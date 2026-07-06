@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, Star, Sparkles, ShoppingBag, Check } from "lucide-react";
+import { ArrowRight, Sparkles, ShoppingBag, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -96,9 +96,9 @@ export function HomePage() {
 
               <div className="mt-10 grid grid-cols-3 gap-4 sm:gap-6 max-w-md mx-auto lg:mx-0">
                 {[
-                  { value: "10K+", label: "Happy Pets" },
-                  { value: "500+", label: "Products" },
-                  { value: "4.9★", label: "Rating" },
+                  { value: "315+", label: "Products" },
+                  { value: "Since 2021", label: "Trusted" },
+                  { value: "100%", label: "Genuine" },
                 ].map((stat, i) => (
                   <motion.div
                     key={stat.label}
@@ -198,12 +198,11 @@ export function HomePage() {
               >
                 <div className="bg-card rounded-2xl p-3 shadow-warm border border-border/40 flex items-center gap-2">
                   <div className="flex flex-col">
-                    <div className="flex items-center gap-0.5">
-                      {[1, 2, 3, 4, 5].map((s) => (
-                        <Star key={s} className="h-3 w-3 fill-amber-glow text-amber-glow" />
-                      ))}
+                    <div className="flex items-center gap-1.5">
+                      <Sparkles className="h-3.5 w-3.5 text-amber-glow" />
+                      <span className="text-xs font-semibold text-cocoa">100% Genuine</span>
                     </div>
-                    <div className="text-[10px] text-cocoa/70 mt-0.5">Trusted by 10k+ pet parents</div>
+                    <div className="text-[10px] text-cocoa/70 mt-0.5">Trusted since 2021</div>
                   </div>
                 </div>
               </motion.div>

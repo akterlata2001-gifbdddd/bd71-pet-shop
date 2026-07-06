@@ -20,7 +20,7 @@ export function ProductDetailPage() {
   const product = getProductById(params.productId || 1);
 
   const [quantity, setQuantity] = useState(1);
-  const [activeTab, setActiveTab] = useState<"description" | "features" | "reviews">("description");
+  const [activeTab, setActiveTab] = useState<"description" | "shipping">("description");
   const [added, setAdded] = useState(false);
   const [wishlisted, setWishlisted] = useState(false);
 
@@ -152,22 +152,28 @@ export function ProductDetailPage() {
               {product.name}
             </h1>
 
-            <div className="mt-3 flex items-center gap-4">
-              <div className="flex items-center gap-1.5">
-                <div className="flex items-center gap-0.5">
-                  {[1, 2, 3, 4, 5].map((s) => (
-                    <Star
-                      key={s}
-                      className={cn(
-                        "h-4 w-4",
-                        s <= Math.floor(product.rating) ? "fill-amber-glow text-amber-glow" : "text-cocoa/20"
-                      )}
-                    />
-                  ))}
+            <div className="mt-3 flex items-center gap-4 flex-wrap">
+              {product.reviews > 0 ? (
+                <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-0.5">
+                    {[1, 2, 3, 4, 5].map((s) => (
+                      <Star
+                        key={s}
+                        className={cn(
+                          "h-4 w-4",
+                          s <= Math.floor(product.rating) ? "fill-amber-glow text-amber-glow" : "text-cocoa/20"
+                        )}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-sm font-medium text-cocoa">{product.rating}</span>
+                  <span className="text-sm text-cocoa/60">({product.reviews} reviews)</span>
                 </div>
-                <span className="text-sm font-medium text-cocoa">{product.rating}</span>
-                <span className="text-sm text-cocoa/60">({product.reviews} reviews)</span>
-              </div>
+              ) : (
+                <Badge className="bg-sage/15 text-sage border-0">
+                  <Check className="h-3 w-3 mr-1" /> New Arrival
+                </Badge>
+              )}
               {product.inStock ? (
                 <Badge className="bg-sage/15 text-sage border-0">
                   <Check className="h-3 w-3 mr-1" /> In Stock
@@ -273,8 +279,7 @@ export function ProductDetailPage() {
           <div className="border-b border-border/60 flex gap-1">
             {[
               { id: "description" as const, label: "Description" },
-              { id: "features" as const, label: `Features (${product.features.length})` },
-              { id: "reviews" as const, label: `Reviews (${product.reviews})` },
+              { id: "shipping" as const, label: "Shipping & Returns" },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -297,87 +302,86 @@ export function ProductDetailPage() {
 
           <div className="py-6">
             {activeTab === "description" && (
-              <div className="prose prose-sm sm:prose-base max-w-none">
-                <p className="text-cocoa/80 leading-relaxed text-base">{product.description}</p>
-                <p className="text-cocoa/70 leading-relaxed text-base mt-4">
-                  This product is carefully selected by BD71 Pet Shop to ensure quality, safety, and
-                  nutritional value for your pet. We work directly with authorized distributors in
-                  Bangladesh to guarantee authenticity and freshness. Each batch is checked for
-                  expiration dates and packaging integrity before shipping.
+              <div className="max-w-3xl space-y-4">
+                <p className="text-cocoa/80 leading-relaxed text-base">
+                  <span className="font-semibold text-cocoa">{product.name}</span> by{" "}
+                  <span className="text-terracotta font-medium">{product.brand}</span> — available at
+                  BD71 Pet Shop, Bangladesh&apos;s trusted online pet food store since 2021.
+                </p>
+                <p className="text-cocoa/70 leading-relaxed text-base">
+                  We source all our products directly from authorized distributors and importers to
+                  ensure 100% authenticity and freshness. This product is part of our{" "}
+                  <span className="font-medium text-cocoa">{product.categoryName}</span> category.
+                </p>
+                <div className="bg-secondary/60 rounded-2xl p-5 mt-4">
+                  <h3 className="font-display text-base font-semibold text-cocoa mb-3">Quick Details</h3>
+                  <div className="grid sm:grid-cols-2 gap-3 text-sm">
+                    <div className="flex items-center gap-2">
+                      <span className="text-cocoa/60">Brand:</span>
+                      <span className="font-medium text-cocoa">{product.brand}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-cocoa/60">Weight:</span>
+                      <span className="font-medium text-cocoa">{product.weight}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-cocoa/60">Category:</span>
+                      <span className="font-medium text-cocoa">{product.categoryName}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-cocoa/60">SKU:</span>
+                      <span className="font-medium text-cocoa font-mono text-xs">{product.sku}</span>
+                    </div>
+                  </div>
+                </div>
+                <p className="text-sm text-cocoa/60 leading-relaxed mt-4">
+                  For more information about this product, please contact us at{" "}
+                  <a href="mailto:contact@bd71shop.com.bd" className="text-terracotta hover:underline">
+                    contact@bd71shop.com.bd
+                  </a>{" "}
+                  or call <a href="tel:01627001719" className="text-terracotta hover:underline">01627-001719</a>.
                 </p>
               </div>
             )}
-            {activeTab === "features" && (
-              <ul className="space-y-3 max-w-2xl">
-                {product.features.map((feature, i) => (
-                  <motion.li
-                    key={i}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.05 }}
-                    className="flex items-start gap-3 text-cocoa/80"
-                  >
-                    <div className="h-6 w-6 rounded-full bg-sage/15 text-sage flex items-center justify-center shrink-0 mt-0.5">
-                      <Check className="h-3.5 w-3.5" />
+            {activeTab === "shipping" && (
+              <div className="max-w-3xl space-y-5">
+                <div className="bg-card rounded-2xl border border-border/60 p-5">
+                  <div className="flex items-start gap-3">
+                    <Truck className="h-5 w-5 text-terracotta mt-0.5 shrink-0" />
+                    <div>
+                      <h3 className="font-display text-base font-semibold text-cocoa mb-1">Delivery Information</h3>
+                      <p className="text-sm text-cocoa/70 leading-relaxed">
+                        We deliver nationwide across Bangladesh through trusted courier services.
+                        Dhaka deliveries are typically completed within 1–2 business days, while
+                        other districts may take 2–4 business days.
+                      </p>
                     </div>
-                    <span className="text-base leading-relaxed">{feature}</span>
-                  </motion.li>
-                ))}
-              </ul>
-            )}
-            {activeTab === "reviews" && (
-              <div className="space-y-4 max-w-3xl">
-                <div className="bg-card rounded-2xl border border-border/60 p-5 flex flex-col sm:flex-row gap-6 items-center">
-                  <div className="text-center">
-                    <div className="font-display text-5xl font-semibold text-cocoa">{product.rating}</div>
-                    <div className="flex items-center gap-0.5 my-2">
-                      {[1, 2, 3, 4, 5].map((s) => (
-                        <Star key={s} className={cn("h-4 w-4", s <= Math.floor(product.rating) ? "fill-amber-glow text-amber-glow" : "text-cocoa/20")} />
-                      ))}
-                    </div>
-                    <div className="text-xs text-cocoa/60">{product.reviews} reviews</div>
-                  </div>
-                  <div className="flex-1 w-full space-y-1.5">
-                    {[5, 4, 3, 2, 1].map((star) => {
-                      const pct = star === 5 ? 78 : star === 4 ? 15 : star === 3 ? 5 : star === 2 ? 1 : 1;
-                      return (
-                        <div key={star} className="flex items-center gap-2 text-xs">
-                          <span className="w-3 text-cocoa/60">{star}</span>
-                          <Star className="h-3 w-3 fill-amber-glow text-amber-glow" />
-                          <div className="flex-1 h-2 rounded-full bg-secondary overflow-hidden">
-                            <div className="h-full bg-amber-glow rounded-full" style={{ width: `${pct}%` }} />
-                          </div>
-                          <span className="w-8 text-right text-cocoa/60">{pct}%</span>
-                        </div>
-                      );
-                    })}
                   </div>
                 </div>
-                {[
-                  { name: "Rahim Uddin", date: "2 weeks ago", rating: 5, text: "Excellent quality! My cat loves this food. Delivery was fast and the packaging was secure. Highly recommend BD71 Pet Shop." },
-                  { name: "Sadia Islam", date: "1 month ago", rating: 5, text: "Genuine product at a great price. My kitten has been thriving on this. Will definitely order again." },
-                  { name: "Mahmud Hasan", date: "2 months ago", rating: 4, text: "Good product overall. Took a bit longer to deliver than expected but the quality is authentic. Customer service was responsive." },
-                ].map((review, i) => (
-                  <div key={i} className="bg-card rounded-2xl border border-border/60 p-5">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-full bg-terracotta/10 text-terracotta flex items-center justify-center font-display font-semibold">
-                          {review.name[0]}
-                        </div>
-                        <div>
-                          <div className="font-semibold text-cocoa text-sm">{review.name}</div>
-                          <div className="text-xs text-cocoa/50">{review.date}</div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-0.5">
-                        {[1, 2, 3, 4, 5].map((s) => (
-                          <Star key={s} className={cn("h-3.5 w-3.5", s <= review.rating ? "fill-amber-glow text-amber-glow" : "text-cocoa/20")} />
-                        ))}
-                      </div>
+                <div className="bg-card rounded-2xl border border-border/60 p-5">
+                  <div className="flex items-start gap-3">
+                    <ShieldCheck className="h-5 w-5 text-sage mt-0.5 shrink-0" />
+                    <div>
+                      <h3 className="font-display text-base font-semibold text-cocoa mb-1">Damaged or Wrong Product</h3>
+                      <p className="text-sm text-cocoa/70 leading-relaxed">
+                        If you receive a damaged or incorrect item, please contact us within 24 hours
+                        of delivery. We will arrange a replacement or refund as quickly as possible.
+                      </p>
                     </div>
-                    <p className="text-sm text-cocoa/70 leading-relaxed">{review.text}</p>
                   </div>
-                ))}
+                </div>
+                <div className="bg-card rounded-2xl border border-border/60 p-5">
+                  <div className="flex items-start gap-3">
+                    <Check className="h-5 w-5 text-amber-glow mt-0.5 shrink-0" />
+                    <div>
+                      <h3 className="font-display text-base font-semibold text-cocoa mb-1">100% Authentic Guarantee</h3>
+                      <p className="text-sm text-cocoa/70 leading-relaxed">
+                        We source all our products directly from authorized distributors and
+                        importers to ensure 100% authenticity and freshness.
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </div>

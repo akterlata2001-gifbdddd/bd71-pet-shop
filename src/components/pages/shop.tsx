@@ -15,11 +15,10 @@ const sortOptions = [
   { value: "popular", label: "Most Popular" },
   { value: "price-low", label: "Price: Low to High" },
   { value: "price-high", label: "Price: High to Low" },
-  { value: "rating", label: "Highest Rated" },
   { value: "newest", label: "Newest First" },
 ];
 
-const brands = ["Purina", "Drools", "Orijen", "SmartHeart", "Miow Miow", "Whiskas", "Royal Canin", "Purina Pro", "Paws", "Haisenpet", "Nature Bridge", "Trendline"];
+const brands = ["Purina Friskies", "Versele Laga", "Drools", "Miow Miow", "Orijen", "SmartHeart", "IAMS", "Haisenpet", "Felicia"];
 
 export function ShopPage() {
   const navigate = useRouter((s) => s.navigate);
@@ -43,9 +42,8 @@ export function ShopPage() {
     switch (sortBy) {
       case "price-low": result.sort((a, b) => a.price - b.price); break;
       case "price-high": result.sort((a, b) => b.price - a.price); break;
-      case "rating": result.sort((a, b) => b.rating - a.rating); break;
       case "newest": result.sort((a, b) => b.id - a.id); break;
-      default: result.sort((a, b) => b.reviews - a.reviews);
+      default: result.sort((a, b) => b.id - a.id);
     }
     return result;
   }, [selectedCategory, selectedBrands, priceRange, sortBy]);
@@ -367,12 +365,17 @@ function ProductListItem({ product, index }: { product: typeof products[0]; inde
           )}
         </div>
         <h3 className="font-semibold text-cocoa line-clamp-1 group-hover:text-terracotta transition-colors">{product.name}</h3>
-        <p className="text-sm text-cocoa/60 line-clamp-2 mt-1 hidden sm:block">{product.description}</p>
-        <div className="flex items-center gap-1 text-xs text-cocoa/60 mt-1.5">
-          <Star className="h-3 w-3 fill-amber-glow text-amber-glow" />
-          <span className="font-medium text-cocoa">{product.rating}</span>
-          <span>({product.reviews} reviews)</span>
-        </div>
+        {product.reviews > 0 ? (
+          <div className="flex items-center gap-1 text-xs text-cocoa/60 mt-1.5">
+            <Star className="h-3 w-3 fill-amber-glow text-amber-glow" />
+            <span className="font-medium text-cocoa">{product.rating}</span>
+            <span>({product.reviews} reviews)</span>
+          </div>
+        ) : (
+          <div className="mt-1.5">
+            <span className="text-[10px] font-medium uppercase tracking-wider text-sage bg-sage/10 px-2 py-0.5 rounded-full">New</span>
+          </div>
+        )}
         <div className="mt-2 flex items-center gap-2">
           {product.oldPrice && (
             <span className="text-xs text-cocoa/40 line-through">৳{formatPrice(product.oldPrice)}</span>

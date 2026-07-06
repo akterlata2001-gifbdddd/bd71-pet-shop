@@ -63,3 +63,4 @@ download/
 # Scraped reference content (temporary)
 fetch_*.json
 clean_*.txt
+scripts/extract_shop.py

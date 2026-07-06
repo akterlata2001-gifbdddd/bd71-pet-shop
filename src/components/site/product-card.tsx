@@ -108,11 +108,17 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
           <span className="text-[11px] font-medium uppercase tracking-wider text-terracotta">
             {product.brand}
           </span>
-          <div className="flex items-center gap-1 text-xs text-cocoa/70">
-            <Star className="h-3 w-3 fill-amber-glow text-amber-glow" />
-            <span className="font-medium">{product.rating}</span>
-            <span className="text-cocoa/40">({product.reviews})</span>
-          </div>
+          {product.reviews > 0 ? (
+            <div className="flex items-center gap-1 text-xs text-cocoa/70">
+              <Star className="h-3 w-3 fill-amber-glow text-amber-glow" />
+              <span className="font-medium">{product.rating}</span>
+              <span className="text-cocoa/40">({product.reviews})</span>
+            </div>
+          ) : (
+            <span className="text-[10px] font-medium uppercase tracking-wider text-sage bg-sage/10 px-2 py-0.5 rounded-full">
+              New
+            </span>
+          )}
         </div>
         <h3 className="text-sm font-semibold text-cocoa leading-snug line-clamp-2 min-h-[2.5rem]">
           {product.name}
