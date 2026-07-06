@@ -3,41 +3,61 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import {
-  Home as HomeIcon, ChevronRight, Phone, Mail, MapPin, Clock, Send, MessageCircle,
+  Home as HomeIcon, ChevronRight, Phone, Mail, MapPin, Clock, Send,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import { useRouter } from "@/lib/store";
+import { contactContent, siteInfo } from "@/lib/data";
 
 export function ContactPage() {
   const navigate = useRouter((s) => s.navigate);
   const [submitted, setSubmitted] = useState(false);
-  const [form, setForm] = useState({ name: "", email: "", phone: "", subject: "", message: "" });
+  const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitted(true);
     setTimeout(() => {
       setSubmitted(false);
-      setForm({ name: "", email: "", phone: "", subject: "", message: "" });
+      setForm({ name: "", email: "", subject: "", message: "" });
     }, 4000);
   };
 
   const contactMethods = [
-    { icon: Phone, label: "Call Us", value: "+880 1700-000000", sub: "Mon-Sun, 8am-10pm", color: "bg-terracotta/10 text-terracotta", href: "tel:+8801700000000" },
-    { icon: Mail, label: "Email Us", value: "hello@bd71shop.com.bd", sub: "We reply within 24 hours", color: "bg-sage/15 text-sage", href: "mailto:hello@bd71shop.com.bd" },
-    { icon: MessageCircle, label: "WhatsApp", value: "+880 1700-000000", sub: "Quick chat support", color: "bg-amber-glow/20 text-amber-glow", href: "#" },
-    { icon: MapPin, label: "Visit Us", value: "Dhaka, Bangladesh", sub: "Nationwide delivery", color: "bg-cocoa/10 text-cocoa", href: "#" },
-  ];
-
-  const faqs = [
-    { q: "How long does delivery take?", a: "Within Dhaka city, delivery typically takes 1-2 business days. Outside Dhaka, expect 2-4 business days depending on your location. We'll send tracking information once your order ships." },
-    { q: "What payment methods do you accept?", a: "We accept Cash on Delivery (COD) nationwide, bKash, Nagad, Rocket, and major credit/debit cards (VISA, Mastercard). All online payments are secured with SSL encryption." },
-    { q: "Are your products genuine?", a: "Absolutely. We source directly from authorized distributors in Bangladesh. Every product is verified for authenticity, and we check expiration dates before shipping. If you ever receive a counterfeit product, we'll refund 200% of your money." },
-    { q: "What is your return policy?", a: "We accept returns within 7 days of delivery for unopened products in original packaging. If you receive a damaged or incorrect item, contact us immediately for a free replacement or full refund." },
-    { q: "Do you offer free delivery?", a: "Yes! Delivery is free for orders over ৳2,000 within Dhaka. For orders under ৳2,000, a nominal delivery fee of ৳60 applies. Outside Dhaka, delivery fees vary by location." },
+    {
+      icon: MapPin,
+      label: "Address",
+      value: siteInfo.address,
+      sub: "Visit our store location",
+      color: "bg-terracotta/10 text-terracotta",
+      href: "#",
+    },
+    {
+      icon: Phone,
+      label: "Phone",
+      value: siteInfo.phone,
+      sub: "Call us anytime, 24/7",
+      color: "bg-sage/15 text-sage",
+      href: `tel:${siteInfo.phone.replace(/[^+\d]/g, "")}`,
+    },
+    {
+      icon: Mail,
+      label: "Mail",
+      value: siteInfo.email,
+      sub: "We reply within 24 hours",
+      color: "bg-amber-glow/20 text-amber-glow",
+      href: `mailto:${siteInfo.email}`,
+    },
+    {
+      icon: Clock,
+      label: "Opening Time",
+      value: "Always Open (24/7)",
+      sub: "Monday to Sunday",
+      color: "bg-cocoa/10 text-cocoa",
+      href: "#",
+    },
   ];
 
   return (
@@ -52,11 +72,11 @@ export function ContactPage() {
             <span className="text-cocoa font-medium">Contact</span>
           </nav>
           <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-semibold text-cocoa tracking-tight mt-3">
-            Get in touch
+            {contactContent.title}
           </h1>
           <p className="mt-2 text-base text-cocoa/70 max-w-2xl">
-            Questions about a product, your order, or just want to say hello? We&apos;d love to hear
-            from you. Our team responds within 24 hours.
+            {contactContent.subtitle} We&apos;re here to help with any questions about products, orders, or
+            pet care.
           </p>
         </div>
       </div>
@@ -80,7 +100,7 @@ export function ContactPage() {
                 <div className="text-xs font-semibold uppercase tracking-wider text-cocoa/60 mb-1">
                   {method.label}
                 </div>
-                <div className="font-semibold text-cocoa">{method.value}</div>
+                <div className="font-semibold text-cocoa break-words">{method.value}</div>
                 <div className="text-xs text-cocoa/60 mt-1">{method.sub}</div>
               </motion.a>
             ))}
@@ -95,11 +115,9 @@ export function ContactPage() {
             {/* Form */}
             <div className="bg-card rounded-3xl border border-border/60 p-6 sm:p-8">
               <h2 className="font-display text-2xl font-semibold text-cocoa mb-1">
-                Send us a message
+                {contactContent.sectionsTitle}
               </h2>
-              <p className="text-sm text-cocoa/60 mb-6">
-                Fill out the form and we&apos;ll get back to you as soon as possible.
-              </p>
+              <p className="text-sm text-cocoa/60 mb-2">{contactContent.formFields.note}</p>
 
               {submitted ? (
                 <motion.div
@@ -114,49 +132,44 @@ export function ContactPage() {
                     Message Sent! 🎉
                   </h3>
                   <p className="text-sm text-cocoa/60">
-                    Thanks for reaching out. We&apos;ll respond within 24 hours.
+                    Thanks for reaching out. We&apos;ll respond as soon as possible.
                   </p>
                 </motion.div>
               ) : (
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-4 mt-5">
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="name" className="text-sm font-medium text-cocoa">Your Name *</Label>
+                      <Label htmlFor="name" className="text-sm font-medium text-cocoa">
+                        {contactContent.formFields.name} *
+                      </Label>
                       <Input
                         id="name"
                         required
                         value={form.name}
                         onChange={(e) => setForm({ ...form, name: e.target.value })}
-                        placeholder="Rahim Uddin"
+                        placeholder="Your name"
                         className="mt-1.5 rounded-xl"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="phone" className="text-sm font-medium text-cocoa">Phone *</Label>
+                      <Label htmlFor="email" className="text-sm font-medium text-cocoa">
+                        {contactContent.formFields.email} *
+                      </Label>
                       <Input
-                        id="phone"
+                        id="email"
+                        type="email"
                         required
-                        value={form.phone}
-                        onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                        placeholder="01XXXXXXXXX"
+                        value={form.email}
+                        onChange={(e) => setForm({ ...form, email: e.target.value })}
+                        placeholder="you@example.com"
                         className="mt-1.5 rounded-xl"
                       />
                     </div>
                   </div>
                   <div>
-                    <Label htmlFor="email" className="text-sm font-medium text-cocoa">Email *</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      required
-                      value={form.email}
-                      onChange={(e) => setForm({ ...form, email: e.target.value })}
-                      placeholder="you@example.com"
-                      className="mt-1.5 rounded-xl"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="subject" className="text-sm font-medium text-cocoa">Subject *</Label>
+                    <Label htmlFor="subject" className="text-sm font-medium text-cocoa">
+                      {contactContent.formFields.subject} *
+                    </Label>
                     <Input
                       id="subject"
                       required
@@ -167,10 +180,11 @@ export function ContactPage() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="message" className="text-sm font-medium text-cocoa">Message *</Label>
+                    <Label htmlFor="message" className="text-sm font-medium text-cocoa">
+                      {contactContent.formFields.message}
+                    </Label>
                     <textarea
                       id="message"
-                      required
                       rows={5}
                       value={form.message}
                       onChange={(e) => setForm({ ...form, message: e.target.value })}
@@ -183,7 +197,7 @@ export function ContactPage() {
                     className="w-full h-12 bg-terracotta hover:bg-terracotta/90 text-primary-foreground rounded-full text-base font-medium"
                   >
                     <Send className="h-4 w-4 mr-2" />
-                    Send Message
+                    {contactContent.formFields.submit}
                   </Button>
                 </form>
               )}
@@ -199,7 +213,6 @@ export function ContactPage() {
                       <div className="absolute -top-1 -left-1 h-4 w-4 rounded-full bg-terracotta/30 animate-ping" />
                     </div>
                   </div>
-                  {/* Grid overlay */}
                   <svg className="absolute inset-0 w-full h-full opacity-20" viewBox="0 0 400 256" preserveAspectRatio="none">
                     {[...Array(8)].map((_, i) => (
                       <line key={`h${i}`} x1="0" y1={i * 32} x2="400" y2={i * 32} stroke="#8B5A3C" strokeWidth="0.5" />
@@ -208,18 +221,13 @@ export function ContactPage() {
                       <line key={`v${i}`} x1={i * 33} y1="0" x2={i * 33} y2="256" stroke="#8B5A3C" strokeWidth="0.5" />
                     ))}
                   </svg>
-                  <Badge className="absolute bottom-3 left-3 bg-card/90 text-cocoa border-0">
-                    📍 Dhaka, Bangladesh
-                  </Badge>
-                </div>
-                <div className="p-5">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-xl bg-terracotta/10 text-terracotta flex items-center justify-center">
-                      <MapPin className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <div className="font-semibold text-cocoa">Our Location</div>
-                      <div className="text-sm text-cocoa/60">Dhaka, Bangladesh</div>
+                  <div className="absolute bottom-3 left-3 right-3 bg-card/90 backdrop-blur rounded-xl p-3">
+                    <div className="flex items-start gap-2">
+                      <MapPin className="h-4 w-4 text-terracotta mt-0.5 shrink-0" />
+                      <div>
+                        <div className="font-semibold text-cocoa text-sm">{siteInfo.address}</div>
+                        <div className="text-xs text-cocoa/60 mt-0.5">Savar, Dhaka, Bangladesh</div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -232,15 +240,15 @@ export function ContactPage() {
                   </div>
                   <div>
                     <div className="font-semibold text-cocoa">Business Hours</div>
-                    <div className="text-sm text-cocoa/60">Online support 24/7</div>
+                    <div className="text-sm text-cocoa/60">{siteInfo.hours}</div>
                   </div>
                 </div>
                 <div className="space-y-2">
                   {[
-                    { day: "Monday - Friday", hours: "8:00 AM - 10:00 PM" },
-                    { day: "Saturday", hours: "9:00 AM - 9:00 PM" },
-                    { day: "Sunday", hours: "10:00 AM - 6:00 PM" },
-                    { day: "Online Orders", hours: "24/7" },
+                    { day: "Monday - Friday", hours: "24 hours open" },
+                    { day: "Saturday - Sunday", hours: "24 hours open" },
+                    { day: "Holidays", hours: "24 hours open" },
+                    { day: "Online Orders", hours: "Available anytime" },
                   ].map((item) => (
                     <div key={item.day} className="flex justify-between items-center py-2 border-b border-border/40 last:border-0">
                       <span className="text-sm text-cocoa/70">{item.day}</span>
@@ -250,42 +258,6 @@ export function ContactPage() {
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* FAQ */}
-      <section className="py-16 sm:py-20">
-        <div className="mx-auto max-w-3xl px-4">
-          <div className="text-center mb-10">
-            <span className="inline-block text-xs font-semibold uppercase tracking-[0.2em] text-terracotta mb-3">
-              FAQ
-            </span>
-            <h2 className="font-display text-3xl sm:text-4xl font-semibold text-cocoa tracking-tight">
-              Frequently asked questions
-            </h2>
-            <p className="mt-3 text-base text-cocoa/70">
-              Quick answers to common questions. Can&apos;t find what you&apos;re looking for? Reach out above.
-            </p>
-          </div>
-
-          <div className="space-y-3">
-            {faqs.map((faq, i) => (
-              <details
-                key={i}
-                className="group bg-card rounded-2xl border border-border/60 overflow-hidden"
-              >
-                <summary className="cursor-pointer p-5 flex items-center justify-between gap-4 list-none">
-                  <span className="font-display text-base font-semibold text-cocoa">{faq.q}</span>
-                  <div className="h-7 w-7 shrink-0 rounded-full bg-secondary group-open:bg-terracotta group-open:text-primary-foreground text-cocoa flex items-center justify-center transition-colors">
-                    <ChevronRight className="h-4 w-4 transition-transform group-open:rotate-90" />
-                  </div>
-                </summary>
-                <div className="px-5 pb-5 text-sm text-cocoa/70 leading-relaxed">
-                  {faq.a}
-                </div>
-              </details>
-            ))}
           </div>
         </div>
       </section>

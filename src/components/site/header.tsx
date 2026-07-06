@@ -24,6 +24,7 @@ import {
 import { PawIcon } from "./icons";
 import { cn } from "@/lib/utils";
 import { useRouter, useCart, type PageId } from "@/lib/store";
+import { siteInfo } from "@/lib/data";
 
 const navLinks: { label: string; page: PageId; hasMenu?: boolean }[] = [
   { label: "Home", page: "home" },
@@ -70,7 +71,7 @@ export function SiteHeader() {
         <div className="mx-auto max-w-7xl px-4 py-2 flex items-center justify-center gap-2 sm:gap-6 text-center">
           <span className="hidden sm:inline-flex items-center gap-1.5">
             <Phone className="h-3.5 w-3.5" />
-            <span>+880 1700-000000</span>
+            <span>{siteInfo.phone}</span>
           </span>
           <span className="inline-flex items-center gap-1.5 font-medium">
             <Truck className="h-3.5 w-3.5" />

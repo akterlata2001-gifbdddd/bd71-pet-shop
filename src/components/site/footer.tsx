@@ -3,6 +3,7 @@
 import { Phone, Mail, MapPin, Clock, Facebook, Instagram, Youtube, Send } from "lucide-react";
 import { PawIcon } from "./icons";
 import { useRouter, type PageId } from "@/lib/store";
+import { siteInfo } from "@/lib/data";
 
 const footerShop = [
   { label: "Cat Food", category: "cat" },
@@ -79,24 +80,24 @@ export function SiteFooter() {
             </p>
 
             <div className="mt-6 space-y-3">
-              <a href="tel:+8801700000000" className="flex items-center gap-3 text-sm text-cream/80 hover:text-amber-glow transition-colors group">
+              <a href={`tel:${siteInfo.phone.replace(/[^+\d]/g, "")}`} className="flex items-center gap-3 text-sm text-cream/80 hover:text-amber-glow transition-colors group">
                 <div className="h-9 w-9 rounded-full bg-cream/10 group-hover:bg-terracotta flex items-center justify-center transition-colors">
                   <Phone className="h-4 w-4" />
                 </div>
-                +880 1700-000000
+                {siteInfo.phone}
               </a>
-              <a href="mailto:hello@bd71shop.com.bd" className="flex items-center gap-3 text-sm text-cream/80 hover:text-amber-glow transition-colors group">
+              <a href={`mailto:${siteInfo.email}`} className="flex items-center gap-3 text-sm text-cream/80 hover:text-amber-glow transition-colors group">
                 <div className="h-9 w-9 rounded-full bg-cream/10 group-hover:bg-terracotta flex items-center justify-center transition-colors">
                   <Mail className="h-4 w-4" />
                 </div>
-                hello@bd71shop.com.bd
+                {siteInfo.email}
               </a>
               <div className="flex items-start gap-3 text-sm text-cream/80">
                 <div className="h-9 w-9 rounded-full bg-cream/10 flex items-center justify-center shrink-0">
                   <MapPin className="h-4 w-4" />
                 </div>
                 <span className="leading-relaxed">
-                  Dhaka, Bangladesh
+                  {siteInfo.address}
                   <br />
                   <span className="text-cream/60">Delivery nationwide</span>
                 </span>
@@ -106,9 +107,9 @@ export function SiteFooter() {
                   <Clock className="h-4 w-4" />
                 </div>
                 <span className="leading-relaxed">
-                  Open 24/7 online
+                  Always Open (24/7)
                   <br />
-                  <span className="text-cream/60">Support always available</span>
+                  <span className="text-cream/60">{siteInfo.hours}</span>
                 </span>
               </div>
             </div>

@@ -59,3 +59,7 @@ download/
 .dev.*
 *.db
 *.db-journal
+
+# Scraped reference content (temporary)
+fetch_*.json
+clean_*.txt

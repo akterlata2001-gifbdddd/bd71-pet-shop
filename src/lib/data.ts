@@ -683,6 +683,331 @@ export const blogPosts: BlogPost[] = [
   },
 ];
 
+// ===== Site Info (from bd71shop.com.bd) =====
+export const siteInfo = {
+  name: "BD71 Pet Shop",
+  legalName: "Bd71 Pet Shop",
+  domain: "bd71shop.com.bd",
+  email: "contact@bd71shop.com.bd",
+  phone: "(+084) 859 481 3614",
+  address: "Bus Stand, Savar, Dhaka",
+  hours: "Monday to Sunday: Always Open (24/7)",
+  founder: "Late Akter",
+  founded: "2021",
+};
+
+// ===== About Page Content (from bd71shop.com.bd/about/) =====
+export const aboutContent = {
+  title: "Trusted Online Pet Shop in Bangladesh Since 2021",
+  intro:
+    "BD71Shop is Bangladesh's one of the trusted online pet food stores, serving pet lovers across the country since 2021. We believe every pet deserves the best nutrition, and that's why we bring you a wide range of premium quality pet food from internationally recognized brands — all at affordable prices, delivered right to your door.",
+  brands:
+    "From cats and dogs to birds, fish, and small animals — we have everything your furry, feathery, or finned friend needs. Our product range includes Royal Canin, Whiskas, Purina, Orijen, IAMS, Sheba, SmartHeart, Versele Laga, and many more trusted brands.",
+  vision:
+    "To become Bangladesh's most trusted destination for premium pet nutrition — a place where every pet owner can find the right food for their beloved companion, with confidence and ease.",
+  mission:
+    "Our mission is to make quality pet food accessible to every pet owner in Bangladesh. We are committed to offering genuine, fresh, and affordable products with fast delivery, honest pricing, and reliable customer support.",
+  serviceTitle: "We Are Proud To Provide The Best Service For Customers",
+  serviceDesc:
+    "At BD71Shop, customer satisfaction is our top priority. We carefully source every product to ensure authenticity and freshness. With over 300+ products available online, easy ordering, and nationwide delivery, we make pet care simple and stress-free for you.",
+  historyTitle: "Our History",
+  history:
+    "BD71Shop was founded in 2021 with a simple goal — to make quality pet food easily available in Bangladesh. What started as a small online venture has grown into a trusted platform with hundreds of happy customers and 300+ products. Over the years, we have expanded our catalog to include food for cats, dogs, birds, fish, and more — always staying committed to quality and affordability.",
+  operationsTitle: "Operations",
+  operations:
+    "We operate fully online, serving customers all across Bangladesh. Orders are processed quickly and delivered through reliable courier services. Our team works every day to ensure smooth operations — from product sourcing to packaging and delivery — so your pet never has to wait for their meal.",
+  founderName: "Late Akter",
+  founderRole: "Founder",
+  faqs: [
+    {
+      q: "What Shipping Methods Are Available?",
+      a: "We deliver nationwide across Bangladesh through trusted courier services. Dhaka deliveries are typically completed within 1–2 business days, while other districts may take 2–4 business days.",
+    },
+    {
+      q: "Are the products genuine and fresh?",
+      a: "Yes, absolutely. We source all our products directly from authorized distributors and importers to ensure 100% authenticity and freshness.",
+    },
+    {
+      q: "What types of pet food do you sell?",
+      a: "We sell food for cats, dogs, birds, fish, and small animals. Our brands include Royal Canin, Whiskas, Purina Friskies, IAMS, Orijen, Sheba, SmartHeart, Versele Laga, Wanpy, and many more.",
+    },
+    {
+      q: "How do I place an order?",
+      a: "Simply browse our website, add your desired products to the cart, and complete the checkout. You can also contact us directly via phone or social media for assistance.",
+    },
+    {
+      q: "What if I receive a damaged or wrong product?",
+      a: "If you receive a damaged or incorrect item, please contact us within 24 hours of delivery. We will arrange a replacement or refund as quickly as possible.",
+    },
+  ],
+};
+
+// ===== Contact Page Content (from bd71shop.com.bd/contact/) =====
+export const contactContent = {
+  title: "Get In Touch",
+  subtitle: "Feel free to reach us.",
+  sectionsTitle: "Have An Question? Contact Us!",
+  info: [
+    { label: "Address", value: "Bus Stand, Savar, Dhaka", icon: "MapPin" },
+    { label: "Phone", value: "(+084) 859 481 3614", icon: "Phone" },
+    { label: "Mail", value: "contact@bd71shop.com.bd", icon: "Mail" },
+    { label: "Opening Time", value: "Monday to Sunday: Always Open (24/7)", icon: "Clock" },
+  ],
+  formFields: {
+    name: "Your name",
+    email: "Your email",
+    subject: "Subject",
+    message: "Your message (optional)",
+    note: "Your email address will not be published. Required fields are marked *",
+    submit: "Send Message",
+  },
+};
+
+// ===== Legal Content (from bd71shop.com.bd) =====
+export type LegalSection = { heading: string; body: string; bullets?: string[] };
+export type LegalDoc = {
+  title: string;
+  lastUpdated: string;
+  intro: string;
+  sections: LegalSection[];
+};
+
+export const legalContent: Record<string, LegalDoc> = {
+  privacy: {
+    title: "Privacy Policy",
+    lastUpdated: "March 1, 2026",
+    intro:
+      "This Privacy Policy describes how bd71shop.com.bd (the \"Site\" or \"we\") collects, uses, and discloses your Personal Information when you visit or make a purchase from the Site.",
+    sections: [
+      {
+        heading: "1. Information Collection",
+        body: "We collect information about you for various reasons, primarily to process your orders and improve your shopping experience.",
+      },
+      {
+        heading: "A. Personal Information You Provide to Us",
+        body: "When you interact with the Site, we may collect the following types of Personal Information:",
+        bullets: [
+          "Order Information: Name, billing address, shipping address, payment information (including credit card numbers, which are processed by secure third-party gateways and we do not store the full details), email address, and phone number.",
+          "Account Information: Name, email address, password, and order history, when you create an account on our Site.",
+          "Communication Data: Information you provide when contacting us directly, such as customer support inquiries, feedback, or marketing communication preferences.",
+        ],
+      },
+      {
+        heading: "B. Device and Usage Data (Automatically Collected)",
+        body: "When you access the Site, we automatically collect certain information about your device and interaction:",
+        bullets: [
+          "Device Information: Web browser type, IP address, time zone, and some of the cookies that are installed on your device.",
+          "Usage Information: Details about how you browse the Site, including the web pages or products you view, what websites or search terms referred you to the Site, and how you interact with the Site.",
+        ],
+      },
+      {
+        heading: "2. Use of Your Personal Information",
+        body: "We use the Personal Information we collect to:",
+        bullets: [
+          "Fulfill Orders: Process your purchases, arrange for shipping, and provide you with invoices and order confirmations.",
+          "Customer Support: Communicate with you about your orders, returns, and service-related issues.",
+          "Account Management: Manage your registered user account.",
+          "Marketing & Advertising (with consent): Send you promotional offers, newsletters, or advertisements we believe may be of interest to you, based on your preferences and purchase history. You can opt-out at any time.",
+          "Improve the Site: Screen for potential risk and fraud (in particular, your IP address), and to generally improve and optimize our Site (e.g., by generating analytics about how our customers browse and interact with the Site).",
+        ],
+      },
+      {
+        heading: "3. Sharing Your Personal Information",
+        body: "We share your Personal Information with third parties to help us run our business and services, as described above.",
+        bullets: [
+          "Service Providers: We share your information with trusted third parties who perform functions on our behalf, such as: Payment processors (e.g., banks, secure gateways) to handle transactions. Shipping and logistics partners (e.g., courier services) to deliver your orders. Analytics providers (e.g., Google Analytics) to help us understand how our customers use the Site. Marketing and advertising partners.",
+          "Legal Compliance: We may share your Personal Information to comply with applicable laws and regulations, to respond to a subpoena, search warrant or other lawful request for information we receive, or to otherwise protect our rights.",
+        ],
+      },
+      {
+        heading: "4. Cookies",
+        body: "Like many websites, we use \"cookies\" to enhance your experience. Cookies are small data files placed on your device or computer. They help us remember your preferences, track site usage, and support advertising efforts. You have the ability to accept or decline cookies. Most web browsers automatically accept cookies, but you can usually modify your browser setting to decline cookies if you prefer. However, this may prevent you from taking full advantage of the website.",
+      },
+      {
+        heading: "5. Security of Your Information",
+        body: "We take reasonable steps to protect your Personal Information from unauthorized access, disclosure, alteration, or destruction. While we strive to use commercially acceptable means to protect our data, no method of transmission over the Internet or electronic storage is 100% secure. We cannot guarantee its absolute security.",
+      },
+      {
+        heading: "6. Your Rights (Bangladesh)",
+        body: "You have the right to access the personal information we hold about you and to ask that your personal information be corrected, updated, or deleted. If you would like to exercise this right, please contact us through the contact information below.",
+      },
+      {
+        heading: "7. Changes to This Privacy Policy",
+        body: "We may update this Privacy Policy from time to time in order to reflect, for example, changes to our practices or for other operational, legal, or regulatory reasons. We will post the revised policy on this page with the \"Last Updated\" date.",
+      },
+      {
+        heading: "8. Contact Us",
+        body: "For more information about our privacy practices, if you have questions, or if you would like to make a complaint, please visit our contact us page.",
+      },
+    ],
+  },
+  terms: {
+    title: "Terms of Use",
+    lastUpdated: "March 1, 2026",
+    intro:
+      "Welcome to bd71shop.com.bd. These Terms of Use govern your use of the Site and the purchase of products offered on the Site. By accessing or using the Site, you agree to be bound by these Terms. If you do not agree with any part of these Terms, you must not use the Site.",
+    sections: [
+      {
+        heading: "1.1 Acceptance of Terms",
+        body: "By placing an order or using any service provided by the Site, you represent that you are at least the age of majority in your place of residence (Bangladesh) and have the legal capacity to enter into this agreement.",
+      },
+      {
+        heading: "1.2 Amendments",
+        body: "We reserve the right to update, change, or replace any part of these Terms by posting updates and changes to our website. It is your responsibility to check this page periodically for changes. Your continued use of or access to the website following the posting of any changes constitutes acceptance of those changes.",
+      },
+      {
+        heading: "2.1 Products and Services",
+        body: "All products are subject to availability. We have made every effort to display as accurately as possible the colors and images of our products. We cannot guarantee that your device's display of any color will be accurate. We reserve the right to limit the sales of our products or services to any person, geographic region, or jurisdiction.",
+      },
+      {
+        heading: "2.2 Order Acceptance and Pricing",
+        body: "We reserve the right to refuse any order you place with us. The prices of our products are subject to change without notice. In the event a product is listed at an incorrect price, we have the right to refuse or cancel any orders placed for the product listed at the incorrect price, regardless of whether the order has been confirmed and your payment processed.",
+      },
+      {
+        heading: "2.3 Payment",
+        body: "Payment must be made in full before shipment. We accept various forms of payment as indicated on the Site. All transactions are processed through secure, third-party payment gateways.",
+      },
+      {
+        heading: "2.4 Shipping and Delivery",
+        body: "We will arrange for the shipment of the products to you. Delivery times are estimates only and are not guaranteed. We are not liable for any delays in shipments. Risk of loss and title for items purchased from the Site pass to you upon our delivery to the carrier.",
+      },
+      {
+        heading: "3.1 Account Responsibility",
+        body: "If you create an account, you are responsible for maintaining the confidentiality of your account and password and for restricting access to your computer. You agree to accept responsibility for all activities that occur under your account or password.",
+      },
+      {
+        heading: "3.2 Prohibited Use",
+        body: "You agree not to use the Site for any illegal or unauthorized purpose, nor may you violate any laws in your jurisdiction (including but not limited to copyright laws) by using the Site.",
+      },
+      {
+        heading: "4. Intellectual Property",
+        body: "The Site and all of its original content, features, and functionality (including graphics, text, logos, and service names) are owned by Bd71 Pet Shop and are protected by international copyright, trademark, and other intellectual property laws. You are not permitted to use any content without our express written permission.",
+      },
+      {
+        heading: "5.1 Disclaimer of Warranties",
+        body: "The Site and all products are provided \"as is\" and \"as available,\" without any warranties of any kind, either express or implied, including, but not limited to, implied warranties of merchantability, fitness for a particular purpose, or non-infringement.",
+      },
+      {
+        heading: "5.2 Limitation of Liability",
+        body: "In no event shall bd71shop.com.bd, our directors, officers, employees, affiliates, agents, contractors, interns, suppliers, service providers, or licensors be liable for any injury, loss, claim, or any direct, indirect, incidental, punitive, special, or consequential damages of any kind, arising from your use of any product or service procured using the Site.",
+      },
+      {
+        heading: "6. Indemnification",
+        body: "You agree to indemnify, defend, and hold harmless bd71shop.com.bd and our parent, subsidiaries, affiliates, partners, officers, directors, agents, contractors, licensors, service providers, subcontractors, suppliers, and employees, harmless from any claim or demand, including reasonable attorneys' fees, made by any third party due to or arising out of your breach of these Terms of Use or your violation of any law or the rights of a third-party.",
+      },
+      {
+        heading: "7. Governing Law",
+        body: "These Terms of Use and any separate agreements whereby we provide you services shall be governed by and construed in accordance with the laws of Bangladesh.",
+      },
+      {
+        heading: "8. Contact Information",
+        body: "Questions about the Terms of Use should be sent to us at contact@bd71shop.com.bd",
+      },
+    ],
+  },
+  dmca: {
+    title: "DMCA Policy",
+    lastUpdated: "March 1, 2026",
+    intro:
+      "This DMCA Policy explains how copyright infringement claims are handled on our website.",
+    sections: [
+      {
+        heading: "1. Copyright Infringement Notification",
+        body: "If you believe that any content on BD71Shop.com.bd infringes your copyright, you may submit a formal DMCA takedown request. Your request must include the following information:",
+        bullets: [
+          "A physical or electronic signature of the copyright owner or authorized representative.",
+          "Identification of the copyrighted work you claim has been infringed.",
+          "Identification of the specific content or URL on our site where the infringement is occurring.",
+          "Your contact information, including name, email address, phone number, and address.",
+          "A statement that you have a good-faith belief that the use of the content is not authorized.",
+          "A statement under penalty of perjury that the information in your notice is accurate and you are the copyright owner or authorized representative.",
+        ],
+      },
+      {
+        heading: "2. Where to Send DMCA Notices",
+        body: "You may send DMCA notices to: Email: contact@bd71shop.com.bd | Subject: DMCA Takedown Request",
+      },
+      {
+        heading: "3. Counter-Notification",
+        body: "If you believe that your content was removed or disabled by mistake or misidentification, you may submit a counter-notification which must include:",
+        bullets: [
+          "Your physical or electronic signature.",
+          "Identification of the content that was removed or disabled.",
+          "A statement under penalty of perjury that the content was removed due to a mistake or misidentification.",
+          "Your name, address, phone number, and email.",
+          "A statement that you consent to the jurisdiction of local courts for any legal matters related to the claim.",
+        ],
+      },
+      {
+        heading: "4. Repeat Infringer Policy",
+        body: "BD71Shop.com.bd may terminate or restrict access to any user who repeatedly violates copyright laws.",
+      },
+      {
+        heading: "5. Removal of Content",
+        body: "Upon receiving a valid DMCA takedown notice, we will:",
+        bullets: [
+          "Review the complaint",
+          "Remove or disable access to the infringing content",
+          "Notify the content uploader (if applicable)",
+        ],
+      },
+      {
+        heading: "6. Changes to This Policy",
+        body: "BD71Shop.com.bd reserves the right to update or modify this DMCA Policy at any time. Updates will be posted on this page.",
+      },
+      {
+        heading: "Contact Information",
+        body: "If you have any questions about this DMCA Policy, please contact us: Email: contact@bd71shop.com.bd",
+      },
+    ],
+  },
+  disclaimer: {
+    title: "Disclaimer",
+    lastUpdated: "March 1, 2026",
+    intro:
+      "Welcome to bd71shop.com.bd. This website is owned and operated by Bd71 Pet Shop. By accessing and using this website, you agree to the terms of this disclaimer. If you do not agree with these terms, please refrain from using the site.",
+    sections: [
+      {
+        heading: "1. General Information",
+        body: "The content on this website is for general informational purposes only. While we strive to provide accurate and up-to-date information, we make no warranties or guarantees regarding the completeness, reliability, or accuracy of the information provided.",
+      },
+      {
+        heading: "2. Product Information",
+        body: "The descriptions, images, and specifications of the products listed on our website are provided for informational purposes. Actual products may vary in appearance due to differences in packaging, color, or product updates by manufacturers. Please read all labels, warnings, and directions before using any product.",
+      },
+      {
+        heading: "3. Limitation of Liability",
+        body: "Under no circumstances shall bd71shop.com.bd or its owners, employees, or affiliates be held liable for any damages or losses arising from:",
+        bullets: [
+          "The use or inability to use the website.",
+          "Errors, inaccuracies, or omissions in the website content.",
+          "Any purchase or use of products listed on this site.",
+        ],
+      },
+      {
+        heading: "4. Third-Party Links",
+        body: "Our website may include links to external websites for your convenience. We are not responsible for the content, policies, or practices of these third-party websites. Accessing such websites is at your own risk.",
+      },
+      {
+        heading: "5. Pricing and Availability",
+        body: "We strive to ensure accurate pricing and availability information; however, errors may occur. We reserve the right to correct any errors, inaccuracies, or omissions and to change or update information at any time without prior notice.",
+      },
+      {
+        heading: "6. Medical and Nutritional Advice",
+        body: "The information provided on this website regarding pet food and related products is not intended as medical or nutritional advice. Always consult a veterinarian or a qualified professional before making changes to your pet's diet or health regimen.",
+      },
+      {
+        heading: "7. Changes to the Disclaimer",
+        body: "We reserve the right to modify this disclaimer at any time without prior notice. Please review this page periodically for updates. Your continued use of the website signifies your acceptance of the revised terms.",
+      },
+      {
+        heading: "8. Contact Us",
+        body: "If you have any questions or concerns about this disclaimer, please visit our contact page.",
+      },
+    ],
+  },
+};
+
 export function formatPrice(n: number) {
   return n.toLocaleString("en-US");
 }

@@ -3,33 +3,28 @@
 import { motion } from "framer-motion";
 import {
   Home as HomeIcon, ChevronRight, Heart, PawPrint, Truck, ShieldCheck, Users, Award, Leaf,
+  Target, Eye, History, Package, Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "@/lib/store";
+import { aboutContent, siteInfo } from "@/lib/data";
 import { CatIllustration, DogIllustration, FishIllustration, BirdIllustration } from "@/components/site/icons";
 
 export function AboutPage() {
   const navigate = useRouter((s) => s.navigate);
 
   const stats = [
-    { value: "10K+", label: "Happy Pets", icon: PawPrint },
-    { value: "500+", label: "Products", icon: Award },
-    { value: "8+", label: "Top Brands", icon: ShieldCheck },
-    { value: "24/7", label: "Support", icon: Users },
+    { value: "300+", label: "Products Online", icon: Package },
+    { value: "2021", label: "Serving Since", icon: Award },
+    { value: "100%", label: "Genuine Products", icon: ShieldCheck },
+    { value: "24/7", label: "Online Support", icon: Users },
   ];
 
   const values = [
-    { icon: Heart, title: "Pet-First Philosophy", desc: "Every decision we make starts with what's best for your pet. We never compromise on nutrition, safety, or quality — only products we'd give our own pets make it to our shelves." },
-    { icon: ShieldCheck, title: "100% Authentic Guarantee", desc: "We source directly from authorized distributors in Bangladesh. Every product is verified for authenticity and freshness, with strict expiration date checks before shipping." },
-    { icon: Truck, title: "Fast Nationwide Delivery", desc: "From Dhaka to Chittagong, Sylhet to Khulna — we deliver across all of Bangladesh. Free delivery within 10km of our store, and affordable rates everywhere else." },
-    { icon: Leaf, title: "Natural & Sustainable", desc: "We prioritize brands that use natural, responsibly-sourced ingredients. Many of our products are organic, grain-free, or formulated for pets with sensitive dietary needs." },
-  ];
-
-  const team = [
-    { name: "Founder & CEO", role: "Pet Parent since 2010", emoji: "👨‍💼", bg: "from-terracotta/20 to-amber-glow/20" },
-    { name: "Head Vet Consultant", role: "DVM, 12+ years experience", emoji: "👩‍⚕️", bg: "from-sage/20 to-amber-glow/15" },
-    { name: "Customer Care Lead", role: "Available 24/7", emoji: "👨‍💻", bg: "from-amber-glow/25 to-sage/15" },
-    { name: "Logistics Manager", role: "Fast delivery expert", emoji: "👩‍🚚", bg: "from-cocoa/10 to-sage/15" },
+    { icon: Heart, title: "Customer Satisfaction First", desc: "Customer satisfaction is our top priority. We carefully source every product to ensure authenticity and freshness, making pet care simple and stress-free for you." },
+    { icon: ShieldCheck, title: "100% Authentic Products", desc: "We source all our products directly from authorized distributors and importers to ensure 100% authenticity and freshness for every order." },
+    { icon: Truck, title: "Nationwide Fast Delivery", desc: "Dhaka deliveries within 1–2 business days, other districts 2–4 business days. Reliable courier services deliver right to your door." },
+    { icon: Leaf, title: "Premium Quality Brands", desc: "Royal Canin, Whiskas, Purina, Orijen, IAMS, Sheba, SmartHeart, Versele Laga and many more trusted international brands at affordable prices." },
   ];
 
   return (
@@ -62,24 +57,16 @@ export function AboutPage() {
             >
               <span className="inline-flex items-center gap-2 rounded-full bg-amber-glow/20 border border-amber-glow/40 px-4 py-1.5 text-sm font-medium text-cocoa mb-5">
                 <Heart className="h-4 w-4 text-terracotta" />
-                Our Story
+                Trusted Since {siteInfo.founded}
               </span>
-              <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-semibold text-cocoa leading-tight tracking-tight text-balance">
-                Where being a pet is{" "}
-                <span className="bg-gradient-to-r from-terracotta to-amber-glow bg-clip-text text-transparent">
-                  just the best
-                </span>
+              <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-semibold text-cocoa leading-tight tracking-tight text-balance">
+                {aboutContent.title}
               </h1>
               <p className="mt-5 text-base sm:text-lg text-cocoa/70 leading-relaxed text-pretty">
-                BD71 Pet Shop began with a simple mission: to give pet parents in Bangladesh access
-                to genuine, premium pet food and care products at fair prices. What started as a
-                small online store has grown into a trusted community of pet lovers — but our
-                commitment to quality and care has never wavered.
+                {aboutContent.intro}
               </p>
               <p className="mt-4 text-base text-cocoa/70 leading-relaxed">
-                Every product on our shelves is chosen with love, vetted for authenticity, and
-                delivered with the speed your pet deserves. We&apos;re proud to serve thousands of
-                happy pets across Bangladesh — and we&apos;re just getting started.
+                {aboutContent.brands}
               </p>
               <div className="mt-7 flex flex-col sm:flex-row gap-3">
                 <Button
@@ -172,8 +159,98 @@ export function AboutPage() {
         </div>
       </section>
 
-      {/* Values */}
+      {/* Vision & Mission */}
       <section className="py-16 sm:py-20">
+        <div className="mx-auto max-w-7xl px-4">
+          <div className="grid md:grid-cols-2 gap-5 sm:gap-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              className="bg-card rounded-2xl border border-border/60 p-6 sm:p-8"
+            >
+              <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-terracotta/10 text-terracotta mb-4">
+                <Eye className="h-7 w-7" />
+              </div>
+              <h2 className="font-display text-2xl font-semibold text-cocoa mb-3">Our Vision</h2>
+              <p className="text-base text-cocoa/70 leading-relaxed">{aboutContent.vision}</p>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="bg-card rounded-2xl border border-border/60 p-6 sm:p-8"
+            >
+              <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-sage/15 text-sage mb-4">
+                <Target className="h-7 w-7" />
+              </div>
+              <h2 className="font-display text-2xl font-semibold text-cocoa mb-3">Our Mission</h2>
+              <p className="text-base text-cocoa/70 leading-relaxed">{aboutContent.mission}</p>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* Service highlight */}
+      <section className="py-12">
+        <div className="mx-auto max-w-5xl px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="bg-gradient-to-br from-terracotta/10 to-amber-glow/10 rounded-3xl p-8 sm:p-10 text-center"
+          >
+            <h2 className="font-display text-2xl sm:text-3xl font-semibold text-cocoa mb-4">
+              {aboutContent.serviceTitle}
+            </h2>
+            <p className="text-base sm:text-lg text-cocoa/70 leading-relaxed max-w-2xl mx-auto">
+              {aboutContent.serviceDesc}
+            </p>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* History & Operations */}
+      <section className="py-12">
+        <div className="mx-auto max-w-7xl px-4">
+          <div className="grid md:grid-cols-2 gap-5 sm:gap-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="bg-card rounded-2xl border border-border/60 p-6 sm:p-8"
+            >
+              <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-amber-glow/20 text-amber-glow mb-4">
+                <History className="h-6 w-6" />
+              </div>
+              <h3 className="font-display text-xl font-semibold text-cocoa mb-3">
+                {aboutContent.historyTitle}
+              </h3>
+              <p className="text-sm text-cocoa/70 leading-relaxed">{aboutContent.history}</p>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 }}
+              className="bg-card rounded-2xl border border-border/60 p-6 sm:p-8"
+            >
+              <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-cocoa/10 text-cocoa mb-4">
+                <Truck className="h-6 w-6" />
+              </div>
+              <h3 className="font-display text-xl font-semibold text-cocoa mb-3">
+                {aboutContent.operationsTitle}
+              </h3>
+              <p className="text-sm text-cocoa/70 leading-relaxed">{aboutContent.operations}</p>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* Values */}
+      <section className="py-16 sm:py-20 bg-gradient-to-b from-background to-secondary/30">
         <div className="mx-auto max-w-7xl px-4">
           <div className="text-center max-w-2xl mx-auto mb-12">
             <span className="inline-block text-xs font-semibold uppercase tracking-[0.2em] text-terracotta mb-3">
@@ -210,37 +287,53 @@ export function AboutPage() {
         </div>
       </section>
 
-      {/* Team */}
-      <section className="py-16 sm:py-20 bg-gradient-to-b from-background to-secondary/30">
-        <div className="mx-auto max-w-7xl px-4">
-          <div className="text-center max-w-2xl mx-auto mb-12">
+      {/* Founder */}
+      <section className="py-12">
+        <div className="mx-auto max-w-3xl px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="bg-card rounded-3xl border border-border/60 p-8 text-center"
+          >
+            <div className="h-20 w-20 rounded-full bg-gradient-to-br from-terracotta/20 to-amber-glow/20 text-terracotta flex items-center justify-center mx-auto mb-4 font-display text-3xl font-semibold">
+              {aboutContent.founderName.charAt(0)}
+            </div>
+            <h3 className="font-display text-xl font-semibold text-cocoa">{aboutContent.founderName}</h3>
+            <p className="text-sm text-terracotta font-medium mt-1">{aboutContent.founderRole}</p>
+            <p className="text-xs text-cocoa/60 mt-2">Founder of BD71 Pet Shop ({siteInfo.founded})</p>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="py-16 sm:py-20">
+        <div className="mx-auto max-w-3xl px-4">
+          <div className="text-center mb-10">
             <span className="inline-block text-xs font-semibold uppercase tracking-[0.2em] text-terracotta mb-3">
-              Our Team
+              FAQ
             </span>
-            <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-semibold text-cocoa tracking-tight text-balance">
-              The people behind BD71
+            <h2 className="font-display text-3xl sm:text-4xl font-semibold text-cocoa tracking-tight">
+              Frequently asked questions
             </h2>
-            <p className="mt-4 text-base sm:text-lg text-cocoa/70 text-pretty">
-              A small, dedicated team of pet lovers committed to serving your furry family.
-            </p>
           </div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            {team.map((member, i) => (
-              <motion.div
-                key={member.name}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.08 }}
-                className="bg-card rounded-2xl border border-border/60 p-6 text-center hover:shadow-warm transition-shadow"
+          <div className="space-y-3">
+            {aboutContent.faqs.map((faq, i) => (
+              <details
+                key={i}
+                className="group bg-card rounded-2xl border border-border/60 overflow-hidden"
               >
-                <div className={`h-24 w-24 mx-auto rounded-full bg-gradient-to-br ${member.bg} flex items-center justify-center text-5xl mb-4`}>
-                  {member.emoji}
+                <summary className="cursor-pointer p-5 flex items-center justify-between gap-4 list-none">
+                  <span className="font-display text-base font-semibold text-cocoa">{faq.q}</span>
+                  <div className="h-7 w-7 shrink-0 rounded-full bg-secondary group-open:bg-terracotta group-open:text-primary-foreground text-cocoa flex items-center justify-center transition-colors">
+                    <ChevronRight className="h-4 w-4 transition-transform group-open:rotate-90" />
+                  </div>
+                </summary>
+                <div className="px-5 pb-5 text-sm text-cocoa/70 leading-relaxed">
+                  {faq.a}
                 </div>
-                <h3 className="font-display text-base font-semibold text-cocoa">{member.name}</h3>
-                <p className="text-xs text-cocoa/60 mt-1">{member.role}</p>
-              </motion.div>
+              </details>
             ))}
           </div>
         </div>
@@ -262,7 +355,7 @@ export function AboutPage() {
                 Ready to spoil your pet?
               </h2>
               <p className="mt-3 text-base sm:text-lg text-white/85 max-w-xl mx-auto text-pretty">
-                Join thousands of happy pet parents across Bangladesh. Quality products, fast
+                Join hundreds of happy pet parents across Bangladesh. Quality products, fast
                 delivery, and genuine care — every single time.
               </p>
               <div className="mt-7 flex flex-col sm:flex-row gap-3 justify-center">
