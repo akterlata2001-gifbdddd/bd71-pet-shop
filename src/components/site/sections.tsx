@@ -1,15 +1,28 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Truck, ShieldCheck, Headphones, Leaf, BadgeCheck } from "lucide-react";
+import {
+  Truck, ShieldCheck, Headphones, Leaf, BadgeCheck, ArrowRight,
+} from "lucide-react";
+import { useRouter, type PageId } from "@/lib/store";
 
-const features = [
+const features: {
+  icon: typeof Truck;
+  title: string;
+  desc: string;
+  color: string;
+  bg: string;
+  page?: PageId;
+  params?: Record<string, string>;
+  action?: string;
+}[] = [
   {
     icon: Truck,
     title: "Fast Delivery",
     desc: "Cheap home delivery to any point in the city and regions",
     color: "text-terracotta",
     bg: "bg-terracotta/10",
+    page: "shop",
   },
   {
     icon: ShieldCheck,
@@ -17,6 +30,7 @@ const features = [
     desc: "Cash on Delivery available across Bangladesh",
     color: "text-sage",
     bg: "bg-sage/10",
+    page: "checkout",
   },
   {
     icon: Headphones,
@@ -24,6 +38,7 @@ const features = [
     desc: "We are always ready to take your call",
     color: "text-amber-glow",
     bg: "bg-amber-glow/15",
+    page: "contact",
   },
   {
     icon: BadgeCheck,
@@ -31,33 +46,38 @@ const features = [
     desc: "All products are genuine, certified & quality-tested",
     color: "text-cocoa",
     bg: "bg-cocoa/10",
+    page: "about",
   },
 ];
 
 export function Features() {
+  const navigate = useRouter((s) => s.navigate);
+
   return (
     <section className="relative -mt-8 z-10">
       <div className="mx-auto max-w-7xl px-4">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {features.map((feature, i) => (
-            <motion.div
+            <motion.button
               key={feature.title}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-50px" }}
               transition={{ duration: 0.4, delay: i * 0.08 }}
-              className="group bg-card rounded-2xl p-4 sm:p-6 shadow-soft border border-border/60 hover:shadow-warm hover:-translate-y-1 transition-all duration-300"
+              onClick={() => feature.page && navigate(feature.page, feature.params)}
+              className="group bg-card rounded-2xl p-4 sm:p-6 shadow-soft border border-border/60 hover:shadow-warm hover:-translate-y-1 transition-all duration-300 text-left cursor-pointer"
             >
               <div className={`inline-flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-xl ${feature.bg} ${feature.color} mb-3 sm:mb-4 group-hover:scale-110 transition-transform`}>
                 <feature.icon className="h-5 w-5 sm:h-6 sm:w-6" />
               </div>
-              <h3 className="font-display text-sm sm:text-base font-semibold text-cocoa leading-tight">
+              <h3 className="font-display text-sm sm:text-base font-semibold text-cocoa leading-tight flex items-center gap-1.5">
                 {feature.title}
+                <ArrowRight className="h-3.5 w-3.5 text-cocoa/30 group-hover:text-terracotta group-hover:translate-x-0.5 transition-all" />
               </h3>
               <p className="text-xs sm:text-sm text-cocoa/60 mt-1.5 leading-relaxed hidden sm:block">
                 {feature.desc}
               </p>
-            </motion.div>
+            </motion.button>
           ))}
         </div>
       </div>
@@ -65,7 +85,16 @@ export function Features() {
   );
 }
 
-const promoBanners = [
+const promoBanners: {
+  eyebrow: string;
+  title: string;
+  desc: string;
+  cta: string;
+  color: string;
+  accent: string;
+  icon: string;
+  category: string;
+}[] = [
   {
     eyebrow: "All Flavour Available",
     title: "Cat Litter",
@@ -74,7 +103,7 @@ const promoBanners = [
     color: "from-terracotta/90 to-terracotta/70",
     accent: "bg-amber-glow",
     icon: "🐱",
-    shape: "cat",
+    category: "litter",
   },
   {
     eyebrow: "Quality You Can Trust",
@@ -84,7 +113,7 @@ const promoBanners = [
     color: "from-sage/90 to-sage/70",
     accent: "bg-amber-glow",
     icon: "🐾",
-    shape: "paw",
+    category: "cat",
   },
   {
     eyebrow: "Best Quality",
@@ -94,23 +123,26 @@ const promoBanners = [
     color: "from-amber-glow/90 to-amber-glow/70",
     accent: "bg-terracotta",
     icon: "🐶",
-    shape: "dog",
+    category: "dog",
   },
 ];
 
 export function PromoBanners() {
+  const navigate = useRouter((s) => s.navigate);
+
   return (
     <section className="py-16 sm:py-20 lg:py-24">
       <div className="mx-auto max-w-7xl px-4">
         <div className="grid md:grid-cols-3 gap-5 sm:gap-6">
           {promoBanners.map((promo, i) => (
-            <motion.div
+            <motion.button
               key={promo.title}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-50px" }}
               transition={{ duration: 0.5, delay: i * 0.12 }}
-              className={`relative overflow-hidden rounded-3xl bg-gradient-to-br ${promo.color} p-6 sm:p-8 min-h-[280px] sm:min-h-[320px] flex flex-col justify-between group cursor-pointer hover:shadow-warm transition-all duration-500`}
+              onClick={() => navigate("shop", { category: promo.category })}
+              className={`relative overflow-hidden rounded-3xl bg-gradient-to-br ${promo.color} p-6 sm:p-8 min-h-[280px] sm:min-h-[320px] flex flex-col justify-between group cursor-pointer hover:shadow-warm transition-all duration-500 text-left`}
             >
               {/* Decorative pattern */}
               <div className="absolute top-0 right-0 w-40 h-40 opacity-10 group-hover:opacity-20 transition-opacity">
@@ -136,17 +168,15 @@ export function PromoBanners() {
                 </p>
               </div>
 
-              <a
-                href="#"
-                onClick={(e) => e.preventDefault()}
+              <span
                 className={`relative z-10 mt-6 inline-flex items-center gap-2 self-start ${promo.accent} text-cocoa font-medium text-sm px-5 py-2.5 rounded-full hover:shadow-lg transition-all group-hover:gap-3`}
               >
                 {promo.cta}
                 <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-              </a>
-            </motion.div>
+              </span>
+            </motion.button>
           ))}
         </div>
       </div>
@@ -154,14 +184,22 @@ export function PromoBanners() {
   );
 }
 
-const whyChooseItems = [
-  { icon: Leaf, title: "100% Organic", desc: "Natural ingredients sourced responsibly for pet wellbeing" },
-  { icon: Truck, title: "Free Ship 10km", desc: "Complimentary delivery within 10km radius" },
-  { icon: BadgeCheck, title: "Genuine Products", desc: "Certified authentic pet food from trusted brands" },
-  { icon: Headphones, title: "Expert Guidance", desc: "Pet care advice from our knowledgeable team" },
+const whyChooseItems: {
+  icon: typeof Leaf;
+  title: string;
+  desc: string;
+  page?: PageId;
+  params?: Record<string, string>;
+}[] = [
+  { icon: Leaf, title: "100% Organic", desc: "Natural ingredients sourced responsibly for pet wellbeing", page: "shop" },
+  { icon: Truck, title: "Free Ship 10km", desc: "Complimentary delivery within 10km radius", page: "shop" },
+  { icon: BadgeCheck, title: "Genuine Products", desc: "Certified authentic pet food from trusted brands", page: "about" },
+  { icon: Headphones, title: "Expert Guidance", desc: "Pet care advice from our knowledgeable team", page: "contact" },
 ];
 
 export function WhyChooseUs() {
+  const navigate = useRouter((s) => s.navigate);
+
   return (
     <section className="py-16 sm:py-20 bg-gradient-to-br from-secondary/40 to-amber-glow/10 relative overflow-hidden">
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full bg-terracotta/5 blur-3xl" />
@@ -181,22 +219,24 @@ export function WhyChooseUs() {
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {whyChooseItems.map((item, i) => (
-            <motion.div
+            <motion.button
               key={item.title}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: i * 0.08 }}
-              className="bg-card rounded-2xl p-6 text-center hover:shadow-warm transition-shadow border border-border/40"
+              onClick={() => item.page && navigate(item.page, item.params)}
+              className="bg-card rounded-2xl p-6 text-center hover:shadow-warm hover:-translate-y-1 transition-all border border-border/40 cursor-pointer group"
             >
-              <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-terracotta/10 text-terracotta mb-4">
+              <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-terracotta/10 text-terracotta mb-4 group-hover:scale-110 transition-transform">
                 <item.icon className="h-6 w-6" />
               </div>
-              <h3 className="font-display text-lg font-semibold text-cocoa mb-2">
+              <h3 className="font-display text-lg font-semibold text-cocoa mb-2 flex items-center justify-center gap-1.5">
                 {item.title}
+                <ArrowRight className="h-3.5 w-3.5 text-cocoa/30 group-hover:text-terracotta group-hover:translate-x-0.5 transition-all" />
               </h3>
               <p className="text-sm text-cocoa/60 leading-relaxed">{item.desc}</p>
-            </motion.div>
+            </motion.button>
           ))}
         </div>
       </div>

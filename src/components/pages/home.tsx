@@ -1,7 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, Star, Sparkles, ShoppingBag } from "lucide-react";
+import { ArrowRight, Star, Sparkles, ShoppingBag, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -401,6 +402,18 @@ function BlogPreview() {
 }
 
 function NewsletterSection() {
+  const [email, setEmail] = useState("");
+  const [subscribed, setSubscribed] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (email) {
+      setSubscribed(true);
+      setEmail("");
+      setTimeout(() => setSubscribed(false), 4000);
+    }
+  };
+
   return (
     <section className="py-16 sm:py-20">
       <div className="mx-auto max-w-7xl px-4">
@@ -431,23 +444,46 @@ function NewsletterSection() {
               </p>
             </div>
 
-            <form
-              className="flex flex-col sm:flex-row gap-3 lg:justify-end"
-              onSubmit={(e) => e.preventDefault()}
-            >
-              <input
-                type="email"
-                placeholder="Enter your email address"
-                className="h-13 px-5 rounded-full bg-white/95 backdrop-blur text-cocoa placeholder:text-cocoa/50 border-0 outline-none focus:ring-4 focus:ring-amber-glow/50 min-w-0 sm:min-w-[280px] lg:min-w-[300px] text-sm font-medium"
-                aria-label="Email address"
-              />
-              <Button
-                type="submit"
-                className="h-13 px-7 rounded-full bg-cocoa hover:bg-cocoa/90 text-primary-foreground text-sm font-semibold shadow-warm whitespace-nowrap"
-              >
-                Subscribe Now
-              </Button>
-            </form>
+            <div className="lg:justify-end">
+              {subscribed ? (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="bg-white/95 backdrop-blur rounded-2xl p-6 text-center max-w-md mx-auto lg:ml-auto"
+                >
+                  <div className="h-14 w-14 rounded-full bg-sage/15 text-sage flex items-center justify-center mx-auto mb-3">
+                    <Check className="h-7 w-7" />
+                  </div>
+                  <h3 className="font-display text-xl font-semibold text-cocoa mb-1">
+                    Successfully Subscribed! 🎉
+                  </h3>
+                  <p className="text-sm text-cocoa/70">
+                    Thanks for joining! Check your inbox for a 10% off welcome coupon.
+                  </p>
+                </motion.div>
+              ) : (
+                <form
+                  className="flex flex-col sm:flex-row gap-3 lg:justify-end"
+                  onSubmit={handleSubmit}
+                >
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Enter your email address"
+                    className="h-13 px-5 rounded-full bg-white/95 backdrop-blur text-cocoa placeholder:text-cocoa/50 border-0 outline-none focus:ring-4 focus:ring-amber-glow/50 min-w-0 sm:min-w-[280px] lg:min-w-[300px] text-sm font-medium"
+                    aria-label="Email address"
+                  />
+                  <Button
+                    type="submit"
+                    className="h-13 px-7 rounded-full bg-cocoa hover:bg-cocoa/90 text-primary-foreground text-sm font-semibold shadow-warm whitespace-nowrap"
+                  >
+                    Subscribe Now
+                  </Button>
+                </form>
+              )}
+            </div>
           </div>
         </motion.div>
       </div>
