@@ -1,33 +1,33 @@
 "use client";
 
-import Link from "next/link";
 import { Phone, Mail, MapPin, Clock, Facebook, Instagram, Youtube, Send } from "lucide-react";
 import { PawIcon } from "./icons";
+import { useRouter, type PageId } from "@/lib/store";
 
-const footerLinks = {
-  shop: [
-    { label: "Cat Food", href: "#products" },
-    { label: "Dog Food", href: "#products" },
-    { label: "Bird Food", href: "#products" },
-    { label: "Fish Food", href: "#products" },
-    { label: "Cat Litter", href: "#products" },
-    { label: "Pet Care", href: "#products" },
-  ],
-  company: [
-    { label: "About Us", href: "#about" },
-    { label: "Blog", href: "#blog" },
-    { label: "Contact", href: "#contact" },
-    { label: "Categories", href: "#categories" },
-  ],
-  legal: [
-    { label: "Home", href: "#home" },
-    { label: "Shop", href: "#products" },
-    { label: "Disclaimer", href: "#" },
-    { label: "DMCA Policy", href: "#" },
-    { label: "Privacy Policy", href: "#" },
-    { label: "Terms of Use", href: "#" },
-  ],
-};
+const footerShop = [
+  { label: "Cat Food", category: "cat" },
+  { label: "Dog Food", category: "dog" },
+  { label: "Bird Food", category: "bird" },
+  { label: "Fish Food", category: "fish" },
+  { label: "Cat Litter", category: "litter" },
+  { label: "Pet Care", category: "care" },
+];
+
+const footerCompany: { label: string; page: PageId }[] = [
+  { label: "About Us", page: "about" },
+  { label: "Blog", page: "blog" },
+  { label: "Contact", page: "contact" },
+  { label: "Categories", page: "shop" },
+];
+
+const footerLegal: { label: string; page: PageId }[] = [
+  { label: "Home", page: "home" },
+  { label: "Shop", page: "shop" },
+  { label: "Disclaimer", page: "disclaimer" },
+  { label: "DMCA Policy", page: "dmca" },
+  { label: "Privacy Policy", page: "privacy" },
+  { label: "Terms of Use", page: "terms" },
+];
 
 const socialLinks = [
   { icon: Facebook, label: "Facebook", href: "#" },
@@ -37,12 +37,10 @@ const socialLinks = [
 ];
 
 export function SiteFooter() {
+  const navigate = useRouter((s) => s.navigate);
+
   return (
-    <footer
-      id="contact"
-      className="relative bg-cocoa text-cream mt-auto"
-    >
-      {/* Top decorative wave */}
+    <footer id="contact" className="relative bg-cocoa text-cream mt-auto">
       <div className="absolute top-0 left-0 right-0 -translate-y-px">
         <svg
           className="w-full h-8 text-cocoa"
@@ -56,11 +54,12 @@ export function SiteFooter() {
       </div>
 
       <div className="mx-auto max-w-7xl px-4 pt-20 pb-8">
-        {/* Top: brand + columns */}
         <div className="grid gap-10 lg:gap-8 lg:grid-cols-12 mb-12">
-          {/* Brand column */}
           <div className="lg:col-span-4">
-            <Link href="#home" className="inline-flex items-center gap-2.5 mb-5">
+            <button
+              onClick={() => navigate("home")}
+              className="inline-flex items-center gap-2.5 mb-5"
+            >
               <div className="h-11 w-11 rounded-2xl bg-terracotta flex items-center justify-center shadow-warm">
                 <PawIcon className="h-6 w-6 text-primary-foreground" />
               </div>
@@ -72,7 +71,7 @@ export function SiteFooter() {
                   Pet Shop
                 </span>
               </div>
-            </Link>
+            </button>
             <p className="text-sm text-cream/70 leading-relaxed max-w-sm">
               Your trusted partner for premium pet food and care in Bangladesh. Genuine products,
               affordable prices, fast delivery — crafted with love for your furry, feathered &amp;
@@ -115,21 +114,20 @@ export function SiteFooter() {
             </div>
           </div>
 
-          {/* Link columns */}
           <div className="lg:col-span-2">
             <h3 className="font-display text-sm font-semibold uppercase tracking-wider text-amber-glow mb-4">
               Shop
             </h3>
             <ul className="space-y-2.5">
-              {footerLinks.shop.map((link) => (
+              {footerShop.map((link) => (
                 <li key={link.label}>
-                  <Link
-                    href={link.href}
+                  <button
+                    onClick={() => navigate("shop", { category: link.category })}
                     className="text-sm text-cream/70 hover:text-amber-glow transition-colors inline-flex items-center gap-1.5 group"
                   >
                     <span className="h-px w-0 group-hover:w-3 bg-amber-glow transition-all" />
                     {link.label}
-                  </Link>
+                  </button>
                 </li>
               ))}
             </ul>
@@ -140,15 +138,15 @@ export function SiteFooter() {
               Company
             </h3>
             <ul className="space-y-2.5">
-              {footerLinks.company.map((link) => (
+              {footerCompany.map((link) => (
                 <li key={link.label}>
-                  <Link
-                    href={link.href}
+                  <button
+                    onClick={() => navigate(link.page)}
                     className="text-sm text-cream/70 hover:text-amber-glow transition-colors inline-flex items-center gap-1.5 group"
                   >
                     <span className="h-px w-0 group-hover:w-3 bg-amber-glow transition-all" />
                     {link.label}
-                  </Link>
+                  </button>
                 </li>
               ))}
             </ul>
@@ -159,21 +157,20 @@ export function SiteFooter() {
               Information
             </h3>
             <ul className="space-y-2.5">
-              {footerLinks.legal.map((link) => (
+              {footerLegal.map((link) => (
                 <li key={link.label}>
-                  <Link
-                    href={link.href}
+                  <button
+                    onClick={() => navigate(link.page)}
                     className="text-sm text-cream/70 hover:text-amber-glow transition-colors inline-flex items-center gap-1.5 group"
                   >
                     <span className="h-px w-0 group-hover:w-3 bg-amber-glow transition-all" />
                     {link.label}
-                  </Link>
+                  </button>
                 </li>
               ))}
             </ul>
           </div>
 
-          {/* Social column */}
           <div className="lg:col-span-2">
             <h3 className="font-display text-sm font-semibold uppercase tracking-wider text-amber-glow mb-4">
               Follow Us
@@ -194,7 +191,6 @@ export function SiteFooter() {
               ))}
             </div>
 
-            {/* Mini badge */}
             <div className="mt-6 rounded-2xl bg-cream/5 border border-cream/10 p-4">
               <div className="text-xs font-semibold text-amber-glow uppercase tracking-wider mb-1">
                 Cash on Delivery
@@ -206,7 +202,6 @@ export function SiteFooter() {
           </div>
         </div>
 
-        {/* Payment + Trust strip */}
         <div className="border-t border-cream/10 py-6 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-4 flex-wrap justify-center">
             <span className="text-xs text-cream/50 uppercase tracking-wider">We Accept:</span>
@@ -225,7 +220,6 @@ export function SiteFooter() {
           </div>
         </div>
 
-        {/* Bottom bar */}
         <div className="border-t border-cream/10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-cream/60">
           <p>© 2026 BD71SHOP. Managed by Cynlex Digital. All rights reserved.</p>
           <p className="flex items-center gap-1.5">

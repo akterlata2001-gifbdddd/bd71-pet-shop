@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
@@ -24,30 +23,33 @@ import {
 } from "@/components/ui/sheet";
 import { PawIcon } from "./icons";
 import { cn } from "@/lib/utils";
+import { useRouter, useCart, type PageId } from "@/lib/store";
 
-const navLinks = [
-  { label: "Home", href: "#home" },
-  { label: "Shop", href: "#products", hasMenu: true },
-  { label: "Categories", href: "#categories" },
-  { label: "Blog", href: "#blog" },
-  { label: "About", href: "#about" },
-  { label: "Contact", href: "#contact" },
+const navLinks: { label: string; page: PageId; hasMenu?: boolean }[] = [
+  { label: "Home", page: "home" },
+  { label: "Shop", page: "shop", hasMenu: true },
+  { label: "Categories", page: "shop" },
+  { label: "Blog", page: "blog" },
+  { label: "About", page: "about" },
+  { label: "Contact", page: "contact" },
 ];
 
 const shopMenu = [
-  { label: "Cat Food", desc: "Premium nutrition for felines" },
-  { label: "Dog Food", desc: "Healthy meals for dogs" },
-  { label: "Bird Food", desc: "Quality seeds & mixes" },
-  { label: "Fish Food", desc: "Aquatic nutrition" },
-  { label: "Cat Litter", desc: "All flavors available" },
-  { label: "Pet Care", desc: "Wellness essentials" },
+  { label: "Cat Food", desc: "Premium nutrition for felines", category: "cat" },
+  { label: "Dog Food", desc: "Healthy meals for dogs", category: "dog" },
+  { label: "Bird Food", desc: "Quality seeds & mixes", category: "bird" },
+  { label: "Fish Food", desc: "Aquatic nutrition", category: "fish" },
+  { label: "Cat Litter", desc: "All flavors available", category: "litter" },
+  { label: "Pet Care", desc: "Wellness essentials", category: "care" },
 ];
 
 export function SiteHeader() {
   const [scrolled, setScrolled] = useState(false);
   const [shopOpen, setShopOpen] = useState(false);
-  const [cartCount, setCartCount] = useState(2);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const navigate = useRouter((s) => s.navigate);
+  const cartCount = useCart((s) => s.count());
+  const setOpen = useCart((s) => s.setOpen);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -56,9 +58,14 @@ export function SiteHeader() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  const goTo = (page: PageId, params?: Record<string, unknown>) => {
+    navigate(page, params as never);
+    setMobileOpen(false);
+    setShopOpen(false);
+  };
+
   return (
     <>
-      {/* Top announcement bar */}
       <div className="bg-terracotta text-primary-foreground text-xs sm:text-sm">
         <div className="mx-auto max-w-7xl px-4 py-2 flex items-center justify-center gap-2 sm:gap-6 text-center">
           <span className="hidden sm:inline-flex items-center gap-1.5">
@@ -86,8 +93,11 @@ export function SiteHeader() {
       >
         <div className="mx-auto max-w-7xl px-4">
           <div className="flex h-16 sm:h-20 items-center justify-between gap-4">
-            {/* Logo */}
-            <Link href="#home" className="flex items-center gap-2.5 shrink-0 group">
+            <button
+              onClick={() => goTo("home")}
+              className="flex items-center gap-2.5 shrink-0 group"
+              aria-label="BD71 Pet Shop home"
+            >
               <div className="relative h-10 w-10 sm:h-12 sm:w-12 rounded-2xl bg-terracotta flex items-center justify-center shadow-warm transition-transform group-hover:scale-105">
                 <PawIcon className="h-6 w-6 sm:h-7 sm:w-7 text-primary-foreground" />
                 <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-amber-glow ring-2 ring-background" />
@@ -100,9 +110,8 @@ export function SiteHeader() {
                   Pet Shop
                 </span>
               </div>
-            </Link>
+            </button>
 
-            {/* Desktop Nav */}
             <nav className="hidden lg:flex items-center gap-1">
               {navLinks.map((link) => (
                 <div
@@ -111,13 +120,13 @@ export function SiteHeader() {
                   onMouseEnter={() => link.hasMenu && setShopOpen(true)}
                   onMouseLeave={() => link.hasMenu && setShopOpen(false)}
                 >
-                  <Link
-                    href={link.href}
+                  <button
+                    onClick={() => goTo(link.page)}
                     className="px-3.5 py-2 text-sm font-medium text-cocoa/80 hover:text-terracotta transition-colors flex items-center gap-1 rounded-lg hover:bg-secondary/60"
                   >
                     {link.label}
                     {link.hasMenu && <ChevronDown className="h-3.5 w-3.5" />}
-                  </Link>
+                  </button>
                   {link.hasMenu && (
                     <AnimatePresence>
                       {shopOpen && (
@@ -130,10 +139,12 @@ export function SiteHeader() {
                         >
                           <div className="bg-card rounded-2xl shadow-warm border border-border/60 p-3 grid grid-cols-2 gap-1">
                             {shopMenu.map((item) => (
-                              <Link
+                              <button
                                 key={item.label}
-                                href="#products"
-                                className="px-3 py-2.5 rounded-xl hover:bg-secondary/60 transition-colors group/item"
+                                onClick={() =>
+                                  goTo("shop", { category: item.category })
+                                }
+                                className="px-3 py-2.5 rounded-xl hover:bg-secondary/60 transition-colors group/item text-left"
                               >
                                 <div className="text-sm font-semibold text-cocoa group-hover/item:text-terracotta transition-colors">
                                   {item.label}
@@ -141,7 +152,7 @@ export function SiteHeader() {
                                 <div className="text-xs text-muted-foreground mt-0.5">
                                   {item.desc}
                                 </div>
-                              </Link>
+                              </button>
                             ))}
                           </div>
                         </motion.div>
@@ -152,13 +163,13 @@ export function SiteHeader() {
               ))}
             </nav>
 
-            {/* Right actions */}
             <div className="flex items-center gap-1.5 sm:gap-2">
               <Button
                 variant="ghost"
                 size="icon"
                 className="hidden sm:inline-flex h-10 w-10 rounded-full text-cocoa hover:bg-secondary/80"
                 aria-label="Search"
+                onClick={() => goTo("shop")}
               >
                 <Search className="h-4.5 w-4.5" />
               </Button>
@@ -167,6 +178,7 @@ export function SiteHeader() {
                 size="icon"
                 className="hidden sm:inline-flex h-10 w-10 rounded-full text-cocoa hover:bg-secondary/80"
                 aria-label="Wishlist"
+                onClick={() => goTo("account")}
               >
                 <Heart className="h-4.5 w-4.5" />
               </Button>
@@ -175,20 +187,23 @@ export function SiteHeader() {
                 size="icon"
                 className="hidden sm:inline-flex h-10 w-10 rounded-full text-cocoa hover:bg-secondary/80"
                 aria-label="Account"
+                onClick={() => goTo("account")}
               >
                 <User className="h-4.5 w-4.5" />
               </Button>
               <button
+                onClick={() => setOpen(true)}
                 className="relative h-10 w-10 sm:h-11 sm:w-11 rounded-full bg-secondary hover:bg-terracotta hover:text-primary-foreground text-cocoa transition-all flex items-center justify-center group"
                 aria-label="Cart"
               >
                 <ShoppingCart className="h-4.5 w-4.5" />
-                <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-amber-glow text-cocoa text-[10px] font-bold flex items-center justify-center ring-2 ring-background">
-                  {cartCount}
-                </span>
+                {cartCount > 0 && (
+                  <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-amber-glow text-cocoa text-[10px] font-bold flex items-center justify-center ring-2 ring-background">
+                    {cartCount}
+                  </span>
+                )}
               </button>
 
-              {/* Mobile menu */}
               <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
                 <SheetTrigger asChild>
                   <Button
@@ -218,29 +233,27 @@ export function SiteHeader() {
                   </SheetHeader>
                   <nav className="flex flex-col p-3">
                     {navLinks.map((link) => (
-                      <Link
+                      <button
                         key={link.label}
-                        href={link.href}
-                        onClick={() => setMobileOpen(false)}
-                        className="px-4 py-3 text-base font-medium text-cocoa/90 hover:bg-secondary/60 hover:text-terracotta rounded-xl transition-colors"
+                        onClick={() => goTo(link.page)}
+                        className="px-4 py-3 text-left text-base font-medium text-cocoa/90 hover:bg-secondary/60 hover:text-terracotta rounded-xl transition-colors"
                       >
                         {link.label}
-                      </Link>
+                      </button>
                     ))}
                     <div className="my-3 h-px bg-border/60" />
                     <div className="px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                       Shop by Pet
                     </div>
                     {shopMenu.map((item) => (
-                      <Link
+                      <button
                         key={item.label}
-                        href="#products"
-                        onClick={() => setMobileOpen(false)}
-                        className="px-4 py-2.5 text-sm text-cocoa/80 hover:text-terracotta rounded-xl hover:bg-secondary/60 transition-colors flex items-center justify-between"
+                        onClick={() => goTo("shop", { category: item.category })}
+                        className="px-4 py-2.5 text-left text-sm text-cocoa/80 hover:text-terracotta rounded-xl hover:bg-secondary/60 transition-colors flex items-center justify-between"
                       >
                         {item.label}
                         <ChevronDown className="h-3.5 w-3.5 -rotate-90 text-muted-foreground" />
-                      </Link>
+                      </button>
                     ))}
                   </nav>
                 </SheetContent>
