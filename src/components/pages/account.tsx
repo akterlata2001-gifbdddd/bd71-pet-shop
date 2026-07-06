@@ -202,7 +202,7 @@ export function AccountPage() {
                         </div>
                         <div>
                           <Label className="text-sm font-medium text-cocoa">Phone</Label>
-                          <Input defaultValue="+880 1700-000000" className="mt-1.5 rounded-xl" />
+                          <Input defaultValue="01627-001719" className="mt-1.5 rounded-xl" />
                         </div>
                       </div>
                       <div>

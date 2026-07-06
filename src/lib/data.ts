@@ -689,7 +689,7 @@ export const siteInfo = {
   legalName: "Bd71 Pet Shop",
   domain: "bd71shop.com.bd",
   email: "contact@bd71shop.com.bd",
-  phone: "(+084) 859 481 3614",
+  phone: "01627-001719",
   address: "Bus Stand, Savar, Dhaka",
   hours: "Monday to Sunday: Always Open (24/7)",
   founder: "Late Akter",
@@ -749,7 +749,7 @@ export const contactContent = {
   sectionsTitle: "Have An Question? Contact Us!",
   info: [
     { label: "Address", value: "Bus Stand, Savar, Dhaka", icon: "MapPin" },
-    { label: "Phone", value: "(+084) 859 481 3614", icon: "Phone" },
+    { label: "Phone", value: "01627-001719", icon: "Phone" },
     { label: "Mail", value: "contact@bd71shop.com.bd", icon: "Mail" },
     { label: "Opening Time", value: "Monday to Sunday: Always Open (24/7)", icon: "Clock" },
   ],
