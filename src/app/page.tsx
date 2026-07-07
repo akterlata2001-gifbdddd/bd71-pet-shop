@@ -38,7 +38,6 @@ const PATH_TO_PAGE: Record<string, { page: string; params?: any }> = {
 export default function Home() {
   const page = useRouter((s) => s.page);
   const loadData = useRouter((s) => s.loadData);
-  const dataLoaded = useRouter((s) => s.dataLoaded);
 
   // Load CMS data on mount
   useEffect(() => {
@@ -47,15 +46,13 @@ export default function Home() {
 
   // On first load, read URL and set the right page
   useEffect(() => {
-    const path = window.location.pathname;
+    const path = window.location.pathname.replace(/\/$/, "") || "/";
     
-    // Check exact matches
     if (PATH_TO_PAGE[path]) {
       useRouter.setState(PATH_TO_PAGE[path]);
       return;
     }
     
-    // Check /product/{id}
     if (path.startsWith("/product/")) {
       const productId = parseInt(path.split("/")[2]);
       if (productId) {
@@ -64,7 +61,6 @@ export default function Home() {
       }
     }
     
-    // Check /blog/{id}
     if (path.startsWith("/blog/")) {
       const blogId = parseInt(path.split("/")[2]);
       if (blogId) {
@@ -80,8 +76,7 @@ export default function Home() {
       if (e.state?.page) {
         useRouter.setState({ page: e.state.page, params: e.state.params || {} });
       } else {
-        // No state — read from URL
-        const path = window.location.pathname;
+        const path = window.location.pathname.replace(/\/$/, "") || "/";
         if (PATH_TO_PAGE[path]) {
           useRouter.setState(PATH_TO_PAGE[path]);
         } else {

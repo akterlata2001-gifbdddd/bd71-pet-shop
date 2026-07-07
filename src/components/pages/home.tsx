@@ -20,7 +20,7 @@ export function HomePage() {
   const navigate = useRouter((s) => s.navigate);
   const products = useRouter((s) => s.products);
   const blogPosts = useRouter((s) => s.blogPosts);
-  const featured = products.slice(0, 8);
+  const featured = products.length > 0 ? products.slice(0, 8) : [];
 
   return (
     <>
@@ -327,6 +327,8 @@ function BlogPreview() {
   const navigate = useRouter((s) => s.navigate);
   const blogPosts = useRouter((s) => s.blogPosts);
   const posts = blogPosts.slice(0, 3);
+  
+  if (posts.length === 0) return null;
   return (
     <section id="blog" className="py-16 sm:py-20 lg:py-24">
       <div className="mx-auto max-w-7xl px-4">
