@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { useRouter, useCart } from "@/lib/store";
 import { formatPrice } from "@/lib/data";
 import { cn } from "@/lib/utils";
+import { ProductCard } from "@/components/site/product-card";
 
 export function ProductDetailPage() {
   const navigate = useRouter((s) => s.navigate);
