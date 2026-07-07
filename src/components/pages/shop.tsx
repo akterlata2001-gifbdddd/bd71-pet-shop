@@ -32,7 +32,7 @@ export function ShopPage() {
   const [showFilters, setShowFilters] = useState(false);
 
   const filtered = useMemo(() => {
-    let result = [...products];
+    let result = products.length > 0 ? [...products] : [];
     if (selectedCategory !== "all") {
       result = result.filter((p) => p.category === selectedCategory);
     }

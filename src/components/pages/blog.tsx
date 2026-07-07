@@ -31,7 +31,18 @@ export function BlogPage() {
     return result;
   }, [activeCategory, search]);
 
-  const featured = blogPosts[0];
+  const featured = blogPosts.length > 0 ? blogPosts[0] : null;
+
+  if (blogPosts.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-6xl mb-4">📝</div>
+          <p className="text-cocoa/60">Loading blog posts...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-gradient-to-b from-secondary/30 to-background min-h-screen">

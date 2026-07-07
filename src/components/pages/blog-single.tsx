@@ -28,8 +28,10 @@ export function BlogSinglePage() {
     );
   }
 
-  const related = blogPosts.filter((p) => p.id !== post.id && p.category === post.category).slice(0, 3);
-  if (related.length < 3) {
+  const related = blogPosts.length > 1
+    ? blogPosts.filter((p) => p.id !== post.id && p.category === post.category).slice(0, 3)
+    : [];
+  if (related.length < 3 && blogPosts.length > 1) {
     const others = blogPosts.filter((p) => p.id !== post.id && p.category !== post.category).slice(0, 3 - related.length);
     related.push(...others);
   }
@@ -183,7 +185,12 @@ export function BlogSinglePage() {
             All Articles
           </Button>
           <Button
-            onClick={() => navigate("blog-single", { blogId: blogPosts[(post.id % blogPosts.length) + 1]?.id || 1 })}
+            onClick={() => {
+              if (blogPosts.length > 1) {
+                const nextIdx = (blogPosts.findIndex((p) => p.id === post.id) + 1) % blogPosts.length;
+                navigate("blog-single", { blogId: blogPosts[nextIdx]?.id || 1 });
+              }
+            }}
             className="bg-terracotta hover:bg-terracotta/90 text-primary-foreground rounded-full"
           >
             Next Article
