@@ -30,14 +30,12 @@ type RouterState = {
   page: PageId;
   params: RouteParams;
   navigate: (page: PageId, params?: RouteParams) => void;
-  // CMS data (loaded on mount)
   products: Product[];
   blogPosts: BlogPost[];
   dataLoaded: boolean;
   loadData: () => Promise<void>;
 };
 
-// CMS API config
 const CMS_API = process.env.NEXT_PUBLIC_CMS_API_URL ?? "https://cms-lac-two.vercel.app";
 const CMS_SITE_ID = process.env.NEXT_PUBLIC_CMS_SITE_ID ?? "lata-test";
 const CMS_API_KEY = process.env.NEXT_PUBLIC_CMS_API_KEY ?? "";
@@ -54,6 +52,44 @@ async function cmsFetch<T>(path: string, options?: RequestInit): Promise<T> {
   const json = await res.json();
   if (!json.success) throw new Error(json.error?.message ?? "API error");
   return json.data as T;
+}
+
+// ===== LocalStorage Cache (stale-while-revalidate) =====
+const CACHE_KEY_PRODUCTS = `cms_${CMS_SITE_ID}_products`;
+const CACHE_KEY_POSTS = `cms_${CMS_SITE_ID}_posts`;
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+function loadFromCache<T>(key: string): T | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    const { data, timestamp } = JSON.parse(raw);
+    return data as T;
+  } catch {
+    return null;
+  }
+}
+
+function saveToCache<T>(key: string, data: T) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(key, JSON.stringify({ data, timestamp: Date.now() }));
+  } catch {
+    // localStorage full or unavailable — skip caching
+  }
+}
+
+function isCacheFresh(key: string): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return false;
+    const { timestamp } = JSON.parse(raw);
+    return Date.now() - timestamp < CACHE_TTL;
+  } catch {
+    return false;
+  }
 }
 
 function mapProduct(p: any): Product {
@@ -146,33 +182,56 @@ export const useRouter = create<RouterState>((set, get) => ({
   },
   loadData: async () => {
     if (get().dataLoaded) return;
-    try {
-      // Load first batch quickly (12 products + all posts)
-      const [prodData, postData] = await Promise.all([
-        cmsFetch<{ products: any[] }>("/products?pageSize=12"),
-        cmsFetch<{ posts: any[] }>("/posts"),
-      ]);
+
+    // Step 1: Instantly load from localStorage cache (if exists)
+    const cachedProducts = loadFromCache<Product[]>(CACHE_KEY_PRODUCTS);
+    const cachedPosts = loadFromCache<BlogPost[]>(CACHE_KEY_POSTS);
+
+    if (cachedProducts && cachedPosts) {
+      // Show cached data IMMEDIATELY — zero loading time
       set({
-        products: prodData.products.map(mapProduct),
-        blogPosts: postData.posts.map(mapPost),
+        products: cachedProducts,
+        blogPosts: cachedPosts,
         dataLoaded: true,
       });
 
-      // Load remaining products in background silently
-      cmsFetch<{ products: any[] }>("/products?pageSize=300")
-        .then((restData) => {
-          if (restData.products && restData.products.length > 0) {
-            const existing = get().products;
-            const existingIds = new Set(existing.map((p) => p.id));
-            const newProducts = restData.products
-              .map(mapProduct)
-              .filter((p) => !existingIds.has(p.id));
-            if (newProducts.length > 0) {
-              set({ products: [...existing, ...newProducts] });
-            }
-          }
-        })
-        .catch(() => {});
+      // If cache is fresh (< 5 min), don't even bother fetching
+      if (isCacheFresh(CACHE_KEY_PRODUCTS) && isCacheFresh(CACHE_KEY_POSTS)) {
+        return;
+      }
+
+      // Cache is stale — silently revalidate in background
+      // User already sees data, this just updates it
+      try {
+        const [prodData, postData] = await Promise.all([
+          cmsFetch<{ products: any[] }>("/products?pageSize=300"),
+          cmsFetch<{ posts: any[] }>("/posts"),
+        ]);
+        const freshProducts = prodData.products.map(mapProduct);
+        const freshPosts = postData.posts.map(mapPost);
+        set({ products: freshProducts, blogPosts: freshPosts });
+        saveToCache(CACHE_KEY_PRODUCTS, freshProducts);
+        saveToCache(CACHE_KEY_POSTS, freshPosts);
+      } catch {
+        // Background revalidation failed — keep showing cached data
+      }
+      return;
+    }
+
+    // Step 2: No cache — first visit. Show loading, fetch from API
+    try {
+      const [prodData, postData] = await Promise.all([
+        cmsFetch<{ products: any[] }>("/products?pageSize=300"),
+        cmsFetch<{ posts: any[] }>("/posts"),
+      ]);
+      const products = prodData.products.map(mapProduct);
+      const blogPosts = postData.posts.map(mapPost);
+
+      set({ products, blogPosts, dataLoaded: true });
+
+      // Save to cache for next visit (instant load)
+      saveToCache(CACHE_KEY_PRODUCTS, products);
+      saveToCache(CACHE_KEY_POSTS, blogPosts);
     } catch (e) {
       console.error("Failed to load CMS data:", e);
       set({ dataLoaded: true });
