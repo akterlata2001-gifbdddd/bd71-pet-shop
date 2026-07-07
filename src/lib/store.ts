@@ -155,8 +155,10 @@ export const useRouter = create<RouterState>((set, get) => ({
   loadData: async () => {
     if (get().dataLoaded) return;
     try {
+      // Load products and posts in parallel
+      // Use smaller page size for faster initial load
       const [prodData, postData] = await Promise.all([
-        cmsFetch<{ products: any[] }>("/products"),
+        cmsFetch<{ products: any[] }>("/products?pageSize=50"),
         cmsFetch<{ posts: any[] }>("/posts"),
       ]);
       set({
@@ -164,6 +166,18 @@ export const useRouter = create<RouterState>((set, get) => ({
         blogPosts: postData.posts.map(mapPost),
         dataLoaded: true,
       });
+
+      // Load remaining products in background (lazy pagination)
+      if (prodData.products.length === 50) {
+        try {
+          const restData = await cmsFetch<{ products: any[] }>("/products?pageSize=200&page=2");
+          if (restData.products && restData.products.length > 0) {
+            set({ products: [...get().products, ...restData.products.map(mapProduct)] });
+          }
+        } catch {
+          // Background load failed, continue with first 50
+        }
+      }
     } catch (e) {
       console.error("Failed to load CMS data:", e);
       set({ dataLoaded: true });

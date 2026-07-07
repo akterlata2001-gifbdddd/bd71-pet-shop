@@ -68,8 +68,19 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
             transition={{ duration: 0.3 }}
             className="w-full h-full object-cover absolute inset-0"
             loading="lazy"
+            onError={(e) => {
+              // Fallback to emoji on broken image
+              const img = e.currentTarget;
+              img.style.display = "none";
+              const fallback = img.nextElementSibling as HTMLElement;
+              if (fallback) fallback.style.display = "flex";
+            }}
           />
-        ) : (
+        ) : null}
+        <div
+          className="absolute inset-0 flex items-center justify-center"
+          style={{ display: product.featured_image ? "none" : "flex" }}
+        >
           <motion.div
             animate={hover ? { y: -8, scale: 1.05 } : { y: 0, scale: 1 }}
             transition={{ duration: 0.3 }}
@@ -78,7 +89,7 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
           >
             {product.emoji}
           </motion.div>
-        )}
+        </div>
 
         <div className="absolute inset-0 -z-0 pointer-events-none">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-3/4 rounded-full border-2 border-dashed border-white/30 group-hover:rotate-45 transition-transform duration-700" />
