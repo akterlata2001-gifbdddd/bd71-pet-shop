@@ -30,7 +30,18 @@ import { useEffect } from "react";
 export type PageMeta = {
   title: string;
   description: string;
-  /** Canonical path (e.g. "/product/whiskas-1kg"). Optional. */
+  /**
+   * Canonical path (e.g. "/product/whiskas-1kg"). ALWAYS relative to
+   * the current storefront — we do NOT preserve the old WordPress
+   * canonical URL because:
+   *   1. The WP URL no longer exists (the site has migrated).
+   *   2. The new URL is the same slug on the new domain, so the
+   *      canonical should point to the CURRENT page URL, not the WP
+   *      URL the Yoast plugin recorded.
+   *   3. Pointing the canonical at a different URL than the one the
+   *      user is on would tell Google "this page is a duplicate of
+   *      <other URL>" — which is the opposite of what we want.
+   */
   path?: string;
   /** OG image URL. Falls back to site default. */
   image?: string;
@@ -38,6 +49,12 @@ export type PageMeta = {
   keywords?: string;
   /** Set true for product/article pages — switches OG type to "article". */
   isArticle?: boolean;
+  /**
+   * When false, emits <meta name="robots" content="noindex,nofollow">.
+   * Honors the Yoast robots_index flag migrated from WordPress.
+   */
+  robotsIndex?: boolean;
+  robotsFollow?: boolean;
 };
 
 const SITE_NAME = "BD71 Pet Shop";
@@ -53,6 +70,12 @@ function upsertMeta(attr: "name" | "property", key: string, content: string) {
     document.head.appendChild(el);
   }
   el.setAttribute("content", content);
+}
+
+function removeMeta(attr: "name" | "property", key: string) {
+  if (typeof document === "undefined") return;
+  const el = document.head.querySelector<HTMLMetaElement>(`meta[${attr}="${key}"]`);
+  if (el) el.remove();
 }
 
 function upsertCanonical(href: string) {
@@ -78,12 +101,14 @@ export function setPageMeta(meta: PageMeta) {
 
   upsertMeta("name", "description", meta.description);
   if (meta.keywords) upsertMeta("name", "keywords", meta.keywords);
+  else removeMeta("name", "keywords");
 
   // Open Graph
   upsertMeta("property", "og:title", fullTitle);
   upsertMeta("property", "og:description", meta.description);
   upsertMeta("property", "og:site_name", SITE_NAME);
   upsertMeta("property", "og:type", meta.isArticle ? "article" : "website");
+  upsertMeta("property", "og:url", `${BASE_URL}${window.location.pathname}`);
   upsertMeta("property", "og:image", meta.image || DEFAULT_IMAGE);
 
   // Twitter
@@ -92,7 +117,20 @@ export function setPageMeta(meta: PageMeta) {
   upsertMeta("name", "twitter:description", meta.description);
   upsertMeta("name", "twitter:image", meta.image || DEFAULT_IMAGE);
 
-  // Canonical
+  // ===== Robots directives =====
+  // Honors the migrated Yoast robots_index / robots_follow flags.
+  // Default: index,follow (the safe SEO default for a public store).
+  const robotsIndex = meta.robotsIndex !== false; // undefined / true → index
+  const robotsFollow = meta.robotsFollow !== false;
+  const robotsContent = [
+    robotsIndex ? "index" : "noindex",
+    robotsFollow ? "follow" : "nofollow",
+  ].join(", ");
+  upsertMeta("name", "robots", robotsContent);
+
+  // ===== Canonical =====
+  // Always points to the SAME URL the user is on (current page URL),
+  // never to the old WP canonical URL. See PageMeta.path docs above.
   const canonical = meta.path
     ? meta.path.startsWith("http")
       ? meta.path
@@ -116,5 +154,7 @@ export function usePageMeta(meta: PageMeta | null) {
     meta?.image,
     meta?.keywords,
     meta?.isArticle,
+    meta?.robotsIndex,
+    meta?.robotsFollow,
   ]);
 }

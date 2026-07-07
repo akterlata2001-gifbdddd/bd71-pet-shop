@@ -72,8 +72,8 @@ async function cmsFetch<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 // ===== LocalStorage Cache (stale-while-revalidate) =====
-const CACHE_KEY_PRODUCTS = `cms_${CMS_SITE_ID}_products_v7`;
-const CACHE_KEY_POSTS = `cms_${CMS_SITE_ID}_posts_v7`;
+const CACHE_KEY_PRODUCTS = `cms_${CMS_SITE_ID}_products_v8`;
+const CACHE_KEY_POSTS = `cms_${CMS_SITE_ID}_posts_v8`;
 const CACHE_KEY_CATEGORIES = `cms_${CMS_SITE_ID}_categories_v1`;
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
@@ -194,6 +194,10 @@ function mapProduct(p: any): Product {
     rawDescription: stripSchemaMarkup(p.description || ""),
     images: p.images || [],
     featured_image: imageUrl,
+    // Pass through the SEO metadata block (from CMS seo_metadata join).
+    // PageMeta component picks this up to set proper title, description,
+    // canonical URL, OG image, and robots directives on the client.
+    seo: p.seo ?? null,
   };
 }
 
@@ -243,6 +247,8 @@ function mapPost(p: any): BlogPost {
     bg: "from-amber-glow/20 to-terracotta/15",
     slug: p.slug || "",
     cover_image: p.cover_image || "",
+    // SEO metadata (Yoast/RankMath) from CMS seo_metadata join.
+    seo: p.seo ?? null,
   };
 }
 

@@ -114,18 +114,30 @@ export function PageMeta() {
         };
       }
 
-      const desc =
-        product.shortDescription ||
-        (product.description || "").slice(0, 160) ||
-        `${product.name} — buy online at BD71 Pet Shop with fast delivery across Bangladesh.`;
+      const seo = product.seo;
+      // ===== Fallback chain =====
+      // Use migrated Yoast data first (preserves WP ranking signals),
+      // then product fields, then a sensible default.
+      const title = seo?.seo_title || `${product.name} — ৳${product.price}`;
+      const description = seo?.seo_description
+        || product.shortDescription
+        || (product.description || "").slice(0, 160)
+        || `${product.name} — buy online at BD71 Pet Shop with fast delivery across Bangladesh.`;
+      const image = seo?.og_image || product.featured_image;
+      const keywords = seo?.focus_keyword
+        || `${product.name}, ${product.brand}, ${product.categoryName}, buy online Bangladesh`;
 
       return {
-        title: `${product.name} — ৳${product.price} | BD71 Pet Shop`,
-        description: desc,
+        title,
+        description,
+        // Canonical = the CURRENT product page URL on the new domain.
+        // Never the old WP canonical_url — that URL no longer exists.
         path: `/product/${product.slug || product.id}`,
-        image: product.featured_image,
-        keywords: `${product.name}, ${product.brand}, ${product.categoryName}, buy online Bangladesh`,
+        image,
+        keywords,
         isArticle: true,
+        robotsIndex: seo?.robots_index ?? true,
+        robotsFollow: seo?.robots_follow ?? true,
       };
     }
 
@@ -146,13 +158,24 @@ export function PageMeta() {
           path: params.blogSlug ? `/blog/${params.blogSlug}` : "/blog",
         };
       }
+
+      const seo = post.seo;
+      const title = seo?.seo_title || `${post.title} | BD71 Pet Shop Blog`;
+      const description = seo?.seo_description
+        || post.excerpt
+        || "Read the latest pet care tips on the BD71 Pet Shop blog.";
+      const image = seo?.og_image || post.cover_image;
+      const keywords = seo?.focus_keyword || post.category;
+
       return {
-        title: `${post.title} | BD71 Pet Shop Blog`,
-        description: post.excerpt || "Read the latest pet care tips on the BD71 Pet Shop blog.",
+        title,
+        description,
         path: `/blog/${post.slug || post.id}`,
-        image: post.cover_image,
-        keywords: post.category,
+        image,
+        keywords,
         isArticle: true,
+        robotsIndex: seo?.robots_index ?? true,
+        robotsFollow: seo?.robots_follow ?? true,
       };
     }
 

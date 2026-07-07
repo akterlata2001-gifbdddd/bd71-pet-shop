@@ -7,6 +7,25 @@
 
 // ===== Types (kept same as before for compatibility) =====
 
+// SEO metadata — mirrored from the CMS seo_metadata table.
+// Populated during WP migration from Yoast/RankMath data.
+export type SeoMeta = {
+  seo_title: string | null;
+  seo_description: string | null;
+  focus_keyword: string | null;
+  canonical_url: string | null;
+  og_title: string | null;
+  og_description: string | null;
+  og_image: string | null;
+  twitter_title: string | null;
+  twitter_description: string | null;
+  twitter_image: string | null;
+  robots_index: boolean;
+  robots_follow: boolean;
+  schema_json: any | null;
+  source: string | null;
+};
+
 export type Product = {
   id: number;
   name: string;
@@ -29,6 +48,7 @@ export type Product = {
   rawDescription?: string;
   images?: string[];
   featured_image?: string;
+  seo?: SeoMeta | null;
 };
 
 export type BlogPost = {
@@ -45,6 +65,7 @@ export type BlogPost = {
   bg: string;
   slug?: string;
   cover_image?: string;
+  seo?: SeoMeta | null;
 };
 
 // ===== Static data (kept as fallback + for non-migrated content) =====
