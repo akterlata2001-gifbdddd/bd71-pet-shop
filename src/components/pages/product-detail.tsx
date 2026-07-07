@@ -19,17 +19,18 @@ export function ProductDetailPage() {
   const allProducts = useRouter((s) => s.products);
   const dataLoaded = useRouter((s) => s.dataLoaded);
 
+  // ALL hooks MUST be called before any early return (React rules)
+  const [quantity, setQuantity] = useState(1);
+  const [activeTab, setActiveTab] = useState<"description" | "shipping">("description");
+  const [added, setAdded] = useState(false);
+  const [wishlisted, setWishlisted] = useState(false);
+
   // Find by slug (preferred) or by productId (fallback)
   const product = params.productSlug
     ? allProducts.find((p) => p.slug === params.productSlug)
     : params.productId
     ? allProducts.find((p) => p.id === params.productId)
     : null;
-
-  const [quantity, setQuantity] = useState(1);
-  const [activeTab, setActiveTab] = useState<"description" | "shipping">("description");
-  const [added, setAdded] = useState(false);
-  const [wishlisted, setWishlisted] = useState(false);
 
   // Loading state — data not loaded yet
   if (!dataLoaded) {
