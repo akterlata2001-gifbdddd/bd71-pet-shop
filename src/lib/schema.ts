@@ -261,5 +261,9 @@ function cleanUndefined(obj: unknown): unknown {
  * `<script type="application/ld+json">`.
  */
 export function serializeSchema(schema: object): string {
-  return JSON.stringify(schema);
+  // Escape <, >, and & to prevent JSON-LD from rendering as visible text
+  return JSON.stringify(schema)
+    .replace(/</g, "\\u003c")
+    .replace(/>/g, "\\u003e")
+    .replace(/&/g, "\\u0026");
 }

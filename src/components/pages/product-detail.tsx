@@ -115,16 +115,12 @@ export function ProductDetailPage() {
       {/* JSON-LD structured data for SEO — hidden from users, visible to search engines */}
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: serializeSchema(productSchema).replace(/</g, "\\u003c"),
-        }}
+        dangerouslySetInnerHTML={{ __html: serializeSchema(productSchema) }}
       />
       {faqSchema && (
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: serializeSchema(faqSchema).replace(/</g, "\\u003c"),
-          }}
+          dangerouslySetInnerHTML={{ __html: serializeSchema(faqSchema) }}
         />
       )}
 

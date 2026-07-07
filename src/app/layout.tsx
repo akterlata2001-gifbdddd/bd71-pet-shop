@@ -65,9 +65,7 @@ export default function RootLayout({
         {/* Site-wide Organization schema for SEO */}
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: serializeSchema(organizationSchema).replace(/</g, "\\u003c"),
-          }}
+          dangerouslySetInnerHTML={{ __html: serializeSchema(organizationSchema) }}
         />
       </head>
       <body
