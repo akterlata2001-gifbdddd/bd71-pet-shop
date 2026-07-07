@@ -29,12 +29,26 @@ export type RouteParams = {
   [key: string]: string | number | undefined;
 };
 
+// A category entry used by the storefront nav + filter bars.
+// Built dynamically from the CMS `/categories` endpoint (with a
+// fallback derived from products' category fields).
+export type StoreCategory = {
+  id: string;       // == slug
+  name: string;
+  slug: string;
+  count: number;
+  desc: string;
+  emoji: string;
+  bg: string;
+};
+
 type RouterState = {
   page: PageId;
   params: RouteParams;
   navigate: (page: PageId, params?: RouteParams) => void;
   products: Product[];
   blogPosts: BlogPost[];
+  categories: StoreCategory[];
   dataLoaded: boolean;
   loadData: () => Promise<void>;
 };
@@ -58,8 +72,9 @@ async function cmsFetch<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 // ===== LocalStorage Cache (stale-while-revalidate) =====
-const CACHE_KEY_PRODUCTS = `cms_${CMS_SITE_ID}_products_v6`;
-const CACHE_KEY_POSTS = `cms_${CMS_SITE_ID}_posts_v6`;
+const CACHE_KEY_PRODUCTS = `cms_${CMS_SITE_ID}_products_v7`;
+const CACHE_KEY_POSTS = `cms_${CMS_SITE_ID}_posts_v7`;
+const CACHE_KEY_CATEGORIES = `cms_${CMS_SITE_ID}_categories_v1`;
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 function loadFromCache<T>(key: string): T | null {
@@ -119,11 +134,24 @@ function mapProduct(p: any): Product {
   const tags = p.tags || [];
   const tagStr = tags.join(" ").toLowerCase();
 
-  // Map WP tags to our category IDs
-  let category = "cat-food"; // default
-  let categoryName = "Cat Food";
+  // ===== Category resolution priority =====
+  //   1. Use the category_slug + category_name returned by the CMS API
+  //      (which comes from the products.category_id → categories join).
+  //      This is the source of truth — products are placed in the exact
+  //      category they were assigned to in WooCommerce.
+  //   2. Fall back to tag-based heuristics ONLY if the API didn't return
+  //      a category (e.g. category_id is null, or old cached data).
+  //
+  // Before this fix, the frontend ignored category_id entirely and guessed
+  // from tags — which caused products to land in wrong categories whenever
+  // their tags didn't match the hardcoded keyword lists below.
+  let category = "uncategorized";
+  let categoryName = "Uncategorized";
 
-  if (tagStr.includes("dog") || tagStr.includes("puppy")) {
+  if (p.category_slug && p.category_name) {
+    category = p.category_slug;
+    categoryName = p.category_name;
+  } else if (tagStr.includes("dog") || tagStr.includes("puppy")) {
     category = "dog-food"; categoryName = "Dog Food";
   } else if (tagStr.includes("litter") || tagStr.includes("litter box")) {
     category = "cat-litter"; categoryName = "Cat Litter & Hygiene";
@@ -218,11 +246,97 @@ function mapPost(p: any): BlogPost {
   };
 }
 
+// =====================================================
+// Build the storefront category list.
+//
+// Priority:
+//   1. Use the CMS /categories endpoint payload (preferred — source of truth).
+//   2. Derive from products' `category` + `categoryName` fields (fallback).
+//
+// Each category gets a deterministic emoji + gradient based on slug
+// keywords so the UI looks consistent regardless of source.
+// =====================================================
+function pickCategoryVisuals(slug: string, name: string): { emoji: string; bg: string; desc: string } {
+  const s = (slug || "").toLowerCase();
+  const n = (name || "").toLowerCase();
+  if (s.includes("dog") || n.includes("dog")) return { emoji: "🐶", bg: "from-sage/25 to-terracotta/15", desc: "Dog food and supplies" };
+  if (s.includes("litter") || n.includes("litter")) return { emoji: "🧹", bg: "from-sage/20 to-ocean/15", desc: "Cat litter, litter boxes & hygiene" };
+  if (s.includes("treat") || n.includes("treat")) return { emoji: "🍖", bg: "from-terracotta/20 to-amber-glow/15", desc: "Treats, wet food & pouches" };
+  if (s.includes("fountain") || s.includes("water") || n.includes("fountain")) return { emoji: "💧", bg: "from-ocean/25 to-sage/15", desc: "Water fountains & bowls" };
+  if (s.includes("vaccine") || s.includes("medicine") || n.includes("medicine")) return { emoji: "💉", bg: "from-terracotta/20 to-sage/15", desc: "Vaccines & health products" };
+  if (s.includes("toy") || n.includes("toy") || s.includes("accessor")) return { emoji: "🪀", bg: "from-amber-glow/20 to-terracotta/10", desc: "Toys, collars & accessories" };
+  if (s.includes("bird") || s.includes("fish") || n.includes("bird") || n.includes("fish")) return { emoji: "🐦", bg: "from-ocean/20 to-amber-glow/10", desc: "Bird & fish supplies" };
+  if (s.includes("cat") || n.includes("cat")) return { emoji: "🐱", bg: "from-amber-glow/30 to-terracotta/15", desc: "Cat food and supplies" };
+  return { emoji: "🐾", bg: "from-amber-glow/20 to-terracotta/15", desc: name || "Products" };
+}
+
+function buildCategories(
+  apiCats: any[] | null | undefined,
+  products: Product[]
+): StoreCategory[] {
+  const out: StoreCategory[] = [];
+  const seen = new Set<string>();
+
+  // First pass: API-provided categories (source of truth)
+  if (apiCats && apiCats.length > 0) {
+    for (const c of apiCats) {
+      const slug: string = (c.slug || "").trim();
+      if (!slug || seen.has(slug)) continue;
+      seen.add(slug);
+      const name: string = c.name || slug;
+      const { emoji, bg, desc } = pickCategoryVisuals(slug, name);
+      const count =
+        typeof c.product_count === "number"
+          ? c.product_count
+          : products.filter((p) => p.category === slug).length;
+      out.push({
+        id: slug,
+        slug,
+        name,
+        count,
+        desc: c.description || desc,
+        emoji,
+        bg,
+      });
+    }
+  }
+
+  // Second pass: any product categories not in the API list
+  // (e.g. tag-derived fallback categories for products whose
+  // category_id is null in the CMS).
+  for (const p of products) {
+    const slug = p.category;
+    const name = p.categoryName || slug;
+    if (!slug || seen.has(slug)) continue;
+    seen.add(slug);
+    const { emoji, bg, desc } = pickCategoryVisuals(slug, name);
+    out.push({
+      id: slug,
+      slug,
+      name,
+      count: products.filter((pp) => pp.category === slug).length,
+      desc,
+      emoji,
+      bg,
+    });
+  }
+
+  // Sort by name (alphabetical) but keep "uncategorized" last
+  out.sort((a, b) => {
+    if (a.slug === "uncategorized") return 1;
+    if (b.slug === "uncategorized") return -1;
+    return a.name.localeCompare(b.name);
+  });
+
+  return out;
+}
+
 export const useRouter = create<RouterState>((set, get) => ({
   page: "home",
   params: {},
   products: [],
   blogPosts: [],
+  categories: [],
   dataLoaded: false,
   navigate: (page, params = {}) => {
     set({ page, params });
@@ -255,12 +369,14 @@ export const useRouter = create<RouterState>((set, get) => ({
     // Step 1: Instantly load from localStorage cache (if exists)
     const cachedProducts = loadFromCache<Product[]>(CACHE_KEY_PRODUCTS);
     const cachedPosts = loadFromCache<BlogPost[]>(CACHE_KEY_POSTS);
+    const cachedCats = loadFromCache<StoreCategory[]>(CACHE_KEY_CATEGORIES);
 
     if (cachedProducts && cachedPosts) {
       // Show cached data IMMEDIATELY — zero loading time
       set({
         products: cachedProducts,
         blogPosts: cachedPosts,
+        categories: cachedCats ?? buildCategories(null, cachedProducts),
         dataLoaded: true,
       });
 
@@ -272,15 +388,18 @@ export const useRouter = create<RouterState>((set, get) => ({
       // Cache is stale — silently revalidate in background
       // User already sees data, this just updates it
       try {
-        const [prodData, postData] = await Promise.all([
+        const [prodData, postData, catData] = await Promise.all([
           cmsFetch<{ products: any[] }>("/products?pageSize=300"),
-          cmsFetch<{ posts: any[] }>("/posts"),
+          cmsFetch<{ posts: any[] }>("/posts?pageSize=100"),
+          cmsFetch<{ categories: any[] }>("/categories?include_counts=1").catch(() => ({ categories: [] })),
         ]);
         const freshProducts = prodData.products.map(mapProduct);
         const freshPosts = postData.posts.map(mapPost);
-        set({ products: freshProducts, blogPosts: freshPosts });
+        const freshCats = buildCategories(catData.categories, freshProducts);
+        set({ products: freshProducts, blogPosts: freshPosts, categories: freshCats });
         saveToCache(CACHE_KEY_PRODUCTS, freshProducts);
         saveToCache(CACHE_KEY_POSTS, freshPosts);
+        saveToCache(CACHE_KEY_CATEGORIES, freshCats);
       } catch {
         // Background revalidation failed — keep showing cached data
       }
@@ -289,18 +408,21 @@ export const useRouter = create<RouterState>((set, get) => ({
 
     // Step 2: No cache — first visit. Show loading, fetch from API
     try {
-      const [prodData, postData] = await Promise.all([
+      const [prodData, postData, catData] = await Promise.all([
         cmsFetch<{ products: any[] }>("/products?pageSize=300"),
-        cmsFetch<{ posts: any[] }>("/posts"),
+        cmsFetch<{ posts: any[] }>("/posts?pageSize=100"),
+        cmsFetch<{ categories: any[] }>("/categories?include_counts=1").catch(() => ({ categories: [] })),
       ]);
       const products = prodData.products.map(mapProduct);
       const blogPosts = postData.posts.map(mapPost);
+      const categories = buildCategories(catData.categories, products);
 
-      set({ products, blogPosts, dataLoaded: true });
+      set({ products, blogPosts, categories, dataLoaded: true });
 
       // Save to cache for next visit (instant load)
       saveToCache(CACHE_KEY_PRODUCTS, products);
       saveToCache(CACHE_KEY_POSTS, blogPosts);
+      saveToCache(CACHE_KEY_CATEGORIES, categories);
     } catch (e) {
       console.error("Failed to load CMS data:", e);
       set({ dataLoaded: true });

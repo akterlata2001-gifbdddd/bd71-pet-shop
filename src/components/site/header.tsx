@@ -35,13 +35,14 @@ const navLinks: { label: string; page: PageId; hasMenu?: boolean }[] = [
   { label: "Contact", page: "contact" },
 ];
 
-const shopMenu = [
-  { label: "Cat Food", desc: "Premium nutrition for felines", category: "cat" },
-  { label: "Dog Food", desc: "Healthy meals for dogs", category: "dog" },
-  { label: "Bird Food", desc: "Quality seeds & mixes", category: "bird" },
-  { label: "Fish Food", desc: "Aquatic nutrition", category: "fish" },
-  { label: "Cat Litter", desc: "All flavors available", category: "litter" },
-  { label: "Pet Care", desc: "Wellness essentials", category: "care" },
+// Fallback shop menu — used before CMS categories are loaded.
+const fallbackShopMenu = [
+  { label: "Cat Food", desc: "Premium nutrition for felines", category: "cat-food" },
+  { label: "Dog Food", desc: "Healthy meals for dogs", category: "dog-food" },
+  { label: "Cat Litter", desc: "All flavors available", category: "cat-litter" },
+  { label: "Cat Treats", desc: "Treats & wet food", category: "cat-treats" },
+  { label: "Bird & Fish", desc: "Quality seeds & aquatic food", category: "bird-fish" },
+  { label: "Toys", desc: "Fun & accessories", category: "toys" },
 ];
 
 export function SiteHeader() {
@@ -49,8 +50,19 @@ export function SiteHeader() {
   const [shopOpen, setShopOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const navigate = useRouter((s) => s.navigate);
+  const dynamicCategories = useRouter((s) => s.categories);
   const cartCount = useCart((s) => s.count());
   const setOpen = useCart((s) => s.setOpen);
+
+  // Build the dropdown shop menu from the actual CMS categories,
+  // falling back to the static list while data is loading.
+  const shopMenu = dynamicCategories.length > 0
+    ? dynamicCategories.slice(0, 8).map((c) => ({
+        label: c.name,
+        desc: c.desc || `${c.count} product${c.count === 1 ? "" : "s"}`,
+        category: c.slug,
+      }))
+    : fallbackShopMenu;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);

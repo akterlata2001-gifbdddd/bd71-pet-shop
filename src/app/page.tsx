@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { SiteHeader } from "@/components/site/header";
 import { SiteFooter } from "@/components/site/footer";
 import { CartDrawer } from "@/components/site/cart-drawer";
+import { PageMeta } from "@/components/site/page-meta";
 import { HomePage } from "@/components/pages/home";
 import { ShopPage } from "@/components/pages/shop";
 import { ProductDetailPage } from "@/components/pages/product-detail";
@@ -118,6 +119,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <PageMeta />
       <SiteHeader />
       <main className="flex-1">
         <AnimatePresence mode="wait">

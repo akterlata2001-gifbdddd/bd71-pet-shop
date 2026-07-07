@@ -222,7 +222,18 @@ export function SiteFooter() {
         </div>
 
         <div className="border-t border-cream/10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-cream/60">
-          <p>© 2026 BD71SHOP. Managed by Cynlex Digital. All rights reserved.</p>
+          <p>
+            © 2026 BD71SHOP. Managed by{" "}
+            <a
+              href="https://cynlex.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-cream/80 hover:text-terracotta transition-colors underline-offset-2 hover:underline"
+            >
+              Cynlex Digital
+            </a>
+            . All rights reserved.
+          </p>
           <p className="flex items-center gap-1.5">
             Crafted with <span className="text-terracotta">❤</span> for pets in Bangladesh
           </p>

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ProductCard } from "@/components/site/product-card";
 import { useRouter } from "@/lib/store";
-import { categories, formatPrice } from "@/lib/data";
+import { categories as staticCategories, formatPrice } from "@/lib/data";
 import { cn } from "@/lib/utils";
 import { Star } from "lucide-react";
 
@@ -22,8 +22,16 @@ const brands = ["Purina Friskies", "Versele Laga", "Drools", "Miow Miow", "Orije
 
 export function ShopPage() {
   const products = useRouter((s) => s.products);
+  const dynamicCategories = useRouter((s) => s.categories);
   const navigate = useRouter((s) => s.navigate);
   const params = useRouter((s) => s.params);
+
+  // Use dynamic categories from the CMS, falling back to the static
+  // list if the API hasn't returned categories yet.
+  const categories = dynamicCategories.length > 0
+    ? dynamicCategories.map((c) => ({ id: c.id, name: c.name, emoji: c.emoji, bg: c.bg, desc: c.desc, count: c.count, longDesc: c.desc }))
+    : staticCategories;
+
   const [selectedCategory, setSelectedCategory] = useState<string>(params.category || "all");
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 20000]);
