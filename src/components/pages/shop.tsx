@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ProductCard } from "@/components/site/product-card";
 import { useRouter } from "@/lib/store";
-import { products, categories, formatPrice } from "@/lib/data";
+import { categories, formatPrice } from "@/lib/data";
+import { useRouter } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import { Star } from "lucide-react";
 
@@ -21,6 +22,7 @@ const sortOptions = [
 const brands = ["Purina Friskies", "Versele Laga", "Drools", "Miow Miow", "Orijen", "SmartHeart", "IAMS", "Haisenpet", "Felicia"];
 
 export function ShopPage() {
+  const products = useRouter((s) => s.products);
   const navigate = useRouter((s) => s.navigate);
   const params = useRouter((s) => s.params);
   const [selectedCategory, setSelectedCategory] = useState<string>(params.category || "all");

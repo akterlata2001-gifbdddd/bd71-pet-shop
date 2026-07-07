@@ -7,12 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "@/lib/store";
-import { blogPosts } from "@/lib/data";
+import { useRouter } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
 const categories = ["All", "Dog Care", "Pet Care", "Pet Foods", "Cat Care"];
 
 export function BlogPage() {
+  const blogPosts = useRouter((s) => s.blogPosts);
   const navigate = useRouter((s) => s.navigate);
   const [activeCategory, setActiveCategory] = useState("All");
   const [search, setSearch] = useState("");

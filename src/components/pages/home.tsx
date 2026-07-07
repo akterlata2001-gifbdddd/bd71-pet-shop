@@ -15,10 +15,12 @@ import {
 import { useRouter } from "@/lib/store";
 import { Features, PromoBanners, WhyChooseUs } from "@/components/site/sections";
 import { ProductCard } from "@/components/site/product-card";
-import { products, blogPosts } from "@/lib/data";
+import { useRouter } from "@/lib/store";
 
 export function HomePage() {
   const navigate = useRouter((s) => s.navigate);
+  const products = useRouter((s) => s.products);
+  const blogPosts = useRouter((s) => s.blogPosts);
   const featured = products.slice(0, 8);
 
   return (

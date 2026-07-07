@@ -334,8 +334,6 @@ export async function createOrder(orderData: any): Promise<{ order_number: strin
 
 // ===== Static products (kept as fallback, used by client components before hydration) =====
 // These are empty — real data comes from API
-export const products: Product[] = [];
-export const blogPosts: BlogPost[] = [];
 
 // ===== Utility functions =====
 

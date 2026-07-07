@@ -10,10 +10,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useRouter } from "@/lib/store";
-import { products, formatPrice } from "@/lib/data";
+import { formatPrice } from "@/lib/data";
+import { useRouter } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
 export function AccountPage() {
+  const products = useRouter((s) => s.products);
   const navigate = useRouter((s) => s.navigate);
   const [mode, setMode] = useState<"login" | "register">("login");
   const [loggedIn, setLoggedIn] = useState(false);

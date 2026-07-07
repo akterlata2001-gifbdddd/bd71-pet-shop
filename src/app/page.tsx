@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { SiteHeader } from "@/components/site/header";
 import { SiteFooter } from "@/components/site/footer";
@@ -20,6 +21,13 @@ import { useRouter } from "@/lib/store";
 
 export default function Home() {
   const page = useRouter((s) => s.page);
+  const loadData = useRouter((s) => s.loadData);
+  const dataLoaded = useRouter((s) => s.dataLoaded);
+
+  // Load CMS data on mount
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const renderPage = () => {
     switch (page) {

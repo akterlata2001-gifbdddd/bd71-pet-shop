@@ -8,12 +8,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useRouter } from "@/lib/store";
-import { getBlogById, blogPosts } from "@/lib/data";
+import { useRouter } from "@/lib/store";
 
 export function BlogSinglePage() {
+  const blogPosts = useRouter((s) => s.blogPosts);
   const navigate = useRouter((s) => s.navigate);
   const params = useRouter((s) => s.params);
-  const post = getBlogById(params.blogId || 1);
+  const post = blogPosts.find((p) => p.id === (params.blogId || 1));
 
   if (!post) {
     return (

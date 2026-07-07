@@ -9,15 +9,15 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useRouter, useCart } from "@/lib/store";
-import { getProductById, getRelatedProducts, formatPrice } from "@/lib/data";
-import { ProductCard } from "@/components/site/product-card";
+import { formatPrice } from "@/lib/data";
 import { cn } from "@/lib/utils";
 
 export function ProductDetailPage() {
   const navigate = useRouter((s) => s.navigate);
   const params = useRouter((s) => s.params);
   const addItem = useCart((s) => s.addItem);
-  const product = getProductById(params.productId || 1);
+  const allProducts = useRouter((s) => s.products);
+  const product = allProducts.find((p) => p.id === (params.productId || 1));
 
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState<"description" | "shipping">("description");
@@ -37,7 +37,7 @@ export function ProductDetailPage() {
     );
   }
 
-  const related = getRelatedProducts(product, 4);
+  const related = allProducts.filter((p) => p.id !== product?.id && p.category === product?.category).slice(0, 4);
 
   const handleAddToCart = () => {
     addItem({

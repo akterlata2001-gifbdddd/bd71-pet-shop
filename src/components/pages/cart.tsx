@@ -6,10 +6,12 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart, useRouter } from "@/lib/store";
-import { formatPrice, products } from "@/lib/data";
+import { formatPrice } from "@/lib/data";
+import { useRouter } from "@/lib/store";
 import { ProductCard } from "@/components/site/product-card";
 
 export function CartPage() {
+  const products = useRouter((s) => s.products);
   const navigate = useRouter((s) => s.navigate);
   const items = useCart((s) => s.items);
   const updateQuantity = useCart((s) => s.updateQuantity);
