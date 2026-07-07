@@ -7,7 +7,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { useCart, useRouter } from "@/lib/store";
 import { formatPrice } from "@/lib/data";
-import { useRouter } from "@/lib/store";
 import { ProductCard } from "@/components/site/product-card";
 
 export function CartPage() {

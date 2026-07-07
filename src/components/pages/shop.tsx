@@ -8,7 +8,6 @@ import { Badge } from "@/components/ui/badge";
 import { ProductCard } from "@/components/site/product-card";
 import { useRouter } from "@/lib/store";
 import { categories, formatPrice } from "@/lib/data";
-import { useRouter } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import { Star } from "lucide-react";
 

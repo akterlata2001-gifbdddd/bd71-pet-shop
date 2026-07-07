@@ -15,7 +15,6 @@ import {
 import { useRouter } from "@/lib/store";
 import { Features, PromoBanners, WhyChooseUs } from "@/components/site/sections";
 import { ProductCard } from "@/components/site/product-card";
-import { useRouter } from "@/lib/store";
 
 export function HomePage() {
   const navigate = useRouter((s) => s.navigate);
@@ -326,6 +325,7 @@ function CategoriesSection() {
 
 function BlogPreview() {
   const navigate = useRouter((s) => s.navigate);
+  const blogPosts = useRouter((s) => s.blogPosts);
   const posts = blogPosts.slice(0, 3);
   return (
     <section id="blog" className="py-16 sm:py-20 lg:py-24">
