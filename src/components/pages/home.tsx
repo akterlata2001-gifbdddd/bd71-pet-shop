@@ -366,10 +366,14 @@ function BlogPreview() {
               onClick={() => navigate("blog-single", { blogId: post.id })}
               className="group bg-card rounded-3xl overflow-hidden border border-border/60 shadow-soft hover:shadow-warm transition-all duration-300 hover:-translate-y-1 flex flex-col text-left"
             >
-              <div className={`relative h-48 bg-gradient-to-br ${post.bg} overflow-hidden flex items-center justify-center`}>
-                <span className="text-7xl drop-shadow-lg group-hover:scale-110 transition-transform duration-500 select-none">
-                  {post.emoji}
-                </span>
+              <div className={`relative h-48 bg-gradient-to-br ${post.bg || "from-amber-glow/20 to-terracotta/15"} overflow-hidden flex items-center justify-center`}>
+                {post.cover_image ? (
+                  <img src={post.cover_image} alt={post.title} className="w-full h-full object-cover absolute inset-0" loading="lazy" />
+                ) : (
+                  <span className="text-7xl drop-shadow-lg group-hover:scale-110 transition-transform duration-500 select-none">
+                    {post.emoji || "🐾"}
+                  </span>
+                )}
                 <div className="absolute top-3 left-3">
                   <Badge className="bg-card/90 text-cocoa border-0 text-[11px] font-semibold px-2.5 py-1">
                     {post.category}
