@@ -112,15 +112,19 @@ export function ProductDetailPage() {
 
   return (
     <div className="bg-gradient-to-b from-secondary/30 to-background min-h-screen">
-      {/* JSON-LD structured data for SEO */}
+      {/* JSON-LD structured data for SEO — hidden from users, visible to search engines */}
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: serializeSchema(productSchema) }}
+        dangerouslySetInnerHTML={{
+          __html: serializeSchema(productSchema).replace(/</g, "\\u003c"),
+        }}
       />
       {faqSchema && (
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: serializeSchema(faqSchema) }}
+          dangerouslySetInnerHTML={{
+            __html: serializeSchema(faqSchema).replace(/</g, "\\u003c"),
+          }}
         />
       )}
 
