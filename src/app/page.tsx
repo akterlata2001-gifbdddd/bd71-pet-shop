@@ -18,6 +18,7 @@ import { LegalPage } from "@/components/pages/legal";
 import { NotFoundPage } from "@/components/pages/not-found";
 import { AccountPage } from "@/components/pages/account";
 import { useRouter } from "@/lib/store";
+import { ErrorBoundary } from "@/components/error-boundary";
 
 // URL path → page mapping
 const PATH_TO_PAGE: Record<string, { page: string; params?: any }> = {
@@ -121,7 +122,9 @@ export default function Home() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
           >
-            {renderPage()}
+            <ErrorBoundary key={page}>
+              {renderPage()}
+            </ErrorBoundary>
           </motion.div>
         </AnimatePresence>
       </main>
