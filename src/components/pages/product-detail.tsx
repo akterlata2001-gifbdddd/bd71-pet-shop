@@ -115,7 +115,7 @@ export function ProductDetailPage() {
               transition={{ duration: 0.4 }}
               className={cn(
                 "relative aspect-square rounded-3xl bg-gradient-to-br overflow-hidden flex items-center justify-center",
-                product.bg
+                (product.bg || "from-amber-glow/30 to-terracotta/20")
               )}
             >
               {product.tag && (
@@ -130,13 +130,22 @@ export function ProductDetailPage() {
               >
                 <Heart className={cn("h-5 w-5", wishlisted ? "fill-terracotta text-terracotta" : "text-cocoa/60")} />
               </button>
-              <motion.div
-                animate={{ y: [0, -10, 0] }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                className="text-[180px] sm:text-[220px] drop-shadow-2xl select-none"
-              >
-                {product.emoji}
-              </motion.div>
+              {product.featured_image ? (
+                <img
+                  src={product.featured_image}
+                  alt={product.name}
+                  className="w-full h-full object-cover absolute inset-0"
+                  loading="lazy"
+                />
+              ) : (
+                <motion.div
+                  animate={{ y: [0, -10, 0] }}
+                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                  className="text-[180px] sm:text-[220px] drop-shadow-2xl select-none"
+                >
+                  {product.emoji}
+                </motion.div>
+              )}
               <div className="absolute inset-0 pointer-events-none">
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-3/4 rounded-full border-2 border-dashed border-white/20" />
               </div>
@@ -153,7 +162,11 @@ export function ProductDetailPage() {
                     product.bg
                   )}
                 >
-                  <span className="opacity-70">{product.emoji}</span>
+                  {product.featured_image ? (
+                    <img src={product.featured_image} alt="" className="w-full h-full object-cover rounded-xl opacity-70" />
+                  ) : (
+                    <span className="opacity-70">{product.emoji}</span>
+                  )}
                 </div>
               ))}
             </div>

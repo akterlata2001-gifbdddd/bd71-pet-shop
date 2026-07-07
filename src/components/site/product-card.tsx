@@ -23,7 +23,7 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
       brand: product.brand,
       price: product.price,
       emoji: product.emoji,
-      bg: product.bg,
+      bg: product.bg || "from-amber-glow/30 to-terracotta/20",
     });
     setAdded(true);
     setTimeout(() => setAdded(false), 1800);
@@ -43,7 +43,7 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
     >
       <div className={cn(
         "relative aspect-square bg-gradient-to-br overflow-hidden flex items-center justify-center",
-        product.bg
+        product.bg || "from-amber-glow/30 to-terracotta/20"
       )}>
         {product.tag && (
           <Badge
