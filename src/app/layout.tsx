@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Fredoka, Quicksand, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
+import { siteInfo } from "@/lib/data";
+import { generateOrganizationSchema, serializeSchema } from "@/lib/schema";
 
 const fredoka = Fredoka({
   variable: "--font-fredoka",
@@ -55,8 +57,17 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const organizationSchema = generateOrganizationSchema(siteInfo);
+
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* Site-wide Organization schema for SEO */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: serializeSchema(organizationSchema) }}
+        />
+      </head>
       <body
         className={`${fredoka.variable} ${quicksand.variable} ${geistMono.variable} antialiased bg-background text-foreground font-sans`}
       >

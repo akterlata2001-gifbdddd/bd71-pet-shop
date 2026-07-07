@@ -8,10 +8,22 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  Accordion,
+  AccordionItem,
+  AccordionTrigger,
+  AccordionContent,
+} from "@/components/ui/accordion";
 import { useRouter, useCart } from "@/lib/store";
 import { formatPrice } from "@/lib/data";
 import { cn } from "@/lib/utils";
 import { ProductCard } from "@/components/site/product-card";
+import {
+  parseFAQFromText,
+  generateProductSchema,
+  generateFAQSchema,
+  serializeSchema,
+} from "@/lib/schema";
 
 export function ProductDetailPage() {
   const navigate = useRouter((s) => s.navigate);
@@ -61,6 +73,18 @@ export function ProductDetailPage() {
 
   const related = allProducts.filter((p) => p.id !== product.id && p.category === product.category).slice(0, 4);
 
+  // ===== FAQ detection + JSON-LD schema =====
+  // Parse the description for FAQ Q&A patterns so we can render them as an
+  // expandable accordion (better UX) and emit FAQPage structured data (SEO).
+  const rawDescription = product.rawDescription || product.description || "";
+  const descriptionIsHtml = /<[a-z][\s\S]*>/i.test(rawDescription);
+  const { regularText, faqs } = descriptionIsHtml
+    ? { regularText: [] as string[], faqs: [] as { question: string; answer: string }[] }
+    : parseFAQFromText(rawDescription);
+
+  const productSchema = generateProductSchema(product);
+  const faqSchema = faqs.length > 0 ? generateFAQSchema(faqs) : null;
+
   const handleAddToCart = () => {
     addItem({
       id: product.id,
@@ -88,6 +112,18 @@ export function ProductDetailPage() {
 
   return (
     <div className="bg-gradient-to-b from-secondary/30 to-background min-h-screen">
+      {/* JSON-LD structured data for SEO */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: serializeSchema(productSchema) }}
+      />
+      {faqSchema && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: serializeSchema(faqSchema) }}
+        />
+      )}
+
       {/* Breadcrumb */}
       <div className="bg-card border-b border-border/40">
         <div className="mx-auto max-w-7xl px-4 py-4">
@@ -338,13 +374,15 @@ export function ProductDetailPage() {
           <div className="py-6">
             {activeTab === "description" && (
               <div className="max-w-3xl space-y-4">
-                {/* Full description — convert plain text to HTML paragraphs */}
+                {/* Full description — render plain text as paragraphs (with FAQ
+                    detection) or HTML as-is. */}
                 {(() => {
                   const raw = product.rawDescription || product.description || "";
                   if (!raw.trim()) return <p className="text-cocoa/70">No description available.</p>;
 
-                  // If it's HTML (has tags), render as-is
-                  if (/<[a-z][\s\S]*>/i.test(raw)) {
+                  // If it's HTML (has tags), render as-is — FAQ parsing only
+                  // applies to plain text.
+                  if (descriptionIsHtml) {
                     return (
                       <div
                         className="blog-content text-cocoa/80 leading-relaxed"
@@ -353,40 +391,63 @@ export function ProductDetailPage() {
                     );
                   }
 
-                  // It's plain text — convert \n to <p> tags
-                  const paragraphs = raw.split(/\n+/).filter((s: string) => s.trim());
+                  // Plain text — render regular paragraphs (non-FAQ lines) using
+                  // the same heading / label-value heuristics as before.
+                  const renderParagraph = (para: string, i: number) => {
+                    // Heading: short line ending with ":"
+                    const isHeading = para.length < 80 && para.trim().endsWith(":");
+                    if (isHeading) {
+                      return (
+                        <h3 key={i} className="font-display text-lg font-semibold text-cocoa mt-4 mb-1">
+                          {para.trim()}
+                        </h3>
+                      );
+                    }
+                    // "Label: Value" pattern
+                    const labelMatch = para.match(/^([^:]{3,50}):\s*(.*)/);
+                    if (labelMatch && para.length < 300) {
+                      return (
+                        <div key={i} className="flex gap-2">
+                          <span className="font-semibold text-cocoa shrink-0">{labelMatch[1]}:</span>
+                          <span className="text-cocoa/75">{labelMatch[2]}</span>
+                        </div>
+                      );
+                    }
+                    // Regular paragraph
+                    return (
+                      <p key={i} className="text-cocoa/75 leading-relaxed text-base">
+                        {para.trim()}
+                      </p>
+                    );
+                  };
+
                   return (
                     <div className="space-y-4">
-                      {paragraphs.map((para: string, i: number) => {
-                        // Check if line looks like a heading (ends with : or is short)
-                        const isHeading = para.length < 80 && para.trim().endsWith(":");
-                        if (isHeading) {
-                          return (
-                            <h3 key={i} className="font-display text-lg font-semibold text-cocoa mt-4 mb-1">
-                              {para.trim()}
-                            </h3>
-                          );
-                        }
-                        // Check if line has "Label: Value" pattern
-                        const labelMatch = para.match(/^([^:]{3,50}):\s*(.*)/);
-                        if (labelMatch && para.length < 300) {
-                          return (
-                            <div key={i} className="flex gap-2">
-                              <span className="font-semibold text-cocoa shrink-0">{labelMatch[1]}:</span>
-                              <span className="text-cocoa/75">{labelMatch[2]}</span>
-                            </div>
-                          );
-                        }
-                        // Regular paragraph
-                        return (
-                          <p key={i} className="text-cocoa/75 leading-relaxed text-base">
-                            {para.trim()}
-                          </p>
-                        );
-                      })}
+                      {regularText.map(renderParagraph)}
                     </div>
                   );
                 })()}
+
+                {/* FAQs parsed from the description, rendered as an accordion */}
+                {faqs.length > 0 && (
+                  <div className="mt-8">
+                    <h3 className="font-display text-lg font-semibold text-cocoa mb-3">
+                      Frequently Asked Questions
+                    </h3>
+                    <Accordion type="single" collapsible className="w-full rounded-2xl bg-card border border-border/60 px-4">
+                      {faqs.map((faq, idx) => (
+                        <AccordionItem key={idx} value={`faq-${idx}`}>
+                          <AccordionTrigger className="text-cocoa font-medium text-left">
+                            {faq.question}
+                          </AccordionTrigger>
+                          <AccordionContent className="text-cocoa/75 leading-relaxed whitespace-pre-line">
+                            {faq.answer}
+                          </AccordionContent>
+                        </AccordionItem>
+                      ))}
+                    </Accordion>
+                  </div>
+                )}
 
                 {/* Quick details card */}
                 <div className="bg-secondary/60 rounded-2xl p-5 mt-6">
