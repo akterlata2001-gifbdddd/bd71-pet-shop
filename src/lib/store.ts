@@ -57,8 +57,8 @@ async function cmsFetch<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 // ===== LocalStorage Cache (stale-while-revalidate) =====
-const CACHE_KEY_PRODUCTS = `cms_${CMS_SITE_ID}_products_v4`;
-const CACHE_KEY_POSTS = `cms_${CMS_SITE_ID}_posts_v4`;
+const CACHE_KEY_PRODUCTS = `cms_${CMS_SITE_ID}_products_v5`;
+const CACHE_KEY_POSTS = `cms_${CMS_SITE_ID}_posts_v5`;
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 function loadFromCache<T>(key: string): T | null {

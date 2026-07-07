@@ -338,17 +338,55 @@ export function ProductDetailPage() {
           <div className="py-6">
             {activeTab === "description" && (
               <div className="max-w-3xl space-y-4">
-                {/* Full description as HTML */}
-                {product.rawDescription ? (
-                  <div
-                    className="blog-content text-cocoa/80 leading-relaxed"
-                    dangerouslySetInnerHTML={{ __html: product.rawDescription }}
-                  />
-                ) : (
-                  <p className="text-cocoa/70 leading-relaxed text-base">
-                    {product.description || "No description available."}
-                  </p>
-                )}
+                {/* Full description — convert plain text to HTML paragraphs */}
+                {(() => {
+                  const raw = product.rawDescription || product.description || "";
+                  if (!raw.trim()) return <p className="text-cocoa/70">No description available.</p>;
+
+                  // If it's HTML (has tags), render as-is
+                  if (/<[a-z][\s\S]*>/i.test(raw)) {
+                    return (
+                      <div
+                        className="blog-content text-cocoa/80 leading-relaxed"
+                        dangerouslySetInnerHTML={{ __html: raw }}
+                      />
+                    );
+                  }
+
+                  // It's plain text — convert \n to <p> tags
+                  const paragraphs = raw.split(/\n+/).filter((s: string) => s.trim());
+                  return (
+                    <div className="space-y-4">
+                      {paragraphs.map((para: string, i: number) => {
+                        // Check if line looks like a heading (ends with : or is short)
+                        const isHeading = para.length < 80 && para.trim().endsWith(":");
+                        if (isHeading) {
+                          return (
+                            <h3 key={i} className="font-display text-lg font-semibold text-cocoa mt-4 mb-1">
+                              {para.trim()}
+                            </h3>
+                          );
+                        }
+                        // Check if line has "Label: Value" pattern
+                        const labelMatch = para.match(/^([^:]{3,50}):\s*(.*)/);
+                        if (labelMatch && para.length < 300) {
+                          return (
+                            <div key={i} className="flex gap-2">
+                              <span className="font-semibold text-cocoa shrink-0">{labelMatch[1]}:</span>
+                              <span className="text-cocoa/75">{labelMatch[2]}</span>
+                            </div>
+                          );
+                        }
+                        // Regular paragraph
+                        return (
+                          <p key={i} className="text-cocoa/75 leading-relaxed text-base">
+                            {para.trim()}
+                          </p>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
 
                 {/* Quick details card */}
                 <div className="bg-secondary/60 rounded-2xl p-5 mt-6">
