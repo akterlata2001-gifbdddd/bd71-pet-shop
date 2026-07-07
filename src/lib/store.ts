@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import type { Product, BlogPost } from "@/lib/data";
+import { stripSchemaMarkup } from "@/lib/clean-description";
 
 export type PageId =
   | "home"
@@ -57,8 +58,8 @@ async function cmsFetch<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 // ===== LocalStorage Cache (stale-while-revalidate) =====
-const CACHE_KEY_PRODUCTS = `cms_${CMS_SITE_ID}_products_v5`;
-const CACHE_KEY_POSTS = `cms_${CMS_SITE_ID}_posts_v5`;
+const CACHE_KEY_PRODUCTS = `cms_${CMS_SITE_ID}_products_v6`;
+const CACHE_KEY_POSTS = `cms_${CMS_SITE_ID}_posts_v6`;
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 function loadFromCache<T>(key: string): T | null {
@@ -95,7 +96,23 @@ function isCacheFresh(key: string): boolean {
 }
 
 function mapProduct(p: any): Product {
-  const stripHtml = (html: string) => html?.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").trim() || "";
+  // Strip <script> blocks (with content) AND any standalone JSON-LD
+  // text that survived earlier tag stripping — Yoast/RankMath inject
+  // FAQ schema into the WooCommerce description, and without this the
+  // schema text leaks into the visible product page.
+  const stripHtml = (html: string) => {
+    if (!html) return "";
+    const noScript = stripSchemaMarkup(html);
+    return noScript
+      .replace(/<[^>]*>/g, "")
+      .replace(/&nbsp;/g, " ")
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&quot;/g, '"')
+      .replace(/&#039;/g, "'")
+      .trim();
+  };
   const imageUrl = p.featured_image || (p.images && p.images.length > 0 ? p.images[0] : "");
 
   // Determine category from tags
@@ -143,7 +160,10 @@ function mapProduct(p: any): Product {
     slug: p.slug || "",
     description: stripHtml(p.description),
     shortDescription: stripHtml(p.short_description),
-    rawDescription: p.description || "",
+    // Strip schema markup from rawDescription too — otherwise the
+    // product detail page will render the FAQ JSON-LD as visible text
+    // (and parseFAQFromText will mistake it for FAQ answer content).
+    rawDescription: stripSchemaMarkup(p.description || ""),
     images: p.images || [],
     featured_image: imageUrl,
   };

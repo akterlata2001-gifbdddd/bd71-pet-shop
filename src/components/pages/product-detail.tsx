@@ -24,6 +24,7 @@ import {
   generateFAQSchema,
   serializeSchema,
 } from "@/lib/schema";
+import { stripSchemaMarkup } from "@/lib/clean-description";
 
 export function ProductDetailPage() {
   const navigate = useRouter((s) => s.navigate);
@@ -76,7 +77,13 @@ export function ProductDetailPage() {
   // ===== FAQ detection + JSON-LD schema =====
   // Parse the description for FAQ Q&A patterns so we can render them as an
   // expandable accordion (better UX) and emit FAQPage structured data (SEO).
-  const rawDescription = product.rawDescription || product.description || "";
+  //
+  // stripSchemaMarkup is called defensively here too — even though
+  // mapProduct already strips schema, the product may have been loaded
+  // from a stale localStorage cache populated before the fix shipped.
+  const rawDescription = stripSchemaMarkup(
+    product.rawDescription || product.description || ""
+  );
   const descriptionIsHtml = /<[a-z][\s\S]*>/i.test(rawDescription);
   const { regularText, faqs } = descriptionIsHtml
     ? { regularText: [] as string[], faqs: [] as { question: string; answer: string }[] }
@@ -377,7 +384,12 @@ export function ProductDetailPage() {
                 {/* Full description — render plain text as paragraphs (with FAQ
                     detection) or HTML as-is. */}
                 {(() => {
-                  const raw = product.rawDescription || product.description || "";
+                  // Always strip schema markup before rendering — even
+                  // HTML descriptions may contain <script> blocks left
+                  // behind by the WP SEO plugin.
+                  const raw = stripSchemaMarkup(
+                    product.rawDescription || product.description || ""
+                  );
                   if (!raw.trim()) return <p className="text-cocoa/70">No description available.</p>;
 
                   // If it's HTML (has tags), render as-is — FAQ parsing only
