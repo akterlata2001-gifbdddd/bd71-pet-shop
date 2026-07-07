@@ -235,7 +235,7 @@ export function ProductDetailPage() {
             </div>
 
             <p className="mt-5 text-sm sm:text-base text-cocoa/70 leading-relaxed">
-              {product.description}
+              {product.shortDescription || product.description}
             </p>
 
             <div className="mt-4 flex items-center gap-3 text-sm text-cocoa/70">
@@ -338,17 +338,20 @@ export function ProductDetailPage() {
           <div className="py-6">
             {activeTab === "description" && (
               <div className="max-w-3xl space-y-4">
-                <p className="text-cocoa/80 leading-relaxed text-base">
-                  <span className="font-semibold text-cocoa">{product.name}</span> by{" "}
-                  <span className="text-terracotta font-medium">{product.brand}</span> — available at
-                  BD71 Pet Shop, Bangladesh&apos;s trusted online pet food store since 2021.
-                </p>
-                <p className="text-cocoa/70 leading-relaxed text-base">
-                  We source all our products directly from authorized distributors and importers to
-                  ensure 100% authenticity and freshness. This product is part of our{" "}
-                  <span className="font-medium text-cocoa">{product.categoryName}</span> category.
-                </p>
-                <div className="bg-secondary/60 rounded-2xl p-5 mt-4">
+                {/* Full description as HTML */}
+                {product.rawDescription ? (
+                  <div
+                    className="blog-content text-cocoa/80 leading-relaxed"
+                    dangerouslySetInnerHTML={{ __html: product.rawDescription }}
+                  />
+                ) : (
+                  <p className="text-cocoa/70 leading-relaxed text-base">
+                    {product.description || "No description available."}
+                  </p>
+                )}
+
+                {/* Quick details card */}
+                <div className="bg-secondary/60 rounded-2xl p-5 mt-6">
                   <h3 className="font-display text-base font-semibold text-cocoa mb-3">Quick Details</h3>
                   <div className="grid sm:grid-cols-2 gap-3 text-sm">
                     <div className="flex items-center gap-2">
@@ -357,7 +360,7 @@ export function ProductDetailPage() {
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-cocoa/60">Weight:</span>
-                      <span className="font-medium text-cocoa">{product.weight}</span>
+                      <span className="font-medium text-cocoa">{product.weight || "N/A"}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-cocoa/60">Category:</span>
@@ -365,17 +368,10 @@ export function ProductDetailPage() {
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-cocoa/60">SKU:</span>
-                      <span className="font-medium text-cocoa font-mono text-xs">{product.sku}</span>
+                      <span className="font-medium text-cocoa font-mono text-xs">{product.sku || "N/A"}</span>
                     </div>
                   </div>
                 </div>
-                <p className="text-sm text-cocoa/60 leading-relaxed mt-4">
-                  For more information about this product, please contact us at{" "}
-                  <a href="mailto:contact@bd71shop.com.bd" className="text-terracotta hover:underline">
-                    contact@bd71shop.com.bd
-                  </a>{" "}
-                  or call <a href="tel:01627001719" className="text-terracotta hover:underline">01627-001719</a>.
-                </p>
               </div>
             )}
             {activeTab === "shipping" && (

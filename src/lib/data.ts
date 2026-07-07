@@ -25,6 +25,8 @@ export type Product = {
   sku: string;
   slug?: string;
   description?: string;
+  shortDescription?: string;
+  rawDescription?: string;
   images?: string[];
   featured_image?: string;
 };
