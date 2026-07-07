@@ -88,7 +88,11 @@ export function BlogSinglePage() {
           transition={{ duration: 0.5, delay: 0.1 }}
           className={`relative h-64 sm:h-80 lg:h-96 bg-gradient-to-br ${post.bg} rounded-3xl overflow-hidden flex items-center justify-center mb-8`}
         >
-          <span className="text-[160px] sm:text-[200px] drop-shadow-2xl select-none">{post.emoji}</span>
+          {post.cover_image ? (
+            <img src={post.cover_image} alt={post.title} className="w-full h-full object-cover absolute inset-0" />
+          ) : (
+            <span className="text-[160px] sm:text-[200px] drop-shadow-2xl select-none">{post.emoji}</span>
+          )}
           <div className="absolute inset-0 pointer-events-none">
             <div className="absolute top-6 right-6 h-32 w-32 rounded-full border-2 border-dashed border-cocoa/20" />
             <div className="absolute bottom-6 left-6 h-20 w-20 rounded-full border-2 border-dashed border-cocoa/15" />
