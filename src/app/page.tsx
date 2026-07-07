@@ -48,24 +48,26 @@ export default function Home() {
   // On first load, read URL and set the right page
   useEffect(() => {
     const path = window.location.pathname.replace(/\/$/, "") || "/";
-    
+
     if (PATH_TO_PAGE[path]) {
       useRouter.setState(PATH_TO_PAGE[path]);
       return;
     }
-    
+
+    // /product/{slug} — use slug, not ID
     if (path.startsWith("/product/")) {
-      const productId = parseInt(path.split("/")[2]);
-      if (productId) {
-        useRouter.setState({ page: "product", params: { productId } });
+      const slug = path.split("/")[2];
+      if (slug) {
+        useRouter.setState({ page: "product", params: { productSlug: slug } });
         return;
       }
     }
-    
+
+    // /blog/{slug} — use slug, not ID
     if (path.startsWith("/blog/")) {
-      const blogId = parseInt(path.split("/")[2]);
-      if (blogId) {
-        useRouter.setState({ page: "blog-single", params: { blogId } });
+      const slug = path.split("/")[2];
+      if (slug) {
+        useRouter.setState({ page: "blog-single", params: { blogSlug: slug } });
         return;
       }
     }
@@ -80,6 +82,10 @@ export default function Home() {
         const path = window.location.pathname.replace(/\/$/, "") || "/";
         if (PATH_TO_PAGE[path]) {
           useRouter.setState(PATH_TO_PAGE[path]);
+        } else if (path.startsWith("/product/")) {
+          useRouter.setState({ page: "product", params: { productSlug: path.split("/")[2] } });
+        } else if (path.startsWith("/blog/")) {
+          useRouter.setState({ page: "blog-single", params: { blogSlug: path.split("/")[2] } });
         } else {
           useRouter.setState({ page: "home", params: {} });
         }

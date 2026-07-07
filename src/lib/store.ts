@@ -20,8 +20,10 @@ export type PageId =
   | "category";
 
 export type RouteParams = {
-  productId?: number;
+  productId?: string;
+  productSlug?: string;
   blogId?: number;
+  blogSlug?: string;
   category?: string;
   [key: string]: string | number | undefined;
 };
@@ -55,8 +57,8 @@ async function cmsFetch<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 // ===== LocalStorage Cache (stale-while-revalidate) =====
-const CACHE_KEY_PRODUCTS = `cms_${CMS_SITE_ID}_products_v2`;
-const CACHE_KEY_POSTS = `cms_${CMS_SITE_ID}_posts_v2`;
+const CACHE_KEY_PRODUCTS = `cms_${CMS_SITE_ID}_products_v3`;
+const CACHE_KEY_POSTS = `cms_${CMS_SITE_ID}_posts_v3`;
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 function loadFromCache<T>(key: string): T | null {
@@ -207,13 +209,13 @@ export const useRouter = create<RouterState>((set, get) => ({
       const urlMap: Record<string, string> = {
         home: "/",
         shop: "/shop",
-        product: params.productId ? `/product/${params.productId}` : "/shop",
+        product: params.productSlug ? `/product/${params.productSlug}` : "/shop",
         cart: "/cart",
         checkout: "/checkout",
         about: "/about",
         contact: "/contact",
         blog: "/blog",
-        "blog-single": params.blogId ? `/blog/${params.blogId}` : "/blog",
+        "blog-single": params.blogSlug ? `/blog/${params.blogSlug}` : "/blog",
         privacy: "/privacy",
         terms: "/terms",
         dmca: "/dmca",

@@ -29,7 +29,7 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
     setTimeout(() => setAdded(false), 1800);
   };
 
-  const goToProduct = () => navigate("product", { productId: product.id });
+  const goToProduct = () => navigate("product", { productSlug: product.slug || String(product.id) });
 
   return (
     <motion.div

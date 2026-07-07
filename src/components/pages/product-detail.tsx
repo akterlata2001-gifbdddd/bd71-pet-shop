@@ -17,13 +17,33 @@ export function ProductDetailPage() {
   const params = useRouter((s) => s.params);
   const addItem = useCart((s) => s.addItem);
   const allProducts = useRouter((s) => s.products);
-  const product = allProducts.find((p) => p.id === (params.productId || 1));
+  const dataLoaded = useRouter((s) => s.dataLoaded);
+
+  // Find by slug (preferred) or by productId (fallback)
+  const product = params.productSlug
+    ? allProducts.find((p) => p.slug === params.productSlug)
+    : params.productId
+    ? allProducts.find((p) => p.id === params.productId)
+    : null;
 
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState<"description" | "shipping">("description");
   const [added, setAdded] = useState(false);
   const [wishlisted, setWishlisted] = useState(false);
 
+  // Loading state — data not loaded yet
+  if (!dataLoaded) {
+    return (
+      <div className="min-h-[400px] flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-5xl mb-3 animate-bounce">🐾</div>
+          <p className="text-cocoa/60 text-sm">Loading product...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Product not found after data loaded
   if (!product) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-20 text-center">
@@ -37,7 +57,7 @@ export function ProductDetailPage() {
     );
   }
 
-  const related = allProducts.filter((p) => p.id !== product?.id && p.category === product?.category).slice(0, 4);
+  const related = allProducts.filter((p) => p.id !== product.id && p.category === product.category).slice(0, 4);
 
   const handleAddToCart = () => {
     addItem({

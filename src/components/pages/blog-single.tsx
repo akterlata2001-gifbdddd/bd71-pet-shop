@@ -13,7 +13,25 @@ export function BlogSinglePage() {
   const blogPosts = useRouter((s) => s.blogPosts);
   const navigate = useRouter((s) => s.navigate);
   const params = useRouter((s) => s.params);
-  const post = blogPosts.find((p) => p.id === (params.blogId || 1));
+  const dataLoaded = useRouter((s) => s.dataLoaded);
+
+  // Find by slug (preferred) or by blogId (fallback)
+  const post = params.blogSlug
+    ? blogPosts.find((p) => p.slug === params.blogSlug)
+    : params.blogId
+    ? blogPosts.find((p) => p.id === params.blogId)
+    : null;
+
+  if (!dataLoaded) {
+    return (
+      <div className="min-h-[400px] flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-5xl mb-3 animate-bounce">📝</div>
+          <p className="text-cocoa/60 text-sm">Loading article...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!post) {
     return (
@@ -193,7 +211,7 @@ export function BlogSinglePage() {
             onClick={() => {
               if (blogPosts.length > 1) {
                 const nextIdx = (blogPosts.findIndex((p) => p.id === post.id) + 1) % blogPosts.length;
-                navigate("blog-single", { blogId: blogPosts[nextIdx]?.id || 1 });
+                navigate("blog-single", { blogSlug: blogPosts[nextIdx]?.slug || String(blogPosts[nextIdx]?.id || 1) });
               }
             }}
             className="bg-terracotta hover:bg-terracotta/90 text-primary-foreground rounded-full"
@@ -219,7 +237,7 @@ export function BlogSinglePage() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.4, delay: i * 0.08 }}
-                  onClick={() => navigate("blog-single", { blogId: p.id })}
+                  onClick={() => navigate("blog-single", { blogSlug: p.slug || String(p.id) })}
                   className="group bg-card rounded-3xl overflow-hidden border border-border/60 shadow-soft hover:shadow-warm transition-all duration-300 hover:-translate-y-1 flex flex-col text-left"
                 >
                   <div className={`relative h-44 bg-gradient-to-br ${p.bg || "from-amber-glow/20 to-terracotta/15"} flex items-center justify-center overflow-hidden`}>

@@ -363,7 +363,7 @@ function BlogPreview() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-50px" }}
               transition={{ duration: 0.5, delay: i * 0.1 }}
-              onClick={() => navigate("blog-single", { blogId: post.id })}
+              onClick={() => navigate("blog-single", { blogSlug: post.slug || String(post.id) })}
               className="group bg-card rounded-3xl overflow-hidden border border-border/60 shadow-soft hover:shadow-warm transition-all duration-300 hover:-translate-y-1 flex flex-col text-left"
             >
               <div className={`relative h-48 bg-gradient-to-br ${post.bg || "from-amber-glow/20 to-terracotta/15"} overflow-hidden flex items-center justify-center`}>
