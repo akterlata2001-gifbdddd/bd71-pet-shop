@@ -57,8 +57,14 @@ async function cmsFetch<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 function mapProduct(p: any): Product {
+  // Strip HTML from description for clean display
+  const stripHtml = (html: string) => html?.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").trim() || "";
+
+  // Use featured_image or first image, fallback to empty
+  const imageUrl = p.featured_image || (p.images && p.images.length > 0 ? p.images[0] : "");
+
   return {
-    id: parseInt(p.id?.replace(/-/g, "").slice(0, 8), 16) || 0,
+    id: parseInt(p.id?.replace(/-/g, "").slice(0, 8), 16) || Math.floor(Math.random() * 1000000),
     name: p.name,
     brand: p.tags?.[0] || "BD71",
     price: p.sale_price || p.base_price,
@@ -68,25 +74,40 @@ function mapProduct(p: any): Product {
     emoji: "🐾",
     bg: "from-amber-glow/30 to-terracotta/20",
     tag: p.is_featured ? "Featured" : undefined,
-    category: p.tags?.[0]?.toLowerCase() || "cat",
+    category: (p.tags?.[0] || "cat").toLowerCase().replace(/\s+/g, "-"),
     categoryName: p.tags?.[0] || "Pet Products",
     weight: p.weight ? `${p.weight}kg` : "",
     inStock: p.stock_quantity > 0,
     sku: p.sku || "",
     slug: p.slug,
-    description: p.description,
-    images: p.images,
-    featured_image: p.featured_image || p.images?.[0],
+    description: stripHtml(p.description),
+    images: p.images || [],
+    featured_image: imageUrl,
   };
 }
 
 function mapPost(p: any): BlogPost {
+  // Parse content — could be HTML string or structured
+  let contentSections: { heading: string; body: string }[] = [];
+  if (typeof p.content === "string") {
+    // Split HTML content into paragraphs
+    const stripped = p.content.replace(/<[^>]*>/g, "\n").split("\n").filter((s: string) => s.trim());
+    if (stripped.length > 0) {
+      contentSections = [{ heading: p.title, body: stripped.join("\n\n") }];
+    }
+  } else if (Array.isArray(p.content)) {
+    contentSections = p.content;
+  }
+
+  // Use cover_image
+  const coverImage = p.cover_image || "";
+
   return {
-    id: parseInt(p.id?.replace(/-/g, "").slice(0, 8), 16) || 0,
+    id: parseInt(p.id?.replace(/-/g, "").slice(0, 8), 16) || Math.floor(Math.random() * 1000000),
     category: p.tags?.[0] || "Pet Care",
     title: p.title,
-    excerpt: p.excerpt || "",
-    content: [{ heading: p.title, body: p.content || "" }],
+    excerpt: p.excerpt?.replace(/<[^>]*>/g, "").trim() || "",
+    content: contentSections,
     date: p.published_at
       ? new Date(p.published_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
       : "",
@@ -96,7 +117,7 @@ function mapPost(p: any): BlogPost {
     emoji: "🐾",
     bg: "from-amber-glow/20 to-terracotta/15",
     slug: p.slug,
-    cover_image: p.cover_image,
+    cover_image: coverImage,
   };
 }
 
@@ -109,6 +130,25 @@ export const useRouter = create<RouterState>((set, get) => ({
   navigate: (page, params = {}) => {
     set({ page, params });
     if (typeof window !== "undefined") {
+      // Update URL bar so it reflects the current page
+      const urlMap: Record<string, string> = {
+        home: "/",
+        shop: "/shop",
+        product: params.productId ? `/product/${params.productId}` : "/shop",
+        cart: "/cart",
+        checkout: "/checkout",
+        about: "/about",
+        contact: "/contact",
+        blog: "/blog",
+        "blog-single": params.blogId ? `/blog/${params.blogId}` : "/blog",
+        privacy: "/privacy",
+        terms: "/terms",
+        dmca: "/dmca",
+        disclaimer: "/disclaimer",
+        account: "/account",
+      };
+      const newUrl = urlMap[page] || "/";
+      window.history.pushState({ page, params }, "", newUrl);
       window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
     }
   },

@@ -29,6 +29,17 @@ export default function Home() {
     loadData();
   }, [loadData]);
 
+  // Handle browser back/forward buttons
+  useEffect(() => {
+    const handlePopState = (e: PopStateEvent) => {
+      if (e.state?.page) {
+        useRouter.setState({ page: e.state.page, params: e.state.params || {} });
+      }
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
   const renderPage = () => {
     switch (page) {
       case "home": return <HomePage />;

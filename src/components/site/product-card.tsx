@@ -60,14 +60,25 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
           </Badge>
         )}
 
-        <motion.div
-          animate={hover ? { y: -8, scale: 1.05 } : { y: 0, scale: 1 }}
-          transition={{ duration: 0.3 }}
-          className="text-7xl sm:text-8xl drop-shadow-lg select-none"
-          aria-hidden="true"
-        >
-          {product.emoji}
-        </motion.div>
+        {product.featured_image ? (
+          <motion.img
+            src={product.featured_image}
+            alt={product.name}
+            animate={hover ? { scale: 1.05 } : { scale: 1 }}
+            transition={{ duration: 0.3 }}
+            className="w-full h-full object-cover absolute inset-0"
+            loading="lazy"
+          />
+        ) : (
+          <motion.div
+            animate={hover ? { y: -8, scale: 1.05 } : { y: 0, scale: 1 }}
+            transition={{ duration: 0.3 }}
+            className="text-7xl sm:text-8xl drop-shadow-lg select-none"
+            aria-hidden="true"
+          >
+            {product.emoji}
+          </motion.div>
+        )}
 
         <div className="absolute inset-0 -z-0 pointer-events-none">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-3/4 rounded-full border-2 border-dashed border-white/30 group-hover:rotate-45 transition-transform duration-700" />
