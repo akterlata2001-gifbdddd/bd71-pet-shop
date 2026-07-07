@@ -135,10 +135,15 @@ export function BlogSinglePage() {
               transition={{ duration: 0.4 }}
               className="mb-8"
             >
-              <h2 className="font-display text-2xl sm:text-3xl font-semibold text-cocoa mt-8 mb-4 leading-tight">
-                {section.heading}
-              </h2>
-              <p className="text-base sm:text-lg text-cocoa/75 leading-relaxed">{section.body}</p>
+              {section.heading && (
+                <h2 className="font-display text-2xl sm:text-3xl font-semibold text-cocoa mt-8 mb-4 leading-tight">
+                  {section.heading}
+                </h2>
+              )}
+              <div
+                className="text-base sm:text-lg text-cocoa/75 leading-relaxed blog-content"
+                dangerouslySetInnerHTML={{ __html: section.body }}
+              />
             </motion.section>
           ))}
         </div>

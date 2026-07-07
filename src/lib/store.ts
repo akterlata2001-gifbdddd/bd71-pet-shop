@@ -55,8 +55,8 @@ async function cmsFetch<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 // ===== LocalStorage Cache (stale-while-revalidate) =====
-const CACHE_KEY_PRODUCTS = `cms_${CMS_SITE_ID}_products`;
-const CACHE_KEY_POSTS = `cms_${CMS_SITE_ID}_posts`;
+const CACHE_KEY_PRODUCTS = `cms_${CMS_SITE_ID}_products_v2`;
+const CACHE_KEY_POSTS = `cms_${CMS_SITE_ID}_posts_v2`;
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 function loadFromCache<T>(key: string): T | null {
@@ -96,10 +96,36 @@ function mapProduct(p: any): Product {
   const stripHtml = (html: string) => html?.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").trim() || "";
   const imageUrl = p.featured_image || (p.images && p.images.length > 0 ? p.images[0] : "");
 
+  // Determine category from tags
+  const tags = p.tags || [];
+  const tagStr = tags.join(" ").toLowerCase();
+
+  // Map WP tags to our category IDs
+  let category = "cat-food"; // default
+  let categoryName = "Cat Food";
+
+  if (tagStr.includes("dog") || tagStr.includes("puppy")) {
+    category = "dog-food"; categoryName = "Dog Food";
+  } else if (tagStr.includes("litter") || tagStr.includes("litter box")) {
+    category = "cat-litter"; categoryName = "Cat Litter & Hygiene";
+  } else if (tagStr.includes("treat") || tagStr.includes("wet") || tagStr.includes("pouch") || tagStr.includes("jerky") || tagStr.includes("snack") || tagStr.includes("creamy")) {
+    category = "cat-treats"; categoryName = "Cat Treats";
+  } else if (tagStr.includes("fountain") || tagStr.includes("water") || tagStr.includes("drinker")) {
+    category = "water-fountains"; categoryName = "Water Fountains";
+  } else if (tagStr.includes("vaccine") || tagStr.includes("medicine") || tagStr.includes("deworm")) {
+    category = "vaccines"; categoryName = "Vaccines & Medicine";
+  } else if (tagStr.includes("toy") || tagStr.includes("ball") || tagStr.includes("feather") || tagStr.includes("stick")) {
+    category = "toys"; categoryName = "Toys & Accessories";
+  } else if (tagStr.includes("bird") || tagStr.includes("fish") || tagStr.includes("aquarium") || tagStr.includes("nutribird") || tagStr.includes("taiyo")) {
+    category = "bird-fish"; categoryName = "Bird & Fish";
+  } else if (tagStr.includes("cat") || tagStr.includes("kitten") || tagStr.includes("whiskas") || tagStr.includes("purina") || tagStr.includes("royal canin") || tagStr.includes("drools") || tagStr.includes("sheba") || tagStr.includes("nekko") || tagStr.includes("wanpy") || tagStr.includes("orijen") || tagStr.includes("smartheart") || tagStr.includes("felicia") || tagStr.includes("haisenpet") || tagStr.includes("miow") || tagStr.includes("friskies") || tagStr.includes("trendline") || tagStr.includes("mito")) {
+    category = "cat-food"; categoryName = "Cat Food";
+  }
+
   return {
     id: parseInt(p.id?.replace(/-/g, "").slice(0, 8), 16) || Math.floor(Math.random() * 1000000),
     name: p.name || "Unnamed Product",
-    brand: p.tags?.[0] || "BD71",
+    brand: tags[0] || "BD71",
     price: p.sale_price || p.base_price || 0,
     oldPrice: p.sale_price ? p.base_price : undefined,
     rating: p.avg_rating || 0,
@@ -107,8 +133,8 @@ function mapProduct(p: any): Product {
     emoji: "🐾",
     bg: "from-amber-glow/30 to-terracotta/20",
     tag: p.is_featured ? "Featured" : undefined,
-    category: (p.tags?.[0] || "cat").toLowerCase().replace(/\s+/g, "-"),
-    categoryName: p.tags?.[0] || "Pet Products",
+    category,
+    categoryName,
     weight: p.weight ? `${p.weight}kg` : "",
     inStock: (p.stock_quantity || 0) > 0,
     sku: p.sku || "",
@@ -120,15 +146,34 @@ function mapProduct(p: any): Product {
 }
 
 function mapPost(p: any): BlogPost {
+  // Content: keep raw HTML for rendering with dangerouslySetInnerHTML
   let contentSections: { heading: string; body: string }[] = [];
   if (typeof p.content === "string" && p.content) {
-    const stripped = p.content.replace(/<[^>]*>/g, "\n").split("\n").filter((s: string) => s.trim());
-    if (stripped.length > 0) {
-      contentSections = [{ heading: p.title || "", body: stripped.join("\n\n") }];
+    // Split HTML content into sections by h2/h3 headings
+    const html = p.content;
+    // Try to split by headings
+    const parts = html.split(/<h[23][^>]*>(.*?)<\/h[23]>/i);
+    if (parts.length > 1) {
+      // Has headings — create sections
+      for (let i = 1; i < parts.length; i += 2) {
+        const heading = parts[i]?.replace(/<[^>]*>/g, "").trim() || "";
+        const body = (parts[i + 1] || "").trim();
+        if (heading || body) {
+          contentSections.push({ heading, body });
+        }
+      }
+    }
+    // If no sections created, put entire content as one section
+    if (contentSections.length === 0) {
+      contentSections = [{ heading: "", body: html }];
     }
   } else if (Array.isArray(p.content)) {
     contentSections = p.content;
   }
+
+  // Calculate read time from content length
+  const wordCount = (p.content || "").replace(/<[^>]*>/g, "").split(/\s+/).length;
+  const readTime = `${Math.max(1, Math.ceil(wordCount / 200))} min read`;
 
   return {
     id: parseInt(p.id?.replace(/-/g, "").slice(0, 8), 16) || Math.floor(Math.random() * 1000000),
@@ -139,7 +184,7 @@ function mapPost(p: any): BlogPost {
     date: p.published_at
       ? new Date(p.published_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
       : "",
-    readTime: "5 min read",
+    readTime,
     comments: 0,
     author: p.author_name || "BD71",
     emoji: "🐾",
