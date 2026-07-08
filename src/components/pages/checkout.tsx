@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import {
-  Home as HomeIcon, ChevronRight, CreditCard, Truck, MapPin, User, Lock, Check, ArrowRight, Banknote,
+  Home as HomeIcon, ChevronRight, CreditCard, Truck, MapPin, User, Lock, Check, ArrowRight, Banknote, Loader2, AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,11 @@ import { useCart, useRouter } from "@/lib/store";
 import { formatPrice } from "@/lib/data";
 import { cn } from "@/lib/utils";
 
+// CMS API config (same as store.ts)
+const CMS_API = process.env.NEXT_PUBLIC_CMS_API_URL ?? "https://cms-lac-two.vercel.app";
+const CMS_SITE_ID = process.env.NEXT_PUBLIC_CMS_SITE_ID ?? "lata-test";
+const CMS_API_KEY = process.env.NEXT_PUBLIC_CMS_API_KEY ?? "";
+
 export function CheckoutPage() {
   const navigate = useRouter((s) => s.navigate);
   const items = useCart((s) => s.items);
@@ -20,12 +25,111 @@ export function CheckoutPage() {
   const clearCart = useCart((s) => s.clearCart);
 
   const [paymentMethod, setPaymentMethod] = useState<"cod" | "bkash" | "nagad" | "card">("cod");
+  const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [orderNumber] = useState(() => `BD71${Math.floor(100000 + Math.random() * 900000)}`);
+  const [orderResult, setOrderResult] = useState<{ orderNumber: string; total: number; error?: string } | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  // Form refs — read values on submit
+  const firstNameRef = useRef<HTMLInputElement>(null);
+  const lastNameRef = useRef<HTMLInputElement>(null);
+  const phoneRef = useRef<HTMLInputElement>(null);
+  const emailRef = useRef<HTMLInputElement>(null);
+  const addressRef = useRef<HTMLInputElement>(null);
+  const cityRef = useRef<HTMLInputElement>(null);
+  const areaRef = useRef<HTMLInputElement>(null);
+  const postalRef = useRef<HTMLInputElement>(null);
+  const notesRef = useRef<HTMLTextAreaElement>(null);
 
   const deliveryFee = subtotal > 2000 ? 0 : 60;
   const total = subtotal + deliveryFee;
 
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setSubmitting(true);
+    setError(null);
+
+    try {
+      // Collect form data
+      const firstName = firstNameRef.current?.value || "";
+      const lastName = lastNameRef.current?.value || "";
+      const phone = phoneRef.current?.value || "";
+      const email = emailRef.current?.value || "";
+      const address = addressRef.current?.value || "";
+      const city = cityRef.current?.value || "";
+      const area = areaRef.current?.value || "";
+      const postal = postalRef.current?.value || "";
+      const notes = notesRef.current?.value || "";
+
+      if (!firstName || !phone || !address || !city) {
+        setError("Please fill in all required fields (name, phone, address, city).");
+        setSubmitting(false);
+        return;
+      }
+
+      // Build order items from cart
+      const orderItems = items.map((item) => ({
+        product_id: String(item.id),
+        name: item.name,
+        quantity: item.quantity,
+        price: item.price,
+        variant_id: null,
+      }));
+
+      // Build shipping address
+      const shippingAddress = {
+        line1: address,
+        line2: area || undefined,
+        city,
+        state: undefined,
+        zip: postal || undefined,
+        country: "Bangladesh",
+      };
+
+      // Call CMS API to create order
+      const res = await fetch(
+        `${CMS_API}/api/v1/sites/${CMS_SITE_ID}/orders`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-API-Key": CMS_API_KEY,
+          },
+          body: JSON.stringify({
+            customerName: `${firstName} ${lastName}`.trim(),
+            customerEmail: email || undefined,
+            customerPhone: phone,
+            shippingAddress,
+            items: orderItems,
+            subtotal,
+            shippingCost: deliveryFee,
+            tax: 0,
+            total,
+            paymentMethod,
+          }),
+        }
+      );
+
+      const json = await res.json();
+
+      if (!json.success) {
+        throw new Error(json.error?.message ?? "Failed to place order");
+      }
+
+      // Success!
+      const orderNum = json.data?.order?.order_number ?? `ORD-${Date.now().toString().slice(-6)}`;
+      setOrderResult({ orderNumber: orderNum, total });
+      setSubmitted(true);
+      clearCart();
+      window.scrollTo({ top: 0 });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to place order. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  // ===== Empty cart state =====
   if (items.length === 0 && !submitted) {
     return (
       <div className="mx-auto max-w-2xl px-4 py-20 text-center">
@@ -39,7 +143,8 @@ export function CheckoutPage() {
     );
   }
 
-  if (submitted) {
+  // ===== Success state =====
+  if (submitted && orderResult) {
     return (
       <div className="bg-gradient-to-b from-secondary/30 to-background min-h-screen flex items-center">
         <div className="mx-auto max-w-xl px-4 py-12">
@@ -61,12 +166,12 @@ export function CheckoutPage() {
             </p>
             <div className="bg-secondary/60 rounded-xl p-4 mb-6">
               <div className="text-xs text-cocoa/60 uppercase tracking-wider">Order Number</div>
-              <div className="font-display text-xl font-semibold text-terracotta">{orderNumber}</div>
+              <div className="font-display text-xl font-semibold text-terracotta">{orderResult.orderNumber}</div>
             </div>
             <div className="grid grid-cols-2 gap-3 text-left mb-6">
               <div className="bg-secondary/40 rounded-xl p-3">
                 <div className="text-xs text-cocoa/60">Total Amount</div>
-                <div className="font-display text-lg font-semibold text-cocoa">৳{formatPrice(total)}</div>
+                <div className="font-display text-lg font-semibold text-cocoa">৳{formatPrice(orderResult.total)}</div>
               </div>
               <div className="bg-secondary/40 rounded-xl p-3">
                 <div className="text-xs text-cocoa/60">Payment Method</div>
@@ -77,20 +182,14 @@ export function CheckoutPage() {
             </div>
             <div className="flex flex-col sm:flex-row gap-3">
               <Button
-                onClick={() => {
-                  clearCart();
-                  navigate("home");
-                }}
+                onClick={() => navigate("home")}
                 className="flex-1 bg-terracotta hover:bg-terracotta/90 text-primary-foreground rounded-full"
               >
                 Back to Home
               </Button>
               <Button
                 variant="outline"
-                onClick={() => {
-                  clearCart();
-                  navigate("shop");
-                }}
+                onClick={() => navigate("shop")}
                 className="flex-1 rounded-full border-2 border-cocoa/15 hover:bg-secondary"
               >
                 Continue Shopping
@@ -102,6 +201,7 @@ export function CheckoutPage() {
     );
   }
 
+  // ===== Checkout form =====
   return (
     <div className="bg-gradient-to-b from-secondary/30 to-background min-h-screen">
       <div className="bg-card border-b border-border/40">
@@ -122,14 +222,14 @@ export function CheckoutPage() {
       </div>
 
       <div className="mx-auto max-w-7xl px-4 py-8">
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            setSubmitted(true);
-            window.scrollTo({ top: 0 });
-          }}
-          className="grid lg:grid-cols-3 gap-8"
-        >
+        {error && (
+          <div className="mb-6 bg-destructive/10 text-destructive p-4 rounded-xl flex items-start gap-2">
+            <AlertCircle className="h-5 w-5 mt-0.5 shrink-0" />
+            <span className="text-sm">{error}</span>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="grid lg:grid-cols-3 gap-8">
           {/* Left: forms */}
           <div className="lg:col-span-2 space-y-6">
             {/* Contact info */}
@@ -146,19 +246,19 @@ export function CheckoutPage() {
               <div className="grid sm:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="firstName" className="text-sm font-medium text-cocoa">First Name *</Label>
-                  <Input id="firstName" required placeholder="Rahim" className="mt-1.5 rounded-xl" />
+                  <Input id="firstName" ref={firstNameRef} required placeholder="Rahim" className="mt-1.5 rounded-xl" />
                 </div>
                 <div>
                   <Label htmlFor="lastName" className="text-sm font-medium text-cocoa">Last Name *</Label>
-                  <Input id="lastName" required placeholder="Uddin" className="mt-1.5 rounded-xl" />
+                  <Input id="lastName" ref={lastNameRef} required placeholder="Uddin" className="mt-1.5 rounded-xl" />
                 </div>
                 <div>
                   <Label htmlFor="phone" className="text-sm font-medium text-cocoa">Phone Number *</Label>
-                  <Input id="phone" required type="tel" placeholder="01XXXXXXXXX" className="mt-1.5 rounded-xl" />
+                  <Input id="phone" ref={phoneRef} required type="tel" placeholder="01XXXXXXXXX" className="mt-1.5 rounded-xl" />
                 </div>
                 <div>
                   <Label htmlFor="email" className="text-sm font-medium text-cocoa">Email Address</Label>
-                  <Input id="email" type="email" placeholder="you@example.com" className="mt-1.5 rounded-xl" />
+                  <Input id="email" ref={emailRef} type="email" placeholder="you@example.com" className="mt-1.5 rounded-xl" />
                 </div>
               </div>
             </div>
@@ -177,26 +277,27 @@ export function CheckoutPage() {
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="address" className="text-sm font-medium text-cocoa">Street Address *</Label>
-                  <Input id="address" required placeholder="House #, Road #, Area" className="mt-1.5 rounded-xl" />
+                  <Input id="address" ref={addressRef} required placeholder="House #, Road #, Area" className="mt-1.5 rounded-xl" />
                 </div>
                 <div className="grid sm:grid-cols-3 gap-4">
                   <div>
                     <Label htmlFor="city" className="text-sm font-medium text-cocoa">City *</Label>
-                    <Input id="city" required placeholder="Dhaka" className="mt-1.5 rounded-xl" />
+                    <Input id="city" ref={cityRef} required placeholder="Dhaka" className="mt-1.5 rounded-xl" />
                   </div>
                   <div>
                     <Label htmlFor="area" className="text-sm font-medium text-cocoa">Area</Label>
-                    <Input id="area" placeholder="Gulshan" className="mt-1.5 rounded-xl" />
+                    <Input id="area" ref={areaRef} placeholder="Gulshan" className="mt-1.5 rounded-xl" />
                   </div>
                   <div>
                     <Label htmlFor="postal" className="text-sm font-medium text-cocoa">Postal Code</Label>
-                    <Input id="postal" placeholder="1212" className="mt-1.5 rounded-xl" />
+                    <Input id="postal" ref={postalRef} placeholder="1212" className="mt-1.5 rounded-xl" />
                   </div>
                 </div>
                 <div>
                   <Label htmlFor="notes" className="text-sm font-medium text-cocoa">Order Notes (optional)</Label>
                   <textarea
                     id="notes"
+                    ref={notesRef}
                     rows={3}
                     placeholder="Any special delivery instructions?"
                     className="mt-1.5 w-full px-3 py-2 rounded-xl border border-border bg-background text-sm resize-none focus:outline-none focus:ring-2 focus:ring-terracotta/30"
@@ -265,13 +366,8 @@ export function CheckoutPage() {
                   animate={{ opacity: 1, height: "auto" }}
                   className="mt-4 pt-4 border-t border-border/60"
                 >
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <div className="sm:col-span-2">
-                      <Label htmlFor="payNumber" className="text-sm font-medium text-cocoa">
-                        {paymentMethod === "card" ? "Card Number" : `${paymentMethod.toUpperCase()} Number`}
-                      </Label>
-                      <Input id="payNumber" placeholder={paymentMethod === "card" ? "0000 0000 0000 0000" : "01XXXXXXXXX"} className="mt-1.5 rounded-xl" />
-                    </div>
+                  <div className="bg-amber-glow/10 rounded-lg p-3 text-xs text-amber-glow">
+                    ⚠ {paymentMethod === "card" ? "Card" : paymentMethod.toUpperCase()} payment will be processed after order confirmation. Our team will contact you.
                   </div>
                 </motion.div>
               )}
@@ -329,11 +425,14 @@ export function CheckoutPage() {
 
               <Button
                 type="submit"
+                disabled={submitting}
                 className="w-full h-12 bg-terracotta hover:bg-terracotta/90 text-primary-foreground rounded-full text-base font-medium group"
               >
-                <Lock className="h-4 w-4 mr-2" />
-                Place Order
-                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                {submitting ? (
+                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Placing Order...</>
+                ) : (
+                  <><Lock className="h-4 w-4 mr-2" /> Place Order <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" /></>
+                )}
               </Button>
 
               <div className="mt-4 text-center text-xs text-cocoa/50">
