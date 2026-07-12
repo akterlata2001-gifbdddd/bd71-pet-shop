@@ -22,6 +22,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { PawIcon } from "./icons";
+import { SearchModal } from "./search-modal";
 import { cn } from "@/lib/utils";
 import { useRouter, useCart, type PageId } from "@/lib/store";
 import { siteInfo } from "@/lib/data";
@@ -49,10 +50,23 @@ export function SiteHeader() {
   const [scrolled, setScrolled] = useState(false);
   const [shopOpen, setShopOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const navigate = useRouter((s) => s.navigate);
   const dynamicCategories = useRouter((s) => s.categories);
   const cartCount = useCart((s) => s.count());
   const setOpen = useCart((s) => s.setOpen);
+
+  // Global keyboard shortcut: Cmd/Ctrl+K opens search
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   // Build the dropdown shop menu from the actual CMS categories,
   // falling back to the static list while data is loading.
@@ -75,6 +89,7 @@ export function SiteHeader() {
     navigate(page, params as never);
     setMobileOpen(false);
     setShopOpen(false);
+    setSearchOpen(false);
   };
 
   return (
@@ -177,12 +192,23 @@ export function SiteHeader() {
             </nav>
 
             <div className="flex items-center gap-1.5 sm:gap-2">
+              {/* Search bar — desktop */}
+              <button
+                onClick={() => setSearchOpen(true)}
+                className="hidden md:flex items-center gap-2 h-10 px-3.5 rounded-full bg-secondary hover:bg-secondary/80 text-cocoa/60 transition-colors group"
+                aria-label="Search"
+              >
+                <Search className="h-4 w-4" />
+                <span className="text-sm">Search products, posts...</span>
+                <kbd className="ml-2 px-1.5 py-0.5 text-[10px] font-mono bg-card rounded border border-border text-cocoa/50">⌘K</kbd>
+              </button>
+              {/* Search icon — mobile */}
               <Button
                 variant="ghost"
                 size="icon"
-                className="hidden sm:inline-flex h-10 w-10 rounded-full text-cocoa hover:bg-secondary/80"
+                className="md:hidden h-10 w-10 rounded-full text-cocoa hover:bg-secondary/80"
                 aria-label="Search"
-                onClick={() => goTo("shop", { search: "" })}
+                onClick={() => setSearchOpen(true)}
               >
                 <Search className="h-4.5 w-4.5" />
               </Button>
@@ -275,6 +301,9 @@ export function SiteHeader() {
           </div>
         </div>
       </header>
+
+      {/* Global search overlay */}
+      <SearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />
     </>
   );
 }
