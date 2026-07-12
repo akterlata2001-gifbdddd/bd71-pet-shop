@@ -47,6 +47,29 @@ export function ProductDetailPage() {
     ? allProducts.find((p) => String(p.id) === String(params.productId))
     : null;
 
+  // Sync wishlist state from localStorage when product changes
+  useEffect(() => {
+    if (!product) return;
+    try {
+      const w: string[] = JSON.parse(localStorage.getItem("bd71-wishlist") ?? "[]");
+      setWishlisted(w.includes(String(product.id)));
+    } catch {
+      setWishlisted(false);
+    }
+  }, [product?.id]);
+
+  const toggleWishlist = () => {
+    if (!product) return;
+    try {
+      const w: string[] = JSON.parse(localStorage.getItem("bd71-wishlist") ?? "[]");
+      const next = w.includes(String(product.id))
+        ? w.filter(x => x !== String(product.id))
+        : [...w, String(product.id)];
+      localStorage.setItem("bd71-wishlist", JSON.stringify(next));
+      setWishlisted(next.includes(String(product.id)));
+    } catch {}
+  };
+
   // Loading state — data not loaded yet
   if (!dataLoaded) {
     return (
@@ -170,7 +193,7 @@ export function ProductDetailPage() {
                 </Badge>
               )}
               <button
-                onClick={() => setWishlisted(!wishlisted)}
+                onClick={() => toggleWishlist()}
                 className="absolute top-4 right-4 z-10 h-10 w-10 rounded-full bg-card/90 backdrop-blur flex items-center justify-center shadow-warm hover:scale-110 transition-transform"
                 aria-label="Add to wishlist"
               >

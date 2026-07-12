@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { useCart, useRouter } from "@/lib/store";
 import { formatPrice } from "@/lib/data";
 import { cn } from "@/lib/utils";
+import { useTurnstile } from "@/components/site/turnstile-widget";
 
 // CMS API config (same as store.ts)
 const CMS_API = process.env.NEXT_PUBLIC_CMS_API_URL ?? "https://cms-lac-two.vercel.app";
@@ -32,6 +33,7 @@ export function CheckoutPage() {
   const [couponCode, setCouponCode] = useState("");
   const [couponStatus, setCouponStatus] = useState<{ valid: boolean; discount: number; message: string } | null>(null);
   const [couponLoading, setCouponLoading] = useState(false);
+  const { token: turnstileToken, widget: turnstileWidget } = useTurnstile();
 
   // Form refs — read values on submit
   const firstNameRef = useRef<HTMLInputElement>(null);
@@ -146,6 +148,7 @@ export function CheckoutPage() {
           headers: {
             "Content-Type": "application/json",
             "X-API-Key": CMS_API_KEY,
+            ...(turnstileToken ? { "x-turnstile-token": turnstileToken } : {}),
           },
           body: JSON.stringify({
             customerName: `${firstName} ${lastName}`.trim(),
@@ -569,6 +572,8 @@ export function CheckoutPage() {
                   ৳{formatPrice(total)}
                 </span>
               </div>
+
+              {turnstileWidget}
 
               <Button
                 type="submit"

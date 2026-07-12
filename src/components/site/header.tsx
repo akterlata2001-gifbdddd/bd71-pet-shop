@@ -12,6 +12,7 @@ import {
   ChevronDown,
   User,
   Heart,
+  Globe,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,6 +26,7 @@ import { PawIcon } from "./icons";
 import { SearchModal } from "./search-modal";
 import { cn } from "@/lib/utils";
 import { useRouter, useCart, type PageId } from "@/lib/store";
+import { useI18n } from "@/lib/i18n";
 import { siteInfo } from "@/lib/data";
 
 const navLinks: { label: string; page: PageId; hasMenu?: boolean }[] = [
@@ -51,10 +53,12 @@ export function SiteHeader() {
   const [shopOpen, setShopOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [langOpen, setLangOpen] = useState(false);
   const navigate = useRouter((s) => s.navigate);
   const dynamicCategories = useRouter((s) => s.categories);
   const cartCount = useCart((s) => s.count());
   const setOpen = useCart((s) => s.setOpen);
+  const { locale, setLocale } = useI18n();
 
   // Global keyboard shortcut: Cmd/Ctrl+K opens search
   useEffect(() => {
@@ -108,6 +112,40 @@ export function SiteHeader() {
             <span className="font-semibold">৳</span>
             <span>Cash on Delivery</span>
           </span>
+          {/* Language switcher */}
+          <div className="relative ml-auto">
+            <button
+              onClick={() => setLangOpen(!langOpen)}
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md hover:bg-primary-foreground/10 transition-colors"
+              aria-label="Change language"
+            >
+              <Globe className="h-3.5 w-3.5" />
+              <span className="uppercase">{locale}</span>
+              <ChevronDown className="h-3 w-3" />
+            </button>
+            {langOpen && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setLangOpen(false)} />
+                <div className="absolute right-0 top-full mt-1 bg-card text-cocoa rounded-lg shadow-lg border border-border py-1 min-w-[120px] z-50">
+                  {[
+                    { code: "en" as const, label: "English" },
+                    { code: "bn" as const, label: "বাংলা" },
+                  ].map((l) => (
+                    <button
+                      key={l.code}
+                      onClick={() => { setLocale(l.code); setLangOpen(false); }}
+                      className={cn(
+                        "w-full text-left px-3 py-1.5 hover:bg-muted transition-colors text-sm",
+                        locale === l.code && "font-bold text-terracotta"
+                      )}
+                    >
+                      {l.label}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
