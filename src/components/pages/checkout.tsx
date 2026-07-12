@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Home as HomeIcon, ChevronRight, CreditCard, Truck, MapPin, User, Lock, Check, ArrowRight, Banknote, Loader2, AlertCircle,
@@ -43,6 +43,34 @@ export function CheckoutPage() {
   const areaRef = useRef<HTMLInputElement>(null);
   const postalRef = useRef<HTMLInputElement>(null);
   const notesRef = useRef<HTMLTextAreaElement>(null);
+
+  // ===== Handle payment return (gateway redirects back here with ?payment=status&order=...) =====
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const paymentStatus = params.get("payment");
+    const orderNum = params.get("order");
+    if (paymentStatus && orderNum) {
+      setSubmitted(true);
+      if (paymentStatus === "success") {
+        setOrderResult({ orderNumber: orderNum, total: 0 });
+        setError(null);
+      } else if (paymentStatus === "cancelled") {
+        setOrderResult({ orderNumber: orderNum, total: 0, error: "Payment was cancelled." });
+        setError("Payment was cancelled. Please try again.");
+      } else if (paymentStatus === "failed") {
+        setOrderResult({ orderNumber: orderNum, total: 0, error: "Payment failed." });
+        setError("Payment verification failed. Please contact us if money was deducted.");
+      } else if (paymentStatus === "error") {
+        setOrderResult({ orderNumber: orderNum, total: 0, error: "Payment error." });
+        setError("There was an error processing your payment. Please try again or contact us.");
+      }
+      // Clean URL
+      const cleanUrl = window.location.origin + window.location.pathname;
+      window.history.replaceState({}, "", cleanUrl);
+      window.scrollTo({ top: 0 });
+    }
+  }, []);
 
   const deliveryFee = subtotal > 2000 ? 0 : 60;
   const discount = couponStatus?.valid ? couponStatus.discount : 0;
@@ -110,7 +138,7 @@ export function CheckoutPage() {
         country: "Bangladesh",
       };
 
-      // Call CMS API to create order
+      // Step 1: Create order in CMS (always with COD as fallback method initially)
       const res = await fetch(
         `${CMS_API}/api/v1/sites/${CMS_SITE_ID}/orders`,
         {
@@ -142,8 +170,74 @@ export function CheckoutPage() {
         throw new Error(json.error?.message ?? "Failed to place order");
       }
 
-      // Success!
+      const orderId = json.data?.order?.id;
       const orderNum = json.data?.order?.order_number ?? `ORD-${Date.now().toString().slice(-6)}`;
+
+      // Step 2: If payment method is NOT COD, initiate gateway redirect
+      if (paymentMethod !== "cod" && orderId) {
+        try {
+          const initRes = await fetch(
+            `${CMS_API}/api/v1/sites/${CMS_SITE_ID}/payments/initiate`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "X-API-Key": CMS_API_KEY,
+              },
+              body: JSON.stringify({
+                orderId,
+                method: paymentMethod === "card" ? "stripe" : paymentMethod,
+                returnUrl: `${window.location.origin}/checkout`,
+              }),
+            }
+          );
+          const initJson = await initRes.json();
+
+          if (initJson.success && initJson.data?.redirectUrl) {
+            // Clear cart before redirect (order will show as success after return)
+            clearCart();
+            // Redirect to gateway (SSLCommerz / bKash / Stripe)
+            window.location.href = initJson.data.redirectUrl;
+            return;
+          }
+
+          // No redirect URL — either demo mode or gateway error.
+          // If demo mode, treat as success. Otherwise show error.
+          if (initJson.data?.isDemo) {
+            setOrderResult({ orderNumber: orderNum, total });
+            setSubmitted(true);
+            clearCart();
+            window.scrollTo({ top: 0 });
+            return;
+          }
+
+          // Gateway failed to initiate — show warning but order is still created
+          setError(
+            initJson.data?.error
+              ? `Order placed, but payment gateway error: ${initJson.data.error}. Our team will contact you.`
+              : "Order placed, but payment gateway could not be reached. Our team will contact you."
+          );
+          setOrderResult({ orderNumber: orderNum, total });
+          setSubmitted(true);
+          clearCart();
+          window.scrollTo({ top: 0 });
+          return;
+        } catch (err) {
+          // Payment initiation failed — still record order, mark as COD
+          setError(
+            `Order placed (Order #${orderNum}), but payment initiation failed: ${
+              err instanceof Error ? err.message : "Network error"
+            }. Our team will contact you to confirm payment.`
+          );
+          setOrderResult({ orderNumber: orderNum, total });
+          setSubmitted(true);
+          clearCart();
+          window.scrollTo({ top: 0 });
+          return;
+        }
+      }
+
+      // COD success!
       setOrderResult({ orderNumber: orderNum, total });
       setSubmitted(true);
       clearCart();
