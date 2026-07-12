@@ -1,13 +1,19 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Home as HomeIcon, ChevronRight, Calendar, MessageCircle, Clock, User,
   ArrowLeft, ArrowRight, Share2, Bookmark, Facebook, Twitter, Link2,
+  Send, Loader2, Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useRouter } from "@/lib/store";
+
+const CMS_API = process.env.NEXT_PUBLIC_CMS_API_URL ?? "https://cms-lac-two.vercel.app";
+const CMS_SITE_ID = process.env.NEXT_PUBLIC_CMS_SITE_ID ?? "lata-test";
+const CMS_API_KEY = process.env.NEXT_PUBLIC_CMS_API_KEY ?? "";
 
 export function BlogSinglePage() {
   const blogPosts = useRouter((s) => s.blogPosts);
@@ -222,6 +228,9 @@ export function BlogSinglePage() {
         </div>
       </article>
 
+      {/* Comments Section */}
+      <BlogComments postSlug={post.slug ?? ""} />
+
       {/* Related */}
       {related.length > 0 && (
         <section className="py-12 bg-gradient-to-b from-background to-secondary/30">
@@ -263,6 +272,184 @@ export function BlogSinglePage() {
             </div>
           </div>
         </section>
+      )}
+    </div>
+  );
+}
+
+// =====================================================
+// BlogComments — comment list + submit form
+// =====================================================
+function BlogComments({ postSlug }: { postSlug: string }) {
+  const [comments, setComments] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [form, setForm] = useState({ authorName: "", authorEmail: "", content: "" });
+
+  useEffect(() => {
+    if (!postSlug) return;
+    fetch(`${CMS_API}/api/v1/sites/${CMS_SITE_ID}/posts/${postSlug}/comments`, {
+      headers: { "X-API-Key": CMS_API_KEY },
+    })
+      .then(res => res.json())
+      .then(json => {
+        if (json.success) setComments(json.data.comments ?? []);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [postSlug]);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!form.authorName.trim() || !form.content.trim()) return;
+    setSubmitting(true);
+    try {
+      const res = await fetch(`${CMS_API}/api/v1/sites/${CMS_SITE_ID}/posts/${postSlug}/comments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-API-Key": CMS_API_KEY },
+        body: JSON.stringify(form),
+      });
+      const json = await res.json();
+      if (json.success) {
+        setSubmitted(true);
+        setShowForm(false);
+        setForm({ authorName: "", authorEmail: "", content: "" });
+        setTimeout(() => setSubmitted(false), 5000);
+      }
+    } catch {}
+    finally { setSubmitting(false); }
+  }
+
+  const totalComments = comments.reduce((sum, c) => sum + 1 + (c.replies?.length ?? 0), 0);
+
+  return (
+    <section className="py-12 bg-secondary/20">
+      <div className="mx-auto max-w-3xl px-4">
+        <div className="flex items-center justify-between mb-8">
+          <h2 className="font-display text-2xl font-semibold text-cocoa flex items-center gap-2">
+            <MessageCircle className="h-6 w-6 text-terracotta" />
+            Comments {totalComments > 0 && `(${totalComments})`}
+          </h2>
+          {!showForm && (
+            <Button variant="outline" onClick={() => setShowForm(true)} className="rounded-full">
+              Write a Comment
+            </Button>
+          )}
+        </div>
+
+        {/* Success message */}
+        {submitted && (
+          <div className="bg-sage/10 rounded-xl p-4 mb-6 flex items-center gap-3">
+            <Check className="h-5 w-5 text-sage" />
+            <div>
+              <p className="font-medium text-cocoa text-sm">Thank you for your comment!</p>
+              <p className="text-xs text-cocoa/60">It will appear here after the site admin approves it.</p>
+            </div>
+          </div>
+        )}
+
+        {/* Comment form */}
+        {showForm && (
+          <motion.form
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            onSubmit={handleSubmit}
+            className="bg-card rounded-2xl border border-border/60 p-6 mb-8 space-y-4"
+          >
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium text-cocoa">Name *</label>
+                <input
+                  type="text" required value={form.authorName}
+                  onChange={e => setForm({ ...form, authorName: e.target.value })}
+                  placeholder="Your name"
+                  className="w-full mt-1 px-3 py-2 rounded-xl border border-border bg-background text-sm"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-cocoa">Email (optional)</label>
+                <input
+                  type="email" value={form.authorEmail}
+                  onChange={e => setForm({ ...form, authorEmail: e.target.value })}
+                  placeholder="you@example.com"
+                  className="w-full mt-1 px-3 py-2 rounded-xl border border-border bg-background text-sm"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-cocoa">Comment *</label>
+              <textarea
+                required value={form.content}
+                onChange={e => setForm({ ...form, content: e.target.value })}
+                rows={4}
+                placeholder="Share your thoughts..."
+                className="w-full mt-1 px-3 py-2 rounded-xl border border-border bg-background text-sm resize-none"
+                maxLength={2000}
+              />
+              <p className="text-[10px] text-cocoa/40 mt-1">{form.content.length}/2000 chars</p>
+            </div>
+            <div className="flex gap-2">
+              <Button type="submit" disabled={submitting} className="bg-terracotta hover:bg-terracotta/90 text-primary-foreground rounded-full">
+                {submitting ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Submitting</> : <><Send className="h-4 w-4 mr-2" />Submit Comment</>}
+              </Button>
+              <Button type="button" variant="outline" onClick={() => setShowForm(false)} className="rounded-full">Cancel</Button>
+            </div>
+          </motion.form>
+        )}
+
+        {/* Comments list */}
+        {loading ? (
+          <div className="text-center py-8"><Loader2 className="h-6 w-6 animate-spin inline text-cocoa/40" /></div>
+        ) : comments.length === 0 ? (
+          <div className="bg-card rounded-2xl border border-border/60 p-8 text-center">
+            <MessageCircle className="h-10 w-10 mx-auto text-cocoa/20 mb-3" />
+            <p className="text-cocoa/60 text-sm">No comments yet. Be the first to comment!</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {comments.map((c, i) => (
+              <CommentItem key={c.id ?? i} comment={c} />
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function CommentItem({ comment, isReply = false }: { comment: any; isReply?: boolean }) {
+  return (
+    <div className={isReply ? "ml-8 sm:ml-12" : ""}>
+      <div className="bg-card rounded-2xl border border-border/60 p-5">
+        <div className="flex items-start gap-3 mb-3">
+          <div className="h-10 w-10 rounded-full bg-terracotta/10 flex items-center justify-center text-terracotta font-bold shrink-0">
+            {comment.author_name?.[0]?.toUpperCase() || "?"}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <p className="font-medium text-cocoa text-sm">{comment.author_name}</p>
+              {comment.is_verified_purchase && (
+                <Badge className="bg-sage/15 text-sage border-0 text-[10px]">
+                  <Check className="h-2.5 w-2.5 mr-1" />Verified
+                </Badge>
+              )}
+            </div>
+            <p className="text-xs text-cocoa/40 mt-0.5">
+              {comment.created_at ? new Date(comment.created_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : ""}
+            </p>
+          </div>
+        </div>
+        <p className="text-sm text-cocoa/75 leading-relaxed whitespace-pre-line">{comment.content}</p>
+      </div>
+      {/* Replies */}
+      {comment.replies && comment.replies.length > 0 && (
+        <div className="mt-3 space-y-3">
+          {comment.replies.map((reply: any, i: number) => (
+            <CommentItem key={reply.id ?? i} comment={reply} isReply />
+          ))}
+        </div>
       )}
     </div>
   );
