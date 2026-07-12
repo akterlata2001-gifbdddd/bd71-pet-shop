@@ -723,7 +723,6 @@ function ProductReviews({ productSlug, productName }: { productSlug: string; pro
           ))}
         </div>
       )}
-      </div>
     </div>
   );
 }
