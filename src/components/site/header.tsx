@@ -182,7 +182,7 @@ export function SiteHeader() {
                 size="icon"
                 className="hidden sm:inline-flex h-10 w-10 rounded-full text-cocoa hover:bg-secondary/80"
                 aria-label="Search"
-                onClick={() => goTo("shop")}
+                onClick={() => goTo("shop", { search: "" })}
               >
                 <Search className="h-4.5 w-4.5" />
               </Button>

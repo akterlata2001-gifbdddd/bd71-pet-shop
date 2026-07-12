@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { SlidersHorizontal, Grid3x3, List, ChevronDown, X, Home as HomeIcon } from "lucide-react";
+import { SlidersHorizontal, Grid3x3, List, ChevronDown, X, Home as HomeIcon, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ProductCard } from "@/components/site/product-card";
@@ -38,9 +38,20 @@ export function ShopPage() {
   const [sortBy, setSortBy] = useState("popular");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [showFilters, setShowFilters] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const filtered = useMemo(() => {
     let result = products.length > 0 ? [...products] : [];
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(p =>
+        p.name?.toLowerCase().includes(q) ||
+        p.brand?.toLowerCase().includes(q) ||
+        p.sku?.toLowerCase().includes(q) ||
+        p.categoryName?.toLowerCase().includes(q) ||
+        p.description?.toLowerCase().includes(q)
+      );
+    }
     if (selectedCategory !== "all") {
       result = result.filter((p) => p.category === selectedCategory);
     }
@@ -55,7 +66,7 @@ export function ShopPage() {
       default: result.sort((a, b) => b.id - a.id);
     }
     return result;
-  }, [selectedCategory, selectedBrands, priceRange, sortBy]);
+  }, [selectedCategory, selectedBrands, priceRange, sortBy, searchQuery, products]);
 
   const toggleBrand = (brand: string) => {
     setSelectedBrands((prev) =>
@@ -67,15 +78,41 @@ export function ShopPage() {
     setSelectedCategory("all");
     setSelectedBrands([]);
     setPriceRange([0, 20000]);
+    setSearchQuery("");
   };
 
   const activeFiltersCount =
     (selectedCategory !== "all" ? 1 : 0) +
     selectedBrands.length +
-    (priceRange[0] !== 0 || priceRange[1] !== 20000 ? 1 : 0);
+    (priceRange[0] !== 0 || priceRange[1] !== 20000 ? 1 : 0) +
+    (searchQuery ? 1 : 0);
 
   const FilterSidebar = (
     <div className="space-y-6">
+      {/* Search */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-display text-sm font-semibold uppercase tracking-wider text-cocoa">
+            Search
+          </h3>
+          {activeFiltersCount > 0 && (
+            <button onClick={clearFilters} className="text-xs text-terracotta hover:underline">
+              Clear all
+            </button>
+          )}
+        </div>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-cocoa/40" />
+          <input
+            type="search"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search products..."
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border bg-card text-sm text-cocoa focus:outline-none focus:ring-2 focus:ring-terracotta/30"
+          />
+        </div>
+      </div>
+
       <div>
         <div className="flex items-center justify-between mb-3">
           <h3 className="font-display text-sm font-semibold uppercase tracking-wider text-cocoa">
@@ -353,7 +390,7 @@ export function ShopPage() {
   );
 }
 
-function ProductListItem({ product, index }: { product: typeof products[0]; index: number }) {
+function ProductListItem({ product, index }: { product: any; index: number }) {
   const navigate = useRouter((s) => s.navigate);
   return (
     <motion.div
