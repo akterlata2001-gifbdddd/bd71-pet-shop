@@ -29,6 +29,9 @@ export function CheckoutPage() {
   const [submitted, setSubmitted] = useState(false);
   const [orderResult, setOrderResult] = useState<{ orderNumber: string; total: number; error?: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [couponCode, setCouponCode] = useState("");
+  const [couponStatus, setCouponStatus] = useState<{ valid: boolean; discount: number; message: string } | null>(null);
+  const [couponLoading, setCouponLoading] = useState(false);
 
   // Form refs — read values on submit
   const firstNameRef = useRef<HTMLInputElement>(null);
@@ -42,7 +45,28 @@ export function CheckoutPage() {
   const notesRef = useRef<HTMLTextAreaElement>(null);
 
   const deliveryFee = subtotal > 2000 ? 0 : 60;
-  const total = subtotal + deliveryFee;
+  const discount = couponStatus?.valid ? couponStatus.discount : 0;
+  const total = Math.max(0, subtotal + deliveryFee - discount);
+
+  async function applyCoupon() {
+    if (!couponCode.trim()) return;
+    setCouponLoading(true); setCouponStatus(null);
+    try {
+      const res = await fetch(`${CMS_API}/api/v1/sites/${CMS_SITE_ID}/coupons/validate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-API-Key": CMS_API_KEY },
+        body: JSON.stringify({ code: couponCode.trim(), cartTotal: subtotal }),
+      });
+      const json = await res.json();
+      if (json.success && json.data.valid) {
+        setCouponStatus({ valid: true, discount: json.data.discountAmount, message: `Saved ৳${json.data.discountAmount}` });
+      } else {
+        setCouponStatus({ valid: false, discount: 0, message: json.data?.reason || "Invalid coupon" });
+      }
+    } catch {
+      setCouponStatus({ valid: false, discount: 0, message: "Failed to validate" });
+    } finally { setCouponLoading(false); }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -103,6 +127,8 @@ export function CheckoutPage() {
             items: orderItems,
             subtotal,
             shippingCost: deliveryFee,
+            discount,
+            couponCode: couponStatus?.valid ? couponCode : undefined,
             tax: 0,
             total,
             paymentMethod,
@@ -399,11 +425,38 @@ export function CheckoutPage() {
                 ))}
               </div>
 
+              {/* Coupon input */}
+              <div className="py-4 border-t border-border/60">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={couponCode}
+                    onChange={e => { setCouponCode(e.target.value.toUpperCase()); setCouponStatus(null); }}
+                    placeholder="Coupon code"
+                    className="flex-1 px-3 py-2 rounded-xl border border-border bg-card text-sm text-cocoa focus:outline-none focus:ring-2 focus:ring-terracotta/30"
+                  />
+                  <Button type="button" onClick={applyCoupon} disabled={couponLoading || !couponCode} variant="outline" className="rounded-xl">
+                    {couponLoading ? "..." : "Apply"}
+                  </Button>
+                </div>
+                {couponStatus && (
+                  <p className={`text-xs mt-1.5 ${couponStatus.valid ? "text-sage" : "text-red-500"}`}>
+                    {couponStatus.valid ? `✓ ${couponStatus.message}` : `✗ ${couponStatus.message}`}
+                  </p>
+                )}
+              </div>
+
               <div className="space-y-2 py-4 border-t border-border/60 text-sm">
                 <div className="flex justify-between">
                   <span className="text-cocoa/70">Subtotal</span>
                   <span className="font-medium text-cocoa">৳{formatPrice(subtotal)}</span>
                 </div>
+                {discount > 0 && (
+                  <div className="flex justify-between text-sage">
+                    <span>Discount</span>
+                    <span className="font-medium">−৳{formatPrice(discount)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span className="text-cocoa/70">Delivery</span>
                   <span className="font-medium text-cocoa">
