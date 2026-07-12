@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useRouter } from "@/lib/store";
+import { useTurnstile } from "@/components/site/turnstile-widget";
 
 const CMS_API = process.env.NEXT_PUBLIC_CMS_API_URL ?? "https://cms-lac-two.vercel.app";
 const CMS_SITE_ID = process.env.NEXT_PUBLIC_CMS_SITE_ID ?? "lata-test";
@@ -287,6 +288,7 @@ function BlogComments({ postSlug }: { postSlug: string }) {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [form, setForm] = useState({ authorName: "", authorEmail: "", content: "" });
+  const { token: turnstileToken, widget: turnstileWidget } = useTurnstile();
 
   useEffect(() => {
     if (!postSlug) return;
@@ -308,7 +310,11 @@ function BlogComments({ postSlug }: { postSlug: string }) {
     try {
       const res = await fetch(`${CMS_API}/api/v1/sites/${CMS_SITE_ID}/posts/${postSlug}/comments`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "X-API-Key": CMS_API_KEY },
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-Key": CMS_API_KEY,
+          ...(turnstileToken ? { "x-turnstile-token": turnstileToken } : {}),
+        },
         body: JSON.stringify(form),
       });
       const json = await res.json();
@@ -390,6 +396,7 @@ function BlogComments({ postSlug }: { postSlug: string }) {
               />
               <p className="text-[10px] text-cocoa/40 mt-1">{form.content.length}/2000 chars</p>
             </div>
+            {turnstileWidget}
             <div className="flex gap-2">
               <Button type="submit" disabled={submitting} className="bg-terracotta hover:bg-terracotta/90 text-primary-foreground rounded-full">
                 {submitting ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Submitting</> : <><Send className="h-4 w-4 mr-2" />Submit Comment</>}

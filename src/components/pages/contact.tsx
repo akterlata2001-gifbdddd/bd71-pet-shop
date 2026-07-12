@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useRouter } from "@/lib/store";
 import { contactContent, siteInfo } from "@/lib/data";
+import { useTurnstile } from "@/components/site/turnstile-widget";
 
 const CMS_API = process.env.NEXT_PUBLIC_CMS_API_URL ?? "https://cms-lac-two.vercel.app";
 const CMS_SITE_ID = process.env.NEXT_PUBLIC_CMS_SITE_ID ?? "lata-test";
@@ -20,6 +21,7 @@ export function ContactPage() {
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", phone: "", subject: "", message: "" });
+  const { token: turnstileToken, widget: turnstileWidget } = useTurnstile();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,7 +30,11 @@ export function ContactPage() {
     try {
       const res = await fetch(`${CMS_API}/api/v1/sites/${CMS_SITE_ID}/contact`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "X-API-Key": CMS_API_KEY },
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-Key": CMS_API_KEY,
+          ...(turnstileToken ? { "x-turnstile-token": turnstileToken } : {}),
+        },
         body: JSON.stringify(form),
       });
       const json = await res.json();
@@ -216,6 +222,7 @@ export function ContactPage() {
                       className="mt-1.5 w-full px-3 py-2 rounded-xl border border-border bg-background text-sm resize-none focus:outline-none focus:ring-2 focus:ring-terracotta/30"
                     />
                   </div>
+                  {turnstileWidget}
                   <Button
                     type="submit"
                     disabled={submitting}

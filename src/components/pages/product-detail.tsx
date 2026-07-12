@@ -25,6 +25,7 @@ import {
   serializeSchema,
 } from "@/lib/schema";
 import { stripSchemaMarkup } from "@/lib/clean-description";
+import { useTurnstile } from "@/components/site/turnstile-widget";
 
 export function ProductDetailPage() {
   const navigate = useRouter((s) => s.navigate);
@@ -560,6 +561,7 @@ function ProductReviews({ productSlug, productName }: { productSlug: string; pro
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [form, setForm] = useState({ customerName: "", rating: 5, title: "", content: "" });
+  const { token: turnstileToken, widget: turnstileWidget } = useTurnstile();
 
   const CMS_API = process.env.NEXT_PUBLIC_CMS_API_URL ?? "https://cms-lac-two.vercel.app";
   const CMS_SITE_ID = process.env.NEXT_PUBLIC_CMS_SITE_ID ?? "lata-test";
@@ -581,7 +583,10 @@ function ProductReviews({ productSlug, productName }: { productSlug: string; pro
     try {
       const res = await fetch(`${CMS_API}/api/v1/sites/${CMS_SITE_ID}/products/${productSlug}/reviews`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(turnstileToken ? { "x-turnstile-token": turnstileToken } : {}),
+        },
         body: JSON.stringify(form),
       });
       const json = await res.json();
@@ -659,6 +664,7 @@ function ProductReviews({ productSlug, productName }: { productSlug: string; pro
               placeholder="Share your experience..."
             />
           </div>
+          {turnstileWidget}
           <div className="flex gap-2">
             <Button type="submit" disabled={submitting} className="bg-terracotta hover:bg-terracotta/90 text-primary-foreground rounded-full">
               {submitting ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Submitting</> : "Submit Review"}
