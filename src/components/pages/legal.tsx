@@ -75,9 +75,11 @@ export function LegalPage({ page }: { page: PageId }) {
           </div>
 
           {/* Intro */}
-          <p className="text-base sm:text-lg text-cocoa/80 leading-relaxed mb-8 pb-8 border-b border-border/60">
-            {content.intro}
-          </p>
+          {content.intro && (
+            <p className="text-base sm:text-lg text-cocoa/80 leading-relaxed mb-8 pb-8 border-b border-border/60">
+              {content.intro}
+            </p>
+          )}
 
           {/* Sections */}
           <div className="space-y-8">

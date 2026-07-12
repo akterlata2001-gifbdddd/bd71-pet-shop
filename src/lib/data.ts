@@ -208,12 +208,13 @@ export const contactContent = {
 };
 
 export type LegalSection = { heading: string; body: string; bullets?: string[] };
-export type LegalDoc = { title: string; lastUpdated: string; sections: LegalSection[] };
+export type LegalDoc = { title: string; lastUpdated: string; intro?: string; sections: LegalSection[] };
 
 export const legalContent: Record<string, LegalDoc> = {
   privacy: {
     title: "Privacy Policy",
     lastUpdated: "March 2025",
+    intro: "Your privacy matters to us. This policy explains what information we collect, how we use it, and the choices you have.",
     sections: [
       { heading: "Information We Collect", body: "We collect information you provide when placing orders, creating accounts, or contacting us. This includes name, phone number, email, and delivery address." },
       { heading: "How We Use Your Information", body: "Order processing, delivery, customer support, and promotional communications (with your consent)." },
@@ -225,6 +226,7 @@ export const legalContent: Record<string, LegalDoc> = {
   terms: {
     title: "Terms of Service",
     lastUpdated: "March 2025",
+    intro: "These terms govern your use of our website and services. By placing an order, you agree to these terms.",
     sections: [
       { heading: "1. Orders & Payment", body: "By placing an order, you agree to pay the listed price including delivery charges. Prices may change without notice." },
       { heading: "2. Delivery", body: "We deliver across Bangladesh. Dhaka: same-day or next-day. Outside Dhaka: 1-3 business days." },
@@ -236,6 +238,7 @@ export const legalContent: Record<string, LegalDoc> = {
   dmca: {
     title: "DMCA Policy",
     lastUpdated: "March 2025",
+    intro: "This policy describes how to submit copyright infringement notices under the Digital Millennium Copyright Act.",
     sections: [
       { heading: "Copyright Infringement Notification", body: "If you believe any content on our website infringes your copyright, submit a formal DMCA takedown request." },
       { heading: "Required Information", body: "Physical/electronic signature, identification of copyrighted work, your contact information, and good faith belief statement." },
@@ -245,6 +248,7 @@ export const legalContent: Record<string, LegalDoc> = {
   disclaimer: {
     title: "Disclaimer",
     lastUpdated: "March 2025",
+    intro: "The information provided on this website is for general purposes only. Please read this disclaimer carefully.",
     sections: [
       { heading: "General Information", body: "Product information, images, and descriptions are provided for general guidance only. Actual products may vary." },
       { heading: "Pet Care Advice", body: "Blog articles are for informational purposes only. Always consult a veterinarian for medical advice." },

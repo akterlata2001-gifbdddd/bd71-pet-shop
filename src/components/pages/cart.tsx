@@ -117,7 +117,7 @@ export function CartPage() {
                   className="bg-card rounded-2xl border border-border/60 p-4 flex gap-4"
                 >
                   <button
-                    onClick={() => navigate("product", { productId: item.id })}
+                    onClick={() => navigate("product", { productId: String(item.id) })}
                     className={`h-24 w-24 sm:h-28 sm:w-28 shrink-0 rounded-xl bg-gradient-to-br ${item.bg} flex items-center justify-center text-5xl hover:scale-105 transition-transform`}
                   >
                     {item.emoji}
@@ -127,7 +127,7 @@ export function CartPage() {
                       {item.brand}
                     </div>
                     <button
-                      onClick={() => navigate("product", { productId: item.id })}
+                      onClick={() => navigate("product", { productId: String(item.id) })}
                       className="font-semibold text-cocoa line-clamp-2 leading-snug text-left hover:text-terracotta transition-colors"
                     >
                       {item.name}

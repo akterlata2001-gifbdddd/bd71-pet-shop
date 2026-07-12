@@ -95,7 +95,7 @@ export function BlogPage() {
 
   const featured = blogPosts.length > 0 ? blogPosts[0] : null;
 
-  if (blogPosts.length === 0) {
+  if (!featured) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">

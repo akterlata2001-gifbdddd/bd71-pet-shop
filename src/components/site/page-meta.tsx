@@ -103,7 +103,7 @@ export function PageMeta() {
       const product = params.productSlug
         ? products.find((p) => p.slug === params.productSlug)
         : params.productId
-        ? products.find((p) => p.id === params.productId)
+        ? products.find((p) => String(p.id) === String(params.productId))
         : null;
 
       if (!product) {

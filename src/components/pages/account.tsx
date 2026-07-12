@@ -158,7 +158,7 @@ export function AccountPage() {
                       {wishlist.map((p) => (
                         <div key={p.id} className="bg-card rounded-2xl border border-border/60 p-4 flex gap-4">
                           <button
-                            onClick={() => navigate("product", { productId: p.id })}
+                            onClick={() => navigate("product", { productId: String(p.id) })}
                             className={`h-20 w-20 shrink-0 rounded-xl bg-gradient-to-br ${p.bg} flex items-center justify-center text-4xl`}
                           >
                             {p.emoji}
@@ -169,7 +169,7 @@ export function AccountPage() {
                             <div className="font-display text-base font-semibold text-cocoa mt-1">৳{formatPrice(p.price)}</div>
                             <Button
                               size="sm"
-                              onClick={() => navigate("product", { productId: p.id })}
+                              onClick={() => navigate("product", { productId: String(p.id) })}
                               className="mt-2 h-8 rounded-full bg-terracotta hover:bg-terracotta/90 text-primary-foreground text-xs"
                             >
                               View Product

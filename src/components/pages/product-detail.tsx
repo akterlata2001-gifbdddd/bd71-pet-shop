@@ -43,7 +43,7 @@ export function ProductDetailPage() {
   const product = params.productSlug
     ? allProducts.find((p) => p.slug === params.productSlug)
     : params.productId
-    ? allProducts.find((p) => p.id === params.productId)
+    ? allProducts.find((p) => String(p.id) === String(params.productId))
     : null;
 
   // Loading state — data not loaded yet
@@ -544,7 +544,7 @@ export function ProductDetailPage() {
         )}
 
         {/* Customer Reviews */}
-        <ProductReviews productSlug={product.slug} productName={product.name} />
+        <ProductReviews productSlug={product.slug ?? ""} productName={product.name} />
       </div>
     </div>
   );
