@@ -347,7 +347,6 @@ export const useRouter = create<RouterState>((set, get) => ({
   navigate: (page, params = {}) => {
     set({ page, params });
     if (typeof window !== "undefined") {
-      // Update URL bar so it reflects the current page
       const urlMap: Record<string, string> = {
         home: "/",
         shop: "/shop",
@@ -369,8 +368,29 @@ export const useRouter = create<RouterState>((set, get) => ({
       window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
     }
   },
+  // ===== hydrateFromServer — called once on page load with SSR data =====
+  // Sets data immediately without any loading flash. Data was fetched
+  // on the Next.js server and passed via props.
   loadData: async () => {
     if (get().dataLoaded) return;
+
+    // Step 1: Check if server already provided data (via window.__INITIAL_DATA__)
+    if (typeof window !== "undefined" && (window as any).__INITIAL_DATA__) {
+      const initial = (window as any).__INITIAL_DATA__;
+      set({
+        products: initial.products ?? [],
+        blogPosts: initial.blogPosts ?? [],
+        categories: initial.categories ?? [],
+        dataLoaded: true,
+      });
+      // Save to localStorage for subsequent navigations
+      try {
+        saveToCache(CACHE_KEY_PRODUCTS, initial.products ?? []);
+        saveToCache(CACHE_KEY_POSTS, initial.blogPosts ?? []);
+        saveToCache(CACHE_KEY_CATEGORIES, initial.categories ?? []);
+      } catch {}
+      return;
+    }
 
     // Step 1: Instantly load from localStorage cache (if exists)
     const cachedProducts = loadFromCache<Product[]>(CACHE_KEY_PRODUCTS);
