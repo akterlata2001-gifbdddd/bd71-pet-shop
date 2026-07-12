@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Star, ShoppingBag, Heart, Truck, ShieldCheck, RefreshCw, ChevronRight,
-  Minus, Plus, Home as HomeIcon, Check, Share2,
+  Minus, Plus, Home as HomeIcon, Check, Share2, MessageSquare, Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -542,6 +542,187 @@ export function ProductDetailPage() {
             </div>
           </div>
         )}
+
+        {/* Customer Reviews */}
+        <ProductReviews productSlug={product.slug} productName={product.name} />
+      </div>
+    </div>
+  );
+}
+
+// =====================================================
+// ProductReviews — review list + submit form
+// =====================================================
+function ProductReviews({ productSlug, productName }: { productSlug: string; productName: string }) {
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [form, setForm] = useState({ customerName: "", rating: 5, title: "", content: "" });
+
+  const CMS_API = process.env.NEXT_PUBLIC_CMS_API_URL ?? "https://cms-lac-two.vercel.app";
+  const CMS_SITE_ID = process.env.NEXT_PUBLIC_CMS_SITE_ID ?? "lata-test";
+
+  useEffect(() => {
+    if (!productSlug) return;
+    fetch(`${CMS_API}/api/v1/sites/${CMS_SITE_ID}/products/${productSlug}/reviews`)
+      .then(res => res.json())
+      .then(json => {
+        if (json.success) setReviews(json.data.reviews ?? []);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [productSlug]);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      const res = await fetch(`${CMS_API}/api/v1/sites/${CMS_SITE_ID}/products/${productSlug}/reviews`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const json = await res.json();
+      if (json.success) {
+        setSubmitted(true);
+        setShowForm(false);
+        setForm({ customerName: "", rating: 5, title: "", content: "" });
+      }
+    } catch {} finally { setSubmitting(false); }
+  }
+
+  const avgRating = reviews.length > 0 ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length : 0;
+
+  return (
+    <div className="mt-16">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="font-display text-2xl sm:text-3xl font-semibold text-cocoa flex items-center gap-2">
+          <MessageSquare className="h-6 w-6 text-terracotta" />
+          Customer Reviews
+        </h2>
+        {!showForm && !submitted && (
+          <Button variant="outline" onClick={() => setShowForm(true)} className="rounded-full">
+            Write a Review
+          </Button>
+        )}
+      </div>
+
+      {submitted && (
+        <div className="bg-sage/10 rounded-2xl p-5 mb-6 text-center">
+          <Check className="h-8 w-8 text-sage mx-auto mb-2" />
+          <p className="font-medium text-cocoa">Thank you for your review!</p>
+          <p className="text-sm text-cocoa/60 mt-1">It will appear here after admin approval.</p>
+        </div>
+      )}
+
+      {showForm && (
+        <form onSubmit={handleSubmit} className="bg-card rounded-2xl border border-border/60 p-6 mb-6 space-y-4">
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium text-cocoa">Your Name *</label>
+              <input
+                type="text" required value={form.customerName}
+                onChange={e => setForm({ ...form, customerName: e.target.value })}
+                className="w-full mt-1 px-3 py-2 rounded-xl border border-border bg-background text-sm"
+                placeholder="John Doe"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-cocoa">Rating *</label>
+              <div className="flex gap-1 mt-1">
+                {[1, 2, 3, 4, 5].map(s => (
+                  <button key={s} type="button" onClick={() => setForm({ ...form, rating: s })}>
+                    <Star className={cn("h-6 w-6", s <= form.rating ? "fill-amber-glow text-amber-glow" : "text-cocoa/20")} />
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div>
+            <label className="text-sm font-medium text-cocoa">Title (optional)</label>
+            <input
+              type="text" value={form.title}
+              onChange={e => setForm({ ...form, title: e.target.value })}
+              className="w-full mt-1 px-3 py-2 rounded-xl border border-border bg-background text-sm"
+              placeholder="Great product!"
+            />
+          </div>
+          <div>
+            <label className="text-sm font-medium text-cocoa">Review *</label>
+            <textarea
+              required value={form.content}
+              onChange={e => setForm({ ...form, content: e.target.value })}
+              rows={4}
+              className="w-full mt-1 px-3 py-2 rounded-xl border border-border bg-background text-sm resize-none"
+              placeholder="Share your experience..."
+            />
+          </div>
+          <div className="flex gap-2">
+            <Button type="submit" disabled={submitting} className="bg-terracotta hover:bg-terracotta/90 text-primary-foreground rounded-full">
+              {submitting ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Submitting</> : "Submit Review"}
+            </Button>
+            <Button type="button" variant="outline" onClick={() => setShowForm(false)} className="rounded-full">Cancel</Button>
+          </div>
+        </form>
+      )}
+
+      {loading ? (
+        <div className="text-center py-8"><Loader2 className="h-6 w-6 animate-spin inline text-cocoa/40" /></div>
+      ) : reviews.length === 0 ? (
+        <div className="bg-card rounded-2xl border border-border/60 p-8 text-center">
+          <MessageSquare className="h-10 w-10 mx-auto text-cocoa/20 mb-3" />
+          <p className="text-cocoa/60">No reviews yet. Be the first to review {productName}!</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {/* Rating summary */}
+          <div className="flex items-center gap-4 bg-card rounded-2xl border border-border/60 p-5">
+            <div className="text-center">
+              <div className="text-3xl font-bold text-cocoa">{avgRating.toFixed(1)}</div>
+              <div className="flex items-center gap-0.5 mt-1">
+                {[1, 2, 3, 4, 5].map(s => (
+                  <Star key={s} className={cn("h-4 w-4", s <= Math.round(avgRating) ? "fill-amber-glow text-amber-glow" : "text-cocoa/20")} />
+                ))}
+              </div>
+              <div className="text-xs text-cocoa/60 mt-1">{reviews.length} review{reviews.length !== 1 ? "s" : ""}</div>
+            </div>
+            <div className="flex-1" />
+          </div>
+
+          {/* Review list */}
+          {reviews.map((r, i) => (
+            <div key={r.id ?? i} className="bg-card rounded-2xl border border-border/60 p-5">
+              <div className="flex items-start justify-between gap-3 mb-2">
+                <div className="flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-full bg-terracotta/10 flex items-center justify-center text-terracotta font-bold text-sm">
+                    {r.customer_name?.[0]?.toUpperCase() || "?"}
+                  </div>
+                  <div>
+                    <p className="font-medium text-cocoa text-sm">{r.customer_name}</p>
+                    <div className="flex items-center gap-0.5 mt-0.5">
+                      {[1, 2, 3, 4, 5].map(s => (
+                        <Star key={s} className={cn("h-3 w-3", s <= r.rating ? "fill-amber-glow text-amber-glow" : "text-cocoa/20")} />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                {r.is_verified_purchase && (
+                  <Badge className="bg-sage/15 text-sage border-0 text-[10px]">
+                    <Check className="h-2.5 w-2.5 mr-1" />Verified
+                  </Badge>
+                )}
+              </div>
+              {r.title && <p className="font-semibold text-cocoa text-sm mb-1">{r.title}</p>}
+              {r.content && <p className="text-sm text-cocoa/70 leading-relaxed">{r.content}</p>}
+              <p className="text-xs text-cocoa/40 mt-2">
+                {r.created_at ? new Date(r.created_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : ""}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
       </div>
     </div>
   );
