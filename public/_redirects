@@ -1,5 +1,0 @@
-# This file intentionally left empty.
-# Next.js App Router handles all routing natively.
-# Removing the old "/* /index.html 200" SPA fallback that was
-# preventing dynamic routes (/product/[slug], /blog/[slug]) from
-# being server-rendered for SEO.

@@ -13,7 +13,7 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   reactStrictMode: false,
-  // Enable experimental features for better caching
+  trailingSlash: false,
   experimental: {
     optimizePackageImports: ["lucide-react", "framer-motion"],
   },
