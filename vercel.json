@@ -1,6 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "next build",
   "framework": "nextjs",
+  "cleanUrls": true,
+  "trailingSlash": false,
   "regions": ["hkg1", "sin1", "iad1"]
 }
