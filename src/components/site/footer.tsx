@@ -1,9 +1,10 @@
 "use client";
 
-import { Phone, Mail, MapPin, Facebook, Instagram, Youtube } from "lucide-react";
+import { Phone, Mail, MapPin } from "lucide-react";
 import { PawIcon } from "./icons";
 import { useRouter, type PageId } from "@/lib/store";
 import { siteInfo } from "@/lib/data";
+import { getSocialLinksSync, SocialIcon } from "@/lib/social-links";
 
 const footerCompany: { label: string; page: PageId }[] = [
   { label: "About Us", page: "about" },
@@ -18,12 +19,6 @@ const footerLegal: { label: string; page: PageId }[] = [
   { label: "DMCA Policy", page: "dmca" },
   { label: "Privacy Policy", page: "privacy" },
   { label: "Terms of Use", page: "terms" },
-];
-
-const socialLinks = [
-  { icon: Facebook, label: "Facebook", href: "#" },
-  { icon: Instagram, label: "Instagram", href: "#" },
-  { icon: Youtube, label: "YouTube", href: "#" },
 ];
 
 export function SiteFooter() {
@@ -141,14 +136,16 @@ export function SiteFooter() {
               </div>
             </div>
             <div className="flex gap-2">
-              {socialLinks.map((social) => (
+              {getSocialLinksSync().map((social) => (
                 <a
-                  key={social.label}
-                  href={social.href}
+                  key={social.key}
+                  href={social.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   aria-label={social.label}
                   className="h-10 w-10 rounded-full bg-cream/10 hover:bg-terracotta flex items-center justify-center text-cream transition-all hover:scale-110 hover:-translate-y-0.5"
                 >
-                  <social.icon className="h-4 w-4" />
+                  <SocialIcon path={social.icon} className="h-4 w-4" />
                 </a>
               ))}
             </div>
