@@ -229,7 +229,6 @@ export function SiteHeader() {
               >
                 <Search className="h-4 w-4" />
                 <span className="text-sm">Search products, posts...</span>
-                <kbd className="ml-2 px-1.5 py-0.5 text-[10px] font-mono bg-card rounded border border-border text-cocoa/50">Ctrl K</kbd>
               </button>
               {/* Search icon — mobile */}
               <Button
