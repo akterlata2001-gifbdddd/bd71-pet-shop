@@ -264,12 +264,33 @@ export function HomePage() {
 
 function CategoriesSection() {
   const navigate = useRouter((s) => s.navigate);
-  const mainCats = [
-    { name: "For Cats", count: "209 Products", desc: "Premium cat food, litter & care", Illustration: CatIllustration, bg: "from-amber-glow/30 to-terracotta/15", text: "text-terracotta", cat: "cat" },
-    { name: "For Dogs", count: "31 Products", desc: "Healthy meals for every breed", Illustration: DogIllustration, bg: "from-sage/25 to-amber-glow/15", text: "text-sage", cat: "dog" },
-    { name: "For Fish", count: "1 Product", desc: "Nutritious aquatic food", Illustration: FishIllustration, bg: "from-cocoa/10 to-sage/15", text: "text-cocoa", cat: "fish" },
-    { name: "For Birds", count: "2 Products", desc: "Quality seeds & bird mixes", Illustration: BirdIllustration, bg: "from-amber-glow/25 to-sage/15", text: "text-amber-glow", cat: "bird" },
-  ];
+  const dynamicCategories = useRouter((s) => s.categories);
+
+  // Map category slugs to illustrations
+  const getIllustration = (slug: string) => {
+    const s = (slug || "").toLowerCase();
+    if (s.includes("dog")) return DogIllustration;
+    if (s.includes("fish") || s.includes("aquatic")) return FishIllustration;
+    if (s.includes("bird")) return BirdIllustration;
+    return CatIllustration; // default
+  };
+
+  // Only show categories with products, max 4
+  const mainCats = dynamicCategories
+    .filter((c) => c.count > 0)
+    .slice(0, 4)
+    .map((c) => ({
+      name: c.name,
+      count: `${c.count} Product${c.count === 1 ? "" : "s"}`,
+      desc: c.desc || "Quality products",
+      Illustration: getIllustration(c.slug),
+      bg: `bg-gradient-to-br ${c.bg}`,
+      text: "text-terracotta",
+      cat: c.slug,
+    }));
+
+  // If no categories with products, don't render section
+  if (mainCats.length === 0) return null;
 
   return (
     <section id="categories" className="py-16 sm:py-20 lg:py-24 bg-gradient-to-b from-secondary/30 to-background">
