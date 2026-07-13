@@ -88,7 +88,7 @@ export async function fetchSiteConfig(): Promise<SiteConfig> {
 
     // Fetch social links in parallel (non-blocking — can be empty on first load)
     let socialLinks: SocialLink[] = cachedConfig?.socialLinks ?? [];
-    getSocialLinks().then(links => {
+    getSocialLinks().then((links: SocialLink[]) => {
       // Update social links in cache without blocking
       if (cachedConfig) {
         saveCache({ ...cachedConfig, socialLinks: links });
