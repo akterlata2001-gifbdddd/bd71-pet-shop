@@ -70,13 +70,8 @@ export function SiteFooter({
                   </div>
                   <div className="flex flex-col leading-none">
                     <span className="font-display text-2xl font-semibold text-cream tracking-tight">
-                      {(siteName || "BD71").split(" ")[0]}
+                      {(siteName || "Store")}
                     </span>
-                    {(siteName || "BD71 Pet Shop").split(" ").length > 1 && (
-                      <span className="text-[10px] font-medium tracking-[0.2em] text-amber-glow uppercase">
-                        {(siteName || "BD71 Pet Shop").split(" ").slice(1).join(" ")}
-                      </span>
-                    )}
                   </div>
                 </>
               )}

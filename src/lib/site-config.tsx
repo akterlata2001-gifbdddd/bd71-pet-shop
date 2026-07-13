@@ -65,9 +65,8 @@ function saveCache(config: SiteConfig) {
 }
 
 export async function fetchSiteConfig(): Promise<SiteConfig> {
-  // Return cached immediately if available
-  if (cachedConfig) return cachedConfig;
-
+  // Always fetch fresh — cache is just for instant initial render.
+  // Background fetch will update state when it arrives.
   try {
     // Single API call — get all settings (branding is inside settings now)
     const res = await fetch(`${CMS_API}/api/v1/sites/${CMS_SITE_ID}/settings`, {
@@ -86,10 +85,9 @@ export async function fetchSiteConfig(): Promise<SiteConfig> {
       } catch {}
     }
 
-    // Fetch social links in parallel (non-blocking — can be empty on first load)
+    // Fetch social links in parallel (non-blocking)
     let socialLinks: SocialLink[] = cachedConfig?.socialLinks ?? [];
     getSocialLinks().then((links: SocialLink[]) => {
-      // Update social links in cache without blocking
       if (cachedConfig) {
         saveCache({ ...cachedConfig, socialLinks: links });
       }

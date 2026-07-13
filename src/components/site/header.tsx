@@ -138,7 +138,7 @@ export function SiteHeader({
               aria-label={`${siteName || "BD71 Pet Shop"} home`}
             >
               {logoUrl ? (
-                <img src={logoUrl} alt={siteName || "BD71 Pet Shop"} className="h-12 sm:h-14 max-w-[160px] w-auto object-contain" />
+                <img src={logoUrl} alt={siteName || "Store"} className="h-12 sm:h-14 max-w-[160px] w-auto object-contain" />
               ) : (
                 <>
                   <div className="relative h-10 w-10 sm:h-12 sm:w-12 rounded-2xl bg-terracotta flex items-center justify-center shadow-warm transition-transform group-hover:scale-105">
@@ -147,13 +147,8 @@ export function SiteHeader({
                   </div>
                   <div className="flex flex-col leading-none">
                     <span className="font-display text-xl sm:text-2xl font-semibold text-cocoa tracking-tight">
-                      {(siteName || "BD71").split(" ")[0]}
+                      {(siteName || "Store")}
                     </span>
-                    {(siteName || "BD71 Pet Shop").split(" ").length > 1 && (
-                      <span className="text-[10px] sm:text-xs font-medium tracking-[0.2em] text-terracotta uppercase">
-                        {(siteName || "BD71 Pet Shop").split(" ").slice(1).join(" ")}
-                      </span>
-                    )}
                   </div>
                 </>
               )}
@@ -284,13 +279,8 @@ export function SiteHeader({
                           </div>
                           <div className="flex flex-col leading-none">
                             <span className="font-display text-lg font-semibold text-cocoa">
-                              {(siteName || "BD71").split(" ")[0]}
+                              {(siteName || "Store")}
                             </span>
-                            {(siteName || "BD71 Pet Shop").split(" ").length > 1 && (
-                              <span className="text-[10px] font-medium tracking-[0.2em] text-terracotta uppercase">
-                                {(siteName || "BD71 Pet Shop").split(" ").slice(1).join(" ")}
-                              </span>
-                            )}
                           </div>
                         </>
                       )}
