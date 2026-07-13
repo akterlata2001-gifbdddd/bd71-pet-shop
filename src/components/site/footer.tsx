@@ -5,25 +5,15 @@ import { PawIcon } from "./icons";
 import { useRouter, type PageId } from "@/lib/store";
 import { siteInfo } from "@/lib/data";
 
-const footerShop = [
-  { label: "Cat Food", category: "cat" },
-  { label: "Dog Food", category: "dog" },
-  { label: "Bird Food", category: "bird" },
-  { label: "Fish Food", category: "fish" },
-  { label: "Cat Litter", category: "litter" },
-  { label: "Pet Care", category: "care" },
-];
-
 const footerCompany: { label: string; page: PageId }[] = [
   { label: "About Us", page: "about" },
   { label: "Blog", page: "blog" },
   { label: "Contact", page: "contact" },
-  { label: "Categories", page: "shop" },
+  { label: "Shop", page: "shop" },
 ];
 
 const footerLegal: { label: string; page: PageId }[] = [
   { label: "Home", page: "home" },
-  { label: "Shop", page: "shop" },
   { label: "Disclaimer", page: "disclaimer" },
   { label: "DMCA Policy", page: "dmca" },
   { label: "Privacy Policy", page: "privacy" },
@@ -54,8 +44,10 @@ export function SiteFooter() {
       </div>
 
       <div className="mx-auto max-w-7xl px-4 pt-20 pb-8">
-        <div className="grid gap-10 lg:gap-8 lg:grid-cols-12 mb-12">
-          <div className="lg:col-span-4">
+        {/* 4 columns */}
+        <div className="grid gap-10 lg:gap-8 lg:grid-cols-4 mb-12">
+          {/* Column 1 — About */}
+          <div>
             <button
               onClick={() => navigate("home")}
               className="inline-flex items-center gap-2.5 mb-5"
@@ -79,26 +71,8 @@ export function SiteFooter() {
             </p>
           </div>
 
-          <div className="lg:col-span-2">
-            <h3 className="font-display text-sm font-semibold uppercase tracking-wider text-amber-glow mb-4">
-              Shop
-            </h3>
-            <ul className="space-y-2.5">
-              {footerShop.map((link) => (
-                <li key={link.label}>
-                  <button
-                    onClick={() => navigate("shop", { category: link.category })}
-                    className="text-sm text-cream/70 hover:text-amber-glow transition-colors inline-flex items-center gap-1.5 group"
-                  >
-                    <span className="h-px w-0 group-hover:w-3 bg-amber-glow transition-all" />
-                    {link.label}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="lg:col-span-2">
+          {/* Column 2 — Company */}
+          <div>
             <h3 className="font-display text-sm font-semibold uppercase tracking-wider text-amber-glow mb-4">
               Company
             </h3>
@@ -117,7 +91,8 @@ export function SiteFooter() {
             </ul>
           </div>
 
-          <div className="lg:col-span-2">
+          {/* Column 3 — Information */}
+          <div>
             <h3 className="font-display text-sm font-semibold uppercase tracking-wider text-amber-glow mb-4">
               Information
             </h3>
@@ -136,7 +111,8 @@ export function SiteFooter() {
             </ul>
           </div>
 
-          <div className="lg:col-span-2">
+          {/* Column 4 — Contact & Social */}
+          <div>
             <h3 className="font-display text-sm font-semibold uppercase tracking-wider text-amber-glow mb-4">
               Follow Us
             </h3>
