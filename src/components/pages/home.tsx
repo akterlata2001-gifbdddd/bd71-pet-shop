@@ -432,13 +432,36 @@ function BlogPreview() {
 function NewsletterSection() {
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (email) {
-      setSubscribed(true);
-      setEmail("");
-      setTimeout(() => setSubscribed(false), 4000);
+    if (!email) return;
+    setSubmitting(true);
+    setError(null);
+    try {
+      const CMS_API = process.env.NEXT_PUBLIC_CMS_API_URL ?? "https://cms-lac-two.vercel.app";
+      const CMS_SITE_ID = process.env.NEXT_PUBLIC_CMS_SITE_ID ?? "lata-test";
+      const res = await fetch(`${CMS_API}/api/v1/sites/${CMS_SITE_ID}/newsletter`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        setSubscribed(true);
+        setEmail("");
+        setTimeout(() => setSubscribed(false), 5000);
+      } else {
+        setError(json.data?.error || json.error?.message || "Failed to subscribe");
+        setTimeout(() => setError(null), 5000);
+      }
+    } catch {
+      setError("Network error. Please try again.");
+      setTimeout(() => setError(null), 5000);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -505,10 +528,14 @@ function NewsletterSection() {
                   />
                   <Button
                     type="submit"
+                    disabled={submitting}
                     className="h-13 px-7 rounded-full bg-cocoa hover:bg-cocoa/90 text-primary-foreground text-sm font-semibold shadow-warm whitespace-nowrap"
                   >
-                    Subscribe Now
+                    {submitting ? "Subscribing..." : "Subscribe Now"}
                   </Button>
+                  {error && (
+                    <p className="text-xs text-red-300 sm:absolute sm:-bottom-6">{error}</p>
+                  )}
                 </form>
               )}
             </div>
