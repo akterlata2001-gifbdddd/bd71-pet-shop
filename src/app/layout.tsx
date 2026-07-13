@@ -77,3 +77,4 @@ export default function RootLayout({
     </html>
   );
 }
+// Trigger redeploy Mon Jul 13 01:27:12 UTC 2026
