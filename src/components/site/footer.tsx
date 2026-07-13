@@ -4,7 +4,7 @@ import { Phone, Mail, MapPin } from "lucide-react";
 import { PawIcon } from "./icons";
 import { useRouter, type PageId } from "@/lib/store";
 import { siteInfo } from "@/lib/data";
-import { getSocialLinksSync, SocialIcon } from "@/lib/social-links";
+import { SocialIcon, type SocialLink } from "@/lib/social-links";
 
 const footerCompany: { label: string; page: PageId }[] = [
   { label: "About Us", page: "about" },
@@ -21,7 +21,7 @@ const footerLegal: { label: string; page: PageId }[] = [
   { label: "Terms of Use", page: "terms" },
 ];
 
-export function SiteFooter() {
+export function SiteFooter({ socialLinks = [] }: { socialLinks?: SocialLink[] }) {
   const navigate = useRouter((s) => s.navigate);
 
   return (
@@ -136,7 +136,7 @@ export function SiteFooter() {
               </div>
             </div>
             <div className="flex gap-2">
-              {getSocialLinksSync().map((social) => (
+              {socialLinks.map((social) => (
                 <a
                   key={social.key}
                   href={social.url}

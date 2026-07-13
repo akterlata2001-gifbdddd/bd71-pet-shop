@@ -26,7 +26,7 @@ import { SearchModal } from "./search-modal";
 import { cn } from "@/lib/utils";
 import { useRouter, useCart, type PageId } from "@/lib/store";
 import { siteInfo } from "@/lib/data";
-import { getSocialLinksSync, SocialIcon } from "@/lib/social-links";
+import { SocialIcon, type SocialLink } from "@/lib/social-links";
 
 const navLinks: { label: string; page: PageId; hasMenu?: boolean }[] = [
   { label: "Home", page: "home" },
@@ -36,7 +36,7 @@ const navLinks: { label: string; page: PageId; hasMenu?: boolean }[] = [
   { label: "Contact", page: "contact" },
 ];
 
-export function SiteHeader() {
+export function SiteHeader({ socialLinks = [] }: { socialLinks?: SocialLink[] }) {
   const [scrolled, setScrolled] = useState(false);
   const [shopOpen, setShopOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -102,7 +102,7 @@ export function SiteHeader() {
           </span>
           {/* Social icons — dynamic from CMS settings */}
           <div className="ml-auto flex items-center gap-1.5">
-            {getSocialLinksSync().slice(0, 5).map((social) => (
+            {socialLinks.slice(0, 5).map((social) => (
               <a key={social.key} href={social.url} target="_blank" rel="noopener noreferrer" aria-label={social.label}
                 className="inline-flex h-6 w-6 items-center justify-center rounded-full hover:bg-primary-foreground/15 transition-colors">
                 <SocialIcon path={social.icon} className="h-3.5 w-3.5" />
