@@ -57,16 +57,29 @@ export async function fetchSiteConfig(): Promise<SiteConfig> {
     const settingsJson = await settingsRes.json();
     const settings = settingsJson.success ? (settingsJson.data?.settings ?? {}) : {};
 
-    // Try to fetch branding (logo/favicon)
+    // Try to fetch branding (logo/favicon) — value is JSON string
     let branding: any = {};
-    try {
-      const brandingRes = await fetch(`${CMS_API}/api/v1/sites/${CMS_SITE_ID}/branding`, {
-        headers: { "X-API-Key": CMS_API_KEY },
-        next: { revalidate: 300 },
-      });
-      const brandingJson = await brandingRes.json();
-      if (brandingJson.success) branding = brandingJson.data?.branding ?? {};
-    } catch {}
+    if (settings.branding) {
+      try {
+        branding = typeof settings.branding === "string"
+          ? JSON.parse(settings.branding)
+          : settings.branding;
+      } catch {}
+    }
+    // Also try the dedicated branding endpoint
+    if (!branding.logo_url) {
+      try {
+        const brandingRes = await fetch(`${CMS_API}/api/v1/sites/${CMS_SITE_ID}/branding`, {
+          headers: { "X-API-Key": CMS_API_KEY },
+          next: { revalidate: 300 },
+        });
+        const brandingJson = await brandingRes.json();
+        if (brandingJson.success) {
+          const b = brandingJson.data?.branding ?? {};
+          branding = { ...branding, ...b };
+        }
+      } catch {}
+    }
 
     const config: SiteConfig = {
       siteName: settings.site_name || defaultSiteInfo.name,

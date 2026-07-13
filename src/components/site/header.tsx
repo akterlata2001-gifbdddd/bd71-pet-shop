@@ -275,17 +275,25 @@ export function SiteHeader({
                 <SheetContent side="right" className="w-[300px] sm:w-[360px] p-0">
                   <SheetHeader className="p-5 border-b border-border/60">
                     <SheetTitle className="flex items-center gap-2.5">
-                      <div className="h-9 w-9 rounded-xl bg-terracotta flex items-center justify-center">
-                        <PawIcon className="h-5 w-5 text-primary-foreground" />
-                      </div>
-                      <div className="flex flex-col leading-none">
-                        <span className="font-display text-lg font-semibold text-cocoa">
-                          BD71
-                        </span>
-                        <span className="text-[10px] font-medium tracking-[0.2em] text-terracotta uppercase">
-                          Pet Shop
-                        </span>
-                      </div>
+                      {logoUrl ? (
+                        <img src={logoUrl} alt={siteName || "Store"} className="h-9 w-auto object-contain" />
+                      ) : (
+                        <>
+                          <div className="h-9 w-9 rounded-xl bg-terracotta flex items-center justify-center">
+                            <PawIcon className="h-5 w-5 text-primary-foreground" />
+                          </div>
+                          <div className="flex flex-col leading-none">
+                            <span className="font-display text-lg font-semibold text-cocoa">
+                              {(siteName || "BD71").split(" ")[0]}
+                            </span>
+                            {(siteName || "BD71 Pet Shop").split(" ").length > 1 && (
+                              <span className="text-[10px] font-medium tracking-[0.2em] text-terracotta uppercase">
+                                {(siteName || "BD71 Pet Shop").split(" ").slice(1).join(" ")}
+                              </span>
+                            )}
+                          </div>
+                        </>
+                      )}
                     </SheetTitle>
                   </SheetHeader>
                   <nav className="flex flex-col p-3">
