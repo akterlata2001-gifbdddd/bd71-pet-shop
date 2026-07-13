@@ -32,20 +32,9 @@ import { siteInfo } from "@/lib/data";
 const navLinks: { label: string; page: PageId; hasMenu?: boolean }[] = [
   { label: "Home", page: "home" },
   { label: "Shop", page: "shop", hasMenu: true },
-  { label: "Categories", page: "shop" },
   { label: "Blog", page: "blog" },
   { label: "About", page: "about" },
   { label: "Contact", page: "contact" },
-];
-
-// Fallback shop menu — used before CMS categories are loaded.
-const fallbackShopMenu = [
-  { label: "Cat Food", desc: "Premium nutrition for felines", category: "cat-food" },
-  { label: "Dog Food", desc: "Healthy meals for dogs", category: "dog-food" },
-  { label: "Cat Litter", desc: "All flavors available", category: "cat-litter" },
-  { label: "Cat Treats", desc: "Treats & wet food", category: "cat-treats" },
-  { label: "Bird & Fish", desc: "Quality seeds & aquatic food", category: "bird-fish" },
-  { label: "Toys", desc: "Fun & accessories", category: "toys" },
 ];
 
 export function SiteHeader() {
@@ -72,15 +61,17 @@ export function SiteHeader() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  // Build the dropdown shop menu from the actual CMS categories,
-  // falling back to the static list while data is loading.
-  const shopMenu = dynamicCategories.length > 0
-    ? dynamicCategories.slice(0, 8).map((c) => ({
+  // Build the dropdown shop menu from the actual CMS categories.
+  // Only show categories that have at least 1 product.
+  // No fallback demo categories — if no CMS data, dropdown is empty.
+  const shopMenu = dynamicCategories
+    .filter((c) => c.count > 0)
+    .slice(0, 8)
+    .map((c) => ({
         label: c.name,
         desc: c.desc || `${c.count} product${c.count === 1 ? "" : "s"}`,
         category: c.slug,
-      }))
-    : fallbackShopMenu;
+      }));
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);

@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import { SlidersHorizontal, Grid3x3, List, ChevronDown, X, Home as HomeIcon, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ProductCard } from "@/components/site/product-card";
 import { useRouter } from "@/lib/store";
-import { categories as staticCategories, formatPrice } from "@/lib/data";
+import { formatPrice } from "@/lib/data";
 import { cn } from "@/lib/utils";
 import { Star } from "lucide-react";
 
@@ -26,11 +26,11 @@ export function ShopPage() {
   const navigate = useRouter((s) => s.navigate);
   const params = useRouter((s) => s.params);
 
-  // Use dynamic categories from the CMS, falling back to the static
-  // list if the API hasn't returned categories yet.
-  const categories = dynamicCategories.length > 0
-    ? dynamicCategories.map((c) => ({ id: c.id, name: c.name, emoji: c.emoji, bg: c.bg, desc: c.desc, count: c.count, longDesc: c.desc }))
-    : staticCategories;
+  // Use dynamic categories from the CMS — only show categories with products.
+  // No fallback to static demo categories.
+  const categories = dynamicCategories
+    .filter((c) => c.count > 0)
+    .map((c) => ({ id: c.id, name: c.name, emoji: c.emoji, bg: c.bg, desc: c.desc, count: c.count, longDesc: c.desc }));
 
   const [selectedCategory, setSelectedCategory] = useState<string>(params.category || "all");
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
@@ -39,6 +39,8 @@ export function ShopPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [showFilters, setShowFilters] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const PRODUCTS_PER_PAGE = 20;
 
   const filtered = useMemo(() => {
     let result = products.length > 0 ? [...products] : [];
@@ -67,6 +69,18 @@ export function ShopPage() {
     }
     return result;
   }, [selectedCategory, selectedBrands, priceRange, sortBy, searchQuery, products]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedCategory, selectedBrands, priceRange, sortBy, searchQuery]);
+
+  // Pagination
+  const totalPages = Math.ceil(filtered.length / PRODUCTS_PER_PAGE);
+  const paginatedProducts = filtered.slice(
+    (currentPage - 1) * PRODUCTS_PER_PAGE,
+    currentPage * PRODUCTS_PER_PAGE
+  );
 
   const toggleBrand = (brand: string) => {
     setSelectedBrands((prev) =>
@@ -345,16 +359,70 @@ export function ShopPage() {
               </div>
             ) : viewMode === "grid" ? (
               <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5">
-                {filtered.map((product, i) => (
+                {paginatedProducts.map((product, i) => (
                   <ProductCard key={product.id} product={product} index={i} />
                 ))}
               </div>
             ) : (
               <div className="space-y-3">
-                {filtered.map((product, i) => (
+                {paginatedProducts.map((product, i) => (
                   <ProductListItem key={product.id} product={product} index={i} />
                 ))}
               </div>
+            )}
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 mt-8 mb-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="rounded-lg"
+                >
+                  ← Prev
+                </Button>
+                {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+                  let page: number;
+                  if (totalPages <= 7) {
+                    page = i + 1;
+                  } else if (currentPage <= 4) {
+                    page = i + 1;
+                  } else if (currentPage >= totalPages - 3) {
+                    page = totalPages - 6 + i;
+                  } else {
+                    page = currentPage - 3 + i;
+                  }
+                  return (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`h-9 w-9 rounded-lg text-sm font-medium transition-colors ${
+                        currentPage === page
+                          ? "bg-terracotta text-primary-foreground"
+                          : "bg-card border border-border/60 text-cocoa hover:bg-secondary"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  );
+                })}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="rounded-lg"
+                >
+                  Next →
+                </Button>
+              </div>
+            )}
+            {totalPages > 1 && (
+              <p className="text-center text-xs text-cocoa/50">
+                Page {currentPage} of {totalPages} • {filtered.length} products total
+              </p>
             )}
           </main>
         </div>
