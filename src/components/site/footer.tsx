@@ -21,7 +21,21 @@ const footerLegal: { label: string; page: PageId }[] = [
   { label: "Terms of Use", page: "terms" },
 ];
 
-export function SiteFooter({ socialLinks = [] }: { socialLinks?: SocialLink[] }) {
+export function SiteFooter({
+  socialLinks = [],
+  siteName,
+  logoUrl,
+  phone,
+  email,
+  address,
+}: {
+  socialLinks?: SocialLink[];
+  siteName?: string;
+  logoUrl?: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+}) {
   const navigate = useRouter((s) => s.navigate);
 
   return (
@@ -47,17 +61,25 @@ export function SiteFooter({ socialLinks = [] }: { socialLinks?: SocialLink[] })
               onClick={() => navigate("home")}
               className="inline-flex items-center gap-2.5 mb-5"
             >
-              <div className="h-11 w-11 rounded-2xl bg-terracotta flex items-center justify-center shadow-warm">
-                <PawIcon className="h-6 w-6 text-primary-foreground" />
-              </div>
-              <div className="flex flex-col leading-none">
-                <span className="font-display text-2xl font-semibold text-cream tracking-tight">
-                  BD71
-                </span>
-                <span className="text-[10px] font-medium tracking-[0.2em] text-amber-glow uppercase">
-                  Pet Shop
-                </span>
-              </div>
+              {logoUrl ? (
+                <img src={logoUrl} alt={siteName || "Store"} className="h-11 w-auto object-contain" />
+              ) : (
+                <>
+                  <div className="h-11 w-11 rounded-2xl bg-terracotta flex items-center justify-center shadow-warm">
+                    <PawIcon className="h-6 w-6 text-primary-foreground" />
+                  </div>
+                  <div className="flex flex-col leading-none">
+                    <span className="font-display text-2xl font-semibold text-cream tracking-tight">
+                      {(siteName || "BD71").split(" ")[0]}
+                    </span>
+                    {(siteName || "BD71 Pet Shop").split(" ").length > 1 && (
+                      <span className="text-[10px] font-medium tracking-[0.2em] text-amber-glow uppercase">
+                        {(siteName || "BD71 Pet Shop").split(" ").slice(1).join(" ")}
+                      </span>
+                    )}
+                  </div>
+                </>
+              )}
             </button>
             <p className="text-sm text-cream/70 leading-relaxed max-w-sm">
               Your trusted partner for premium pet food and care in Bangladesh. Genuine products,
@@ -112,24 +134,24 @@ export function SiteFooter({ socialLinks = [] }: { socialLinks?: SocialLink[] })
               Follow Us
             </h3>
             <div className="space-y-3 mb-5">
-              <a href={`tel:${siteInfo.phone.replace(/[^+\d]/g, "")}`} className="flex items-center gap-3 text-sm text-cream/80 hover:text-amber-glow transition-colors group">
+              <a href={`tel:${(phone || siteInfo.phone).replace(/[^+\d]/g, "")}`} className="flex items-center gap-3 text-sm text-cream/80 hover:text-amber-glow transition-colors group">
                 <div className="h-8 w-8 rounded-full bg-cream/10 group-hover:bg-terracotta flex items-center justify-center transition-colors shrink-0">
                   <Phone className="h-3.5 w-3.5" />
                 </div>
-                {siteInfo.phone}
+                {phone || siteInfo.phone}
               </a>
-              <a href={`mailto:${siteInfo.email}`} className="flex items-center gap-3 text-sm text-cream/80 hover:text-amber-glow transition-colors group">
+              <a href={`mailto:${email || siteInfo.email}`} className="flex items-center gap-3 text-sm text-cream/80 hover:text-amber-glow transition-colors group">
                 <div className="h-8 w-8 rounded-full bg-cream/10 group-hover:bg-terracotta flex items-center justify-center transition-colors shrink-0">
                   <Mail className="h-3.5 w-3.5" />
                 </div>
-                <span className="break-all">{siteInfo.email}</span>
+                <span className="break-all">{email || siteInfo.email}</span>
               </a>
               <div className="flex items-start gap-3 text-sm text-cream/80">
                 <div className="h-8 w-8 rounded-full bg-cream/10 flex items-center justify-center shrink-0">
                   <MapPin className="h-3.5 w-3.5" />
                 </div>
                 <span className="leading-relaxed">
-                  {siteInfo.address}
+                  {address || siteInfo.address}
                   <br />
                   <span className="text-cream/60">Delivery nationwide</span>
                 </span>
@@ -172,7 +194,7 @@ export function SiteFooter({ socialLinks = [] }: { socialLinks?: SocialLink[] })
 
         <div className="border-t border-cream/10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-cream/60">
           <p>
-            © 2026 BD71SHOP. Managed by{" "}
+            © 2026 {(siteName || "BD71 Pet Shop").split(" ")[0].toUpperCase()}. Managed by{" "}
             <a
               href="https://cynlex.com/"
               target="_blank"

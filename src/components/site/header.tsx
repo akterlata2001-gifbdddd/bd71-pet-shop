@@ -36,7 +36,17 @@ const navLinks: { label: string; page: PageId; hasMenu?: boolean }[] = [
   { label: "Contact", page: "contact" },
 ];
 
-export function SiteHeader({ socialLinks = [] }: { socialLinks?: SocialLink[] }) {
+export function SiteHeader({
+  socialLinks = [],
+  siteName,
+  logoUrl,
+  phone,
+}: {
+  socialLinks?: SocialLink[];
+  siteName?: string;
+  logoUrl?: string;
+  phone?: string;
+}) {
   const [scrolled, setScrolled] = useState(false);
   const [shopOpen, setShopOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -90,7 +100,7 @@ export function SiteHeader({ socialLinks = [] }: { socialLinks?: SocialLink[] })
         <div className="mx-auto max-w-7xl px-4 py-2 flex items-center justify-center gap-2 sm:gap-6 text-center">
           <span className="hidden sm:inline-flex items-center gap-1.5">
             <Phone className="h-3.5 w-3.5" />
-            <span>{siteInfo.phone}</span>
+            <span>{phone || siteInfo.phone}</span>
           </span>
           <span className="inline-flex items-center gap-1.5 font-medium">
             <Truck className="h-3.5 w-3.5" />
@@ -125,20 +135,28 @@ export function SiteHeader({ socialLinks = [] }: { socialLinks?: SocialLink[] })
             <button
               onClick={() => goTo("home")}
               className="flex items-center gap-2.5 shrink-0 group"
-              aria-label="BD71 Pet Shop home"
+              aria-label={`${siteName || "BD71 Pet Shop"} home`}
             >
-              <div className="relative h-10 w-10 sm:h-12 sm:w-12 rounded-2xl bg-terracotta flex items-center justify-center shadow-warm transition-transform group-hover:scale-105">
-                <PawIcon className="h-6 w-6 sm:h-7 sm:w-7 text-primary-foreground" />
-                <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-amber-glow ring-2 ring-background" />
-              </div>
-              <div className="flex flex-col leading-none">
-                <span className="font-display text-xl sm:text-2xl font-semibold text-cocoa tracking-tight">
-                  BD71
-                </span>
-                <span className="text-[10px] sm:text-xs font-medium tracking-[0.2em] text-terracotta uppercase">
-                  Pet Shop
-                </span>
-              </div>
+              {logoUrl ? (
+                <img src={logoUrl} alt={siteName || "BD71 Pet Shop"} className="h-10 sm:h-12 w-auto object-contain" />
+              ) : (
+                <>
+                  <div className="relative h-10 w-10 sm:h-12 sm:w-12 rounded-2xl bg-terracotta flex items-center justify-center shadow-warm transition-transform group-hover:scale-105">
+                    <PawIcon className="h-6 w-6 sm:h-7 sm:w-7 text-primary-foreground" />
+                    <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-amber-glow ring-2 ring-background" />
+                  </div>
+                  <div className="flex flex-col leading-none">
+                    <span className="font-display text-xl sm:text-2xl font-semibold text-cocoa tracking-tight">
+                      {(siteName || "BD71").split(" ")[0]}
+                    </span>
+                    {(siteName || "BD71 Pet Shop").split(" ").length > 1 && (
+                      <span className="text-[10px] sm:text-xs font-medium tracking-[0.2em] text-terracotta uppercase">
+                        {(siteName || "BD71 Pet Shop").split(" ").slice(1).join(" ")}
+                      </span>
+                    )}
+                  </div>
+                </>
+              )}
             </button>
 
             <nav className="hidden lg:flex items-center gap-1">
