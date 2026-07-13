@@ -51,7 +51,6 @@ export function SiteHeader({
   const [shopOpen, setShopOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [logoLoaded, setLogoLoaded] = useState(false);
   const navigate = useRouter((s) => s.navigate);
   const dynamicCategories = useRouter((s) => s.categories);
   const cartCount = useCart((s) => s.count());
@@ -139,18 +138,7 @@ export function SiteHeader({
               aria-label={`${siteName || "BD71 Pet Shop"} home`}
             >
               {logoUrl ? (
-                <>
-                  {!logoLoaded && (
-                    <div className="h-12 sm:h-14 w-[140px] animate-pulse bg-secondary rounded-lg" />
-                  )}
-                  <img
-                    src={logoUrl}
-                    alt={siteName || "BD71 Pet Shop"}
-                    className={`h-12 sm:h-14 max-w-[160px] w-auto object-contain transition-opacity duration-200 ${logoLoaded ? "opacity-100" : "opacity-0 absolute"}`}
-                    onLoad={() => setLogoLoaded(true)}
-                    onError={() => setLogoLoaded(false)}
-                  />
-                </>
+                <img src={logoUrl} alt={siteName || "BD71 Pet Shop"} className="h-12 sm:h-14 max-w-[160px] w-auto object-contain" />
               ) : (
                 <>
                   <div className="relative h-10 w-10 sm:h-12 sm:w-12 rounded-2xl bg-terracotta flex items-center justify-center shadow-warm transition-transform group-hover:scale-105">

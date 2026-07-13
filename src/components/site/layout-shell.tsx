@@ -6,15 +6,20 @@ import { SiteFooter } from "@/components/site/footer";
 import { CartDrawer } from "@/components/site/cart-drawer";
 import { PageMeta } from "@/components/site/page-meta";
 import { StoreInitializer } from "@/components/site/store-initializer";
-import { fetchSiteConfig, type SiteConfig } from "@/lib/site-config";
+import { fetchSiteConfig, getSiteConfigSync, type SiteConfig } from "@/lib/site-config";
 
 // =====================================================
 // LayoutShell — wraps ALL pages with header/footer/cart
 // =====================================================
+// Uses cached site config for instant render.
+// Fetches fresh config in background.
+// =====================================================
 
 export function LayoutShell({ children }: { children: React.ReactNode }) {
-  const [config, setConfig] = useState<SiteConfig | null>(null);
+  // Start with cached config (from localStorage) — instant!
+  const [config, setConfig] = useState<SiteConfig>(getSiteConfigSync());
 
+  // Fetch fresh config in background (non-blocking)
   useEffect(() => {
     fetchSiteConfig().then(setConfig);
   }, []);
@@ -24,21 +29,21 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
       <StoreInitializer />
       <PageMeta />
       <SiteHeader
-        socialLinks={config?.socialLinks ?? []}
-        siteName={config?.siteName}
-        logoUrl={config?.logoUrl}
-        phone={config?.phone}
+        socialLinks={config.socialLinks}
+        siteName={config.siteName}
+        logoUrl={config.logoUrl}
+        phone={config.phone}
       />
       <main className="flex-1">
         {children}
       </main>
       <SiteFooter
-        socialLinks={config?.socialLinks ?? []}
-        siteName={config?.siteName}
-        logoUrl={config?.logoUrl}
-        phone={config?.phone}
-        email={config?.email}
-        address={config?.address}
+        socialLinks={config.socialLinks}
+        siteName={config.siteName}
+        logoUrl={config.logoUrl}
+        phone={config.phone}
+        email={config.email}
+        address={config.address}
       />
       <CartDrawer />
     </div>

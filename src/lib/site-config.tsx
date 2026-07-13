@@ -7,9 +7,8 @@ import { getSocialLinks, type SocialLink } from "@/lib/social-links";
 // =====================================================
 // Site Config — dynamic site identity from CMS
 // =====================================================
-// Fetches branding + settings from CMS and overrides
-// the hardcoded siteInfo. Used by LayoutShell to pass
-// dynamic data to Header, Footer, and all pages.
+// Uses localStorage cache for instant load.
+// Fetches fresh data in background.
 // =====================================================
 
 export interface SiteConfig {
@@ -27,6 +26,7 @@ export interface SiteConfig {
 const CMS_API = process.env.NEXT_PUBLIC_CMS_API_URL ?? "https://cms-lac-two.vercel.app";
 const CMS_SITE_ID = process.env.NEXT_PUBLIC_CMS_SITE_ID ?? "lata-test";
 const CMS_API_KEY = process.env.NEXT_PUBLIC_CMS_API_KEY ?? "";
+const CACHE_KEY = "pn_site_config_v1";
 
 const DEFAULT_CONFIG: SiteConfig = {
   siteName: defaultSiteInfo.name,
@@ -40,24 +40,43 @@ const DEFAULT_CONFIG: SiteConfig = {
   socialLinks: [],
 };
 
-let cachedConfig: SiteConfig | null = null;
+// Load from localStorage synchronously on module init
+function loadCachedConfig(): SiteConfig | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return { ...DEFAULT_CONFIG, ...parsed };
+  } catch {
+    return null;
+  }
+}
+
+let cachedConfig: SiteConfig | null = loadCachedConfig();
+
+function saveCache(config: SiteConfig) {
+  cachedConfig = config;
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.setItem(CACHE_KEY, JSON.stringify(config));
+    } catch {}
+  }
+}
 
 export async function fetchSiteConfig(): Promise<SiteConfig> {
+  // Return cached immediately if available
   if (cachedConfig) return cachedConfig;
 
   try {
-    const [settingsRes, socialLinks] = await Promise.all([
-      fetch(`${CMS_API}/api/v1/sites/${CMS_SITE_ID}/settings`, {
-        headers: { "X-API-Key": CMS_API_KEY },
-        next: { revalidate: 300 },
-      }),
-      getSocialLinks(),
-    ]);
+    // Single API call — get all settings (branding is inside settings now)
+    const res = await fetch(`${CMS_API}/api/v1/sites/${CMS_SITE_ID}/settings`, {
+      headers: { "X-API-Key": CMS_API_KEY },
+    });
+    const json = await res.json();
+    const settings = json.success ? (json.data?.settings ?? {}) : {};
 
-    const settingsJson = await settingsRes.json();
-    const settings = settingsJson.success ? (settingsJson.data?.settings ?? {}) : {};
-
-    // Try to fetch branding (logo/favicon) — value is JSON string
+    // Parse branding from settings (stored as JSON string under key='branding')
     let branding: any = {};
     if (settings.branding) {
       try {
@@ -66,20 +85,15 @@ export async function fetchSiteConfig(): Promise<SiteConfig> {
           : settings.branding;
       } catch {}
     }
-    // Also try the dedicated branding endpoint
-    if (!branding.logo_url) {
-      try {
-        const brandingRes = await fetch(`${CMS_API}/api/v1/sites/${CMS_SITE_ID}/branding`, {
-          headers: { "X-API-Key": CMS_API_KEY },
-          next: { revalidate: 300 },
-        });
-        const brandingJson = await brandingRes.json();
-        if (brandingJson.success) {
-          const b = brandingJson.data?.branding ?? {};
-          branding = { ...branding, ...b };
-        }
-      } catch {}
-    }
+
+    // Fetch social links in parallel (non-blocking — can be empty on first load)
+    let socialLinks: SocialLink[] = cachedConfig?.socialLinks ?? [];
+    getSocialLinks().then(links => {
+      // Update social links in cache without blocking
+      if (cachedConfig) {
+        saveCache({ ...cachedConfig, socialLinks: links });
+      }
+    });
 
     const config: SiteConfig = {
       siteName: settings.site_name || defaultSiteInfo.name,
@@ -93,7 +107,7 @@ export async function fetchSiteConfig(): Promise<SiteConfig> {
       socialLinks,
     };
 
-    cachedConfig = config;
+    saveCache(config);
 
     // Update favicon if set
     if (config.faviconUrl && typeof document !== "undefined") {
@@ -113,7 +127,7 @@ export async function fetchSiteConfig(): Promise<SiteConfig> {
 
     return config;
   } catch {
-    return { ...DEFAULT_CONFIG, socialLinks: cachedConfig?.socialLinks ?? [] };
+    return cachedConfig ?? DEFAULT_CONFIG;
   }
 }
 
