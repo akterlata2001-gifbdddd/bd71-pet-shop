@@ -1,6 +1,6 @@
 "use client";
 
-import { Phone, Mail, MapPin, Clock, Facebook, Instagram, Youtube, Send } from "lucide-react";
+import { Phone, Mail, MapPin, Facebook, Instagram, Youtube } from "lucide-react";
 import { PawIcon } from "./icons";
 import { useRouter, type PageId } from "@/lib/store";
 import { siteInfo } from "@/lib/data";
@@ -34,7 +34,6 @@ const socialLinks = [
   { icon: Facebook, label: "Facebook", href: "#" },
   { icon: Instagram, label: "Instagram", href: "#" },
   { icon: Youtube, label: "YouTube", href: "#" },
-  { icon: Send, label: "Telegram", href: "#" },
 ];
 
 export function SiteFooter() {
@@ -102,16 +101,6 @@ export function SiteFooter() {
                   <span className="text-cream/60">Delivery nationwide</span>
                 </span>
               </div>
-              <div className="flex items-start gap-3 text-sm text-cream/80">
-                <div className="h-9 w-9 rounded-full bg-cream/10 flex items-center justify-center shrink-0">
-                  <Clock className="h-4 w-4" />
-                </div>
-                <span className="leading-relaxed">
-                  Always Open (24/7)
-                  <br />
-                  <span className="text-cream/60">{siteInfo.hours}</span>
-                </span>
-              </div>
             </div>
           </div>
 
@@ -176,10 +165,7 @@ export function SiteFooter() {
             <h3 className="font-display text-sm font-semibold uppercase tracking-wider text-amber-glow mb-4">
               Follow Us
             </h3>
-            <p className="text-sm text-cream/70 mb-4 leading-relaxed">
-              Join our community of pet lovers and stay updated.
-            </p>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex gap-2">
               {socialLinks.map((social) => (
                 <a
                   key={social.label}
@@ -190,15 +176,6 @@ export function SiteFooter() {
                   <social.icon className="h-4 w-4" />
                 </a>
               ))}
-            </div>
-
-            <div className="mt-6 rounded-2xl bg-cream/5 border border-cream/10 p-4">
-              <div className="text-xs font-semibold text-amber-glow uppercase tracking-wider mb-1">
-                Cash on Delivery
-              </div>
-              <div className="text-xs text-cream/70 leading-relaxed">
-                Easy &amp; secure payment options available nationwide.
-              </div>
             </div>
           </div>
         </div>
