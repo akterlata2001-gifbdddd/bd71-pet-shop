@@ -364,8 +364,16 @@ export const useRouter = create<RouterState>((set, get) => ({
         account: "/account",
       };
       const newUrl = urlMap[page] || "/";
-      window.history.pushState({ page, params }, "", newUrl);
-      window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+
+      // Use full page navigation so Next.js App Router renders the
+      // correct page component. pushState alone only changes the URL
+      // bar without triggering a route change.
+      if (window.location.pathname !== newUrl) {
+        window.location.href = newUrl;
+      } else {
+        // Already on the page — just scroll to top
+        window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+      }
     }
   },
   // ===== hydrateFromServer — called once on page load with SSR data =====
