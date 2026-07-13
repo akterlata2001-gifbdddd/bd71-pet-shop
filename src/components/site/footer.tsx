@@ -62,7 +62,7 @@ export function SiteFooter({
               className="inline-flex items-center gap-2.5 mb-5"
             >
               {logoUrl ? (
-                <img src={logoUrl} alt={siteName || "Store"} className="h-11 w-auto object-contain" />
+                <img src={logoUrl} alt={siteName || "Store"} className="h-12 max-w-[160px] w-auto object-contain mb-5" />
               ) : (
                 <>
                   <div className="h-11 w-11 rounded-2xl bg-terracotta flex items-center justify-center shadow-warm">
