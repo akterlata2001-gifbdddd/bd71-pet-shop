@@ -1,7 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
-  "cleanUrls": true,
-  "trailingSlash": false,
-  "regions": ["hkg1", "sin1", "iad1"]
+  "routes": [
+    { "src": "/_next/(.*)", "dest": "/_next/$1" },
+    { "src": "/(.*\\.(svg|png|jpg|jpeg|gif|ico|webp|css|js|woff|woff2|ttf|eot))", "dest": "/$1" },
+    { "src": "/(.*)", "dest": "/$1" }
+  ]
 }
