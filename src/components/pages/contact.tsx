@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import {
-  Home as HomeIcon, ChevronRight, Phone, Mail, MapPin, Clock, Send, Loader2,
+  Home as HomeIcon, ChevronRight, Phone, Mail, MapPin, Clock, Send, Loader2, AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +20,7 @@ export function ContactPage() {
   const navigate = useRouter((s) => s.navigate);
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState({ name: "", email: "", phone: "", subject: "", message: "" });
   const { token: turnstileToken, widget: turnstileWidget } = useTurnstile();
 
@@ -41,15 +42,18 @@ export function ContactPage() {
       if (json.success) {
         setSubmitted(true);
         setForm({ name: "", email: "", phone: "", subject: "", message: "" });
-        setTimeout(() => setSubmitted(false), 5000);
+        // Success message shows for 10 seconds (was 5s — too short)
+        setTimeout(() => setSubmitted(false), 10000);
       } else {
-        alert(json.error?.message || "Failed to send message");
+        // Real error from API — show it, don't fake success
+        const errMsg = json.data?.error || json.error?.message || "Failed to send message. Please try again.";
+        setError(errMsg);
+        setTimeout(() => setError(null), 8000);
       }
     } catch (err) {
-      // Fallback: show success even if CMS is unreachable (don't block user)
-      setSubmitted(true);
-      setForm({ name: "", email: "", phone: "", subject: "", message: "" });
-      setTimeout(() => setSubmitted(false), 5000);
+      // Network error — show friendly message, but indicate it may not have sent
+      setError("Network error. Please check your connection and try again, or call us directly.");
+      setTimeout(() => setError(null), 8000);
     } finally {
       setSubmitting(false);
     }
@@ -148,6 +152,21 @@ export function ContactPage() {
                 {contactContent.sectionsTitle}
               </h2>
               <p className="text-sm text-cocoa/60 mb-2">{contactContent.formFields.note}</p>
+
+              {/* Error message — shows for 8 seconds */}
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mb-4 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm flex items-start gap-2"
+                >
+                  <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-semibold">Couldn&apos;t send your message</p>
+                    <p className="text-xs mt-1">{error}</p>
+                  </div>
+                </motion.div>
+              )}
 
               {submitted ? (
                 <motion.div
