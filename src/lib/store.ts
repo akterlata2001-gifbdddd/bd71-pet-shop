@@ -130,44 +130,13 @@ function mapProduct(p: any): Product {
   };
   const imageUrl = p.featured_image || (p.images && p.images.length > 0 ? p.images[0] : "");
 
-  // Determine category from tags
+  // Determine category — use ONLY the CMS-assigned category.
+  // Don't guess from tags (that created fake categories like
+  // cat-food, dog-food, etc. that don't exist in the CMS).
   const tags = p.tags || [];
-  const tagStr = tags.join(" ").toLowerCase();
 
-  // ===== Category resolution priority =====
-  //   1. Use the category_slug + category_name returned by the CMS API
-  //      (which comes from the products.category_id → categories join).
-  //      This is the source of truth — products are placed in the exact
-  //      category they were assigned to in WooCommerce.
-  //   2. Fall back to tag-based heuristics ONLY if the API didn't return
-  //      a category (e.g. category_id is null, or old cached data).
-  //
-  // Before this fix, the frontend ignored category_id entirely and guessed
-  // from tags — which caused products to land in wrong categories whenever
-  // their tags didn't match the hardcoded keyword lists below.
-  let category = "uncategorized";
-  let categoryName = "Uncategorized";
-
-  if (p.category_slug && p.category_name) {
-    category = p.category_slug;
-    categoryName = p.category_name;
-  } else if (tagStr.includes("dog") || tagStr.includes("puppy")) {
-    category = "dog-food"; categoryName = "Dog Food";
-  } else if (tagStr.includes("litter") || tagStr.includes("litter box")) {
-    category = "cat-litter"; categoryName = "Cat Litter & Hygiene";
-  } else if (tagStr.includes("treat") || tagStr.includes("wet") || tagStr.includes("pouch") || tagStr.includes("jerky") || tagStr.includes("snack") || tagStr.includes("creamy")) {
-    category = "cat-treats"; categoryName = "Cat Treats";
-  } else if (tagStr.includes("fountain") || tagStr.includes("water") || tagStr.includes("drinker")) {
-    category = "water-fountains"; categoryName = "Water Fountains";
-  } else if (tagStr.includes("vaccine") || tagStr.includes("medicine") || tagStr.includes("deworm")) {
-    category = "vaccines"; categoryName = "Vaccines & Medicine";
-  } else if (tagStr.includes("toy") || tagStr.includes("ball") || tagStr.includes("feather") || tagStr.includes("stick")) {
-    category = "toys"; categoryName = "Toys & Accessories";
-  } else if (tagStr.includes("bird") || tagStr.includes("fish") || tagStr.includes("aquarium") || tagStr.includes("nutribird") || tagStr.includes("taiyo")) {
-    category = "bird-fish"; categoryName = "Bird & Fish";
-  } else if (tagStr.includes("cat") || tagStr.includes("kitten") || tagStr.includes("whiskas") || tagStr.includes("purina") || tagStr.includes("royal canin") || tagStr.includes("drools") || tagStr.includes("sheba") || tagStr.includes("nekko") || tagStr.includes("wanpy") || tagStr.includes("orijen") || tagStr.includes("smartheart") || tagStr.includes("felicia") || tagStr.includes("haisenpet") || tagStr.includes("miow") || tagStr.includes("friskies") || tagStr.includes("trendline") || tagStr.includes("mito")) {
-    category = "cat-food"; categoryName = "Cat Food";
-  }
+  let category = p.category_slug || "uncategorized";
+  let categoryName = p.category_name || "Uncategorized";
 
   return {
     id: parseInt(p.id?.replace(/-/g, "").slice(0, 8), 16) || Math.floor(Math.random() * 1000000),

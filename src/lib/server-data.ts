@@ -70,31 +70,13 @@ function mapProduct(p: any): Product {
   const imageUrl = p.featured_image || (p.images && p.images.length > 0 ? p.images[0] : "");
 
   const tags = p.tags || [];
-  const tagStr = tags.join(" ").toLowerCase();
 
-  let category = "uncategorized";
-  let categoryName = "Uncategorized";
-
-  if (p.category_slug && p.category_name) {
-    category = p.category_slug;
-    categoryName = p.category_name;
-  } else if (tagStr.includes("dog") || tagStr.includes("puppy")) {
-    category = "dog-food"; categoryName = "Dog Food";
-  } else if (tagStr.includes("litter") || tagStr.includes("litter box")) {
-    category = "cat-litter"; categoryName = "Cat Litter & Hygiene";
-  } else if (tagStr.includes("treat") || tagStr.includes("wet") || tagStr.includes("pouch") || tagStr.includes("jerky") || tagStr.includes("snack") || tagStr.includes("creamy")) {
-    category = "cat-treats"; categoryName = "Cat Treats";
-  } else if (tagStr.includes("fountain") || tagStr.includes("water") || tagStr.includes("drinker")) {
-    category = "water-fountains"; categoryName = "Water Fountains";
-  } else if (tagStr.includes("vaccine") || tagStr.includes("medicine") || tagStr.includes("deworm")) {
-    category = "vaccines"; categoryName = "Vaccines & Medicine";
-  } else if (tagStr.includes("toy") || tagStr.includes("ball") || tagStr.includes("feather") || tagStr.includes("stick")) {
-    category = "toys"; categoryName = "Toys & Accessories";
-  } else if (tagStr.includes("bird") || tagStr.includes("fish") || tagStr.includes("aquarium") || tagStr.includes("nutribird") || tagStr.includes("taiyo")) {
-    category = "bird-fish"; categoryName = "Bird & Fish";
-  } else if (tagStr.includes("cat") || tagStr.includes("kitten") || tagStr.includes("whiskas") || tagStr.includes("purina") || tagStr.includes("royal canin") || tagStr.includes("drools") || tagStr.includes("sheba") || tagStr.includes("nekko") || tagStr.includes("wanpy") || tagStr.includes("orijen") || tagStr.includes("smartheart") || tagStr.includes("felicia") || tagStr.includes("haisenpet") || tagStr.includes("miow") || tagStr.includes("friskies") || tagStr.includes("trendline") || tagStr.includes("mito")) {
-    category = "cat-food"; categoryName = "Cat Food";
-  }
+  // Use the category assigned by the CMS. If no category is assigned,
+  // leave as "uncategorized" — don't guess from tags (that created
+  // fake categories like cat-food, dog-food, etc. that don't exist
+  // in the CMS and confused the admin).
+  let category = p.category_slug || "uncategorized";
+  let categoryName = p.category_name || "Uncategorized";
 
   return {
     id: parseInt(p.id?.replace(/-/g, "").slice(0, 8), 16) || Math.floor(Math.random() * 1000000),
