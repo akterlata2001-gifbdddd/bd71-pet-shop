@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { siteInfo } from "@/lib/data";
 import { generateOrganizationSchema, serializeSchema } from "@/lib/schema";
+import { LayoutShell } from "@/components/site/layout-shell";
 
 const fredoka = Fredoka({
   variable: "--font-fredoka",
@@ -71,7 +72,7 @@ export default function RootLayout({
       <body
         className={`${fredoka.variable} ${quicksand.variable} ${geistMono.variable} antialiased bg-background text-foreground font-sans`}
       >
-        {children}
+        <LayoutShell>{children}</LayoutShell>
         <Toaster />
       </body>
     </html>

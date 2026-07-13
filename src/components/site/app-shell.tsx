@@ -2,10 +2,9 @@
 
 import { useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { SiteHeader } from "@/components/site/header";
-import { SiteFooter } from "@/components/site/footer";
-import { CartDrawer } from "@/components/site/cart-drawer";
-import { PageMeta } from "@/components/site/page-meta";
+import { useRouter } from "@/lib/store";
+import { ErrorBoundary } from "@/components/error-boundary";
+// Header/Footer/CartDrawer now live in LayoutShell (root layout)
 import { HomePage } from "@/components/pages/home";
 import { ShopPage } from "@/components/pages/shop";
 import { ProductDetailPage } from "@/components/pages/product-detail";
@@ -18,8 +17,6 @@ import { BlogSinglePage } from "@/components/pages/blog-single";
 import { LegalPage } from "@/components/pages/legal";
 import { NotFoundPage } from "@/components/pages/not-found";
 import { AccountPage } from "@/components/pages/account";
-import { useRouter } from "@/lib/store";
-import { ErrorBoundary } from "@/components/error-boundary";
 
 // URL path → page mapping
 const PATH_TO_PAGE: Record<string, { page: string; params?: any }> = {
@@ -120,8 +117,6 @@ export function AppShell() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <PageMeta />
-      <SiteHeader />
       <main className="flex-1">
         <AnimatePresence mode="wait">
           <motion.div
@@ -137,8 +132,6 @@ export function AppShell() {
           </motion.div>
         </AnimatePresence>
       </main>
-      <SiteFooter />
-      <CartDrawer />
     </div>
   );
 }
