@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "@/lib/store";
 import { BlogSinglePage } from "@/components/pages/blog-single";
+import { StoreInitializer } from "@/components/site/store-initializer";
 
 // =====================================================
 // Client wrapper — receives SSR post data and injects
@@ -28,7 +29,12 @@ export function BlogSingleSSR({ post }: { post: any }) {
     }
   }, [post, allPosts.length, dataLoaded]);
 
-  return <BlogSinglePage />;
+  return (
+    <>
+      <StoreInitializer />
+      <BlogSinglePage />
+    </>
+  );
 }
 
 function mapApiPost(p: any) {

@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "@/lib/store";
+import { StoreInitializer } from "@/components/site/store-initializer";
 import { ShopPage } from "@/components/pages/shop";
 
 export function ShopSSR() {
@@ -11,5 +12,5 @@ export function ShopSSR() {
     useRouter.setState({ page: "shop", params: {} } as any);
   }, []);
 
-  return <ShopPage />;
+  return (<><StoreInitializer /><ShopPage /></>);
 }

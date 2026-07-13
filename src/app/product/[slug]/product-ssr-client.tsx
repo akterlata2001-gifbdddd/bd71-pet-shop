@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "@/lib/store";
 import { ProductDetailPage } from "@/components/pages/product-detail";
+import { StoreInitializer } from "@/components/site/store-initializer";
 
 // =====================================================
 // Client wrapper — receives SSR product data and injects
@@ -31,7 +32,12 @@ export function ProductDetailSSR({ product }: { product: any }) {
     }
   }, [product, allProducts.length, dataLoaded]);
 
-  return <ProductDetailPage />;
+  return (
+    <>
+      <StoreInitializer />
+      <ProductDetailPage />
+    </>
+  );
 }
 
 function mapApiProduct(p: any) {
