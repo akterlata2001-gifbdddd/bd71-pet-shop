@@ -1,66 +1,110 @@
 import { fetchAllProducts, fetchAllPosts, fetchCategories } from "@/lib/seo-fetchers";
 
 // =====================================================
-// /sitemap.xml — Dynamic sitemap generated from CMS data
+// /sitemap.xml — Dynamic sitemap from CMS data
 // =====================================================
-// Next.js App Router: any file named sitemap.ts in /app
-// automatically serves /sitemap.xml.
-//
-// Includes:
-//   - Static pages (home, shop, about, contact, blog)
-//   - All active products (/product/[slug])
-//   - All published blog posts (/blog/[slug])
-//   - All categories (/category/[slug])
+// Reads sitemap inclusion toggles from CMS store_settings.
+// If a content type is disabled in client dashboard SEO settings,
+// it won't appear in the sitemap.
 // =====================================================
 
 const BASE_URL = "https://bd71shop.com.bd";
+const CMS_API = process.env.NEXT_PUBLIC_CMS_API_URL ?? "https://cms-lac-two.vercel.app";
+const CMS_SITE_ID = process.env.NEXT_PUBLIC_CMS_SITE_ID ?? "lata-test";
+const CMS_API_KEY = process.env.NEXT_PUBLIC_CMS_API_KEY ?? "";
+
+interface SitemapToggles {
+  products: boolean;
+  posts: boolean;
+  categories: boolean;
+  pages: boolean;
+}
+
+async function getSitemapToggles(): Promise<SitemapToggles> {
+  try {
+    const res = await fetch(
+      `${CMS_API}/api/v1/sites/${CMS_SITE_ID}/settings`,
+      {
+        headers: { "X-API-Key": CMS_API_KEY },
+        next: { revalidate: 300, tags: ["seo-settings"] },
+      }
+    );
+    const json = await res.json();
+    if (!json.success) {
+      return { products: true, posts: true, categories: true, pages: true };
+    }
+    const s = json.data?.settings ?? {};
+    return {
+      products: s.sitemapIncludeProducts !== "false" && s.sitemapIncludeProducts !== false,
+      posts: s.sitemapIncludePosts !== "false" && s.sitemapIncludePosts !== false,
+      categories: s.sitemapIncludeCategories !== "false" && s.sitemapIncludeCategories !== false,
+      pages: s.sitemapIncludePages !== "false" && s.sitemapIncludePages !== false,
+    };
+  } catch {
+    return { products: true, posts: true, categories: true, pages: true };
+  }
+}
 
 export default async function sitemap() {
-  // Fetch all data in parallel
-  const [products, posts, categories] = await Promise.all([
+  const [toggles, products, posts, categories] = await Promise.all([
+    getSitemapToggles(),
     fetchAllProducts(),
     fetchAllPosts(),
     fetchCategories(),
   ]);
 
-  // Static pages
-  const staticPages = [
-    { url: `${BASE_URL}/`, priority: 1.0, changeFrequency: "daily" as const, lastModified: new Date() },
-    { url: `${BASE_URL}/shop`, priority: 0.9, changeFrequency: "daily" as const, lastModified: new Date() },
-    { url: `${BASE_URL}/blog`, priority: 0.8, changeFrequency: "daily" as const, lastModified: new Date() },
-    { url: `${BASE_URL}/about`, priority: 0.5, changeFrequency: "monthly" as const, lastModified: new Date() },
-    { url: `${BASE_URL}/contact`, priority: 0.5, changeFrequency: "monthly" as const, lastModified: new Date() },
+  // Static pages — always include home + shop
+  const staticPages: any[] = [
+    { url: `${BASE_URL}/`, priority: 1.0, changeFrequency: "daily", lastModified: new Date() },
+    { url: `${BASE_URL}/shop`, priority: 0.9, changeFrequency: "daily", lastModified: new Date() },
   ];
-
-  // Product pages
-  const productPages = (products ?? [])
-    .filter((p: any) => p.status !== "draft" && p.slug)
-    .map((p: any) => ({
-      url: `${BASE_URL}/product/${p.slug}`,
-      priority: 0.7,
-      changeFrequency: "weekly" as const,
-      lastModified: p.updated_at ? new Date(p.updated_at) : new Date(),
-    }));
-
-  // Blog post pages
-  const postPages = (posts ?? [])
-    .filter((p: any) => p.status !== "draft" && p.slug)
-    .map((p: any) => ({
-      url: `${BASE_URL}/blog/${p.slug}`,
-      priority: 0.6,
-      changeFrequency: "weekly" as const,
-      lastModified: p.updated_at ? new Date(p.updated_at) : new Date(p.published_at ?? new Date()),
-    }));
-
-  // Category pages
-  const categoryPages = (categories ?? [])
-    .filter((c: any) => c.slug)
-    .map((c: any) => ({
-      url: `${BASE_URL}/category/${c.slug}`,
-      priority: 0.6,
-      changeFrequency: "weekly" as const,
+  if (toggles.posts) {
+    staticPages.push({
+      url: `${BASE_URL}/blog`,
+      priority: 0.8,
+      changeFrequency: "daily",
       lastModified: new Date(),
-    }));
+    });
+  }
+  // About + Contact are static pages
+  staticPages.push(
+    { url: `${BASE_URL}/about`, priority: 0.5, changeFrequency: "monthly", lastModified: new Date() },
+    { url: `${BASE_URL}/contact`, priority: 0.5, changeFrequency: "monthly", lastModified: new Date() },
+  );
+
+  // Conditional content pages
+  const productPages = toggles.products
+    ? (products ?? [])
+        .filter((p: any) => p.status !== "draft" && p.slug)
+        .map((p: any) => ({
+          url: `${BASE_URL}/product/${p.slug}`,
+          priority: 0.7,
+          changeFrequency: "weekly",
+          lastModified: p.updated_at ? new Date(p.updated_at) : new Date(),
+        }))
+    : [];
+
+  const postPages = toggles.posts
+    ? (posts ?? [])
+        .filter((p: any) => p.status !== "draft" && p.slug)
+        .map((p: any) => ({
+          url: `${BASE_URL}/blog/${p.slug}`,
+          priority: 0.6,
+          changeFrequency: "weekly",
+          lastModified: p.updated_at ? new Date(p.updated_at) : new Date(p.published_at ?? new Date()),
+        }))
+    : [];
+
+  const categoryPages = toggles.categories
+    ? (categories ?? [])
+        .filter((c: any) => c.slug)
+        .map((c: any) => ({
+          url: `${BASE_URL}/category/${c.slug}`,
+          priority: 0.6,
+          changeFrequency: "weekly",
+          lastModified: new Date(),
+        }))
+    : [];
 
   return [...staticPages, ...productPages, ...postPages, ...categoryPages];
 }
