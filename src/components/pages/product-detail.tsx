@@ -70,19 +70,13 @@ export function ProductDetailPage() {
     } catch {}
   };
 
-  // Loading state — data not loaded yet
-  if (!dataLoaded) {
-    return (
-      <div className="min-h-[400px] flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-5xl mb-3 animate-bounce">🐾</div>
-          <p className="text-cocoa/60 text-sm">Loading product...</p>
-        </div>
-      </div>
-    );
+  // If data not loaded yet AND no product found, wait silently
+  // (don't show "Loading..." or "Product not found" flash)
+  if (!product && !dataLoaded) {
+    return null;
   }
 
-  // Product not found after data loaded
+  // Product not found after data fully loaded
   if (!product) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-20 text-center">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "@/lib/store";
 import { ProductDetailPage } from "@/components/pages/product-detail";
 
@@ -12,24 +12,32 @@ import { ProductDetailPage } from "@/components/pages/product-detail";
 export function ProductDetailSSR({ product }: { product: any }) {
   const allProducts = useRouter((s) => s.products);
   const dataLoaded = useRouter((s) => s.dataLoaded);
+  const [injected, setInjected] = useState(false);
 
   useEffect(() => {
     if (!product) return;
-    // Set router state WITHOUT pushing URL (we're already on the right URL).
-    // Direct set() bypasses the navigate() URL push.
+
+    // Set router state
     useRouter.setState({
       page: "product",
       params: { productSlug: product.slug, productId: String(product.id) },
     } as any);
 
-    // If product isn't already in store, inject it
+    // If product isn't already in store, inject it immediately
     const exists = allProducts.find((p) => p.slug === product.slug);
-    if (!exists && dataLoaded) {
+    if (!exists) {
       useRouter.setState((s) => ({
         products: [...s.products, mapApiProduct(product)] as any,
       }));
     }
-  }, [product, allProducts.length, dataLoaded]);
+    setInjected(true);
+  }, [product]);
+
+  // Don't render ProductDetailPage until product is injected
+  // This prevents "Loading..." and "Product not found" flash
+  if (!injected && product) {
+    return null; // Brief invisible state — product injects in <1ms
+  }
 
   return <ProductDetailPage />;
 }
