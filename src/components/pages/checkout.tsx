@@ -36,14 +36,10 @@ export function CheckoutPage() {
   const { token: turnstileToken, widget: turnstileWidget } = useTurnstile();
 
   // Form refs — read values on submit
-  const firstNameRef = useRef<HTMLInputElement>(null);
-  const lastNameRef = useRef<HTMLInputElement>(null);
+  const fullNameRef = useRef<HTMLInputElement>(null);
   const phoneRef = useRef<HTMLInputElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
-  const addressRef = useRef<HTMLInputElement>(null);
-  const cityRef = useRef<HTMLInputElement>(null);
-  const areaRef = useRef<HTMLInputElement>(null);
-  const postalRef = useRef<HTMLInputElement>(null);
+  const addressRef = useRef<HTMLTextAreaElement>(null);
   const notesRef = useRef<HTMLTextAreaElement>(null);
 
   // ===== Handle payment return (gateway redirects back here with ?payment=status&order=...) =====
@@ -105,18 +101,32 @@ export function CheckoutPage() {
 
     try {
       // Collect form data
-      const firstName = firstNameRef.current?.value || "";
-      const lastName = lastNameRef.current?.value || "";
+      const fullName = fullNameRef.current?.value || "";
       const phone = phoneRef.current?.value || "";
       const email = emailRef.current?.value || "";
       const address = addressRef.current?.value || "";
-      const city = cityRef.current?.value || "";
-      const area = areaRef.current?.value || "";
-      const postal = postalRef.current?.value || "";
       const notes = notesRef.current?.value || "";
 
-      if (!firstName || !phone || !address || !city) {
-        setError("Please fill in all required fields (name, phone, address, city).");
+      // Validate full name
+      if (!fullName.trim()) {
+        setError("Please enter your full name.");
+        setSubmitting(false);
+        return;
+      }
+
+      // Validate Bangladeshi phone number
+      // Accepts: 01XXXXXXXXX, +8801XXXXXXXXX, 8801XXXXXXXXX
+      const phoneClean = phone.replace(/[\s-]/g, "");
+      const phoneRegex = /^(?:\+?88)?01[3-9]\d{8}$/;
+      if (!phoneRegex.test(phoneClean)) {
+        setError("Please enter a valid Bangladeshi phone number (e.g., 01712345678).");
+        setSubmitting(false);
+        return;
+      }
+
+      // Validate address
+      if (!address.trim()) {
+        setError("Please enter your full delivery address.");
         setSubmitting(false);
         return;
       }
@@ -130,13 +140,9 @@ export function CheckoutPage() {
         variant_id: null,
       }));
 
-      // Build shipping address
+      // Build shipping address — single field
       const shippingAddress = {
-        line1: address,
-        line2: area || undefined,
-        city,
-        state: undefined,
-        zip: postal || undefined,
+        full_address: address.trim(),
         country: "Bangladesh",
       };
 
@@ -151,9 +157,9 @@ export function CheckoutPage() {
             ...(turnstileToken ? { "x-turnstile-token": turnstileToken } : {}),
           },
           body: JSON.stringify({
-            customerName: `${firstName} ${lastName}`.trim(),
+            customerName: fullName.trim(),
             customerEmail: email || undefined,
-            customerPhone: phone,
+            customerPhone: phoneClean,
             shippingAddress,
             items: orderItems,
             subtotal,
@@ -366,22 +372,21 @@ export function CheckoutPage() {
                   <p className="text-xs text-cocoa/60">We&apos;ll use this to confirm your order</p>
                 </div>
               </div>
-              <div className="grid sm:grid-cols-2 gap-4">
+              <div className="space-y-4">
                 <div>
-                  <Label htmlFor="firstName" className="text-sm font-medium text-cocoa">First Name *</Label>
-                  <Input id="firstName" ref={firstNameRef} required placeholder="Rahim" className="mt-1.5 rounded-xl" />
+                  <Label htmlFor="fullName" className="text-sm font-medium text-cocoa">Full Name *</Label>
+                  <Input id="fullName" ref={fullNameRef} required placeholder="e.g., Rahim Uddin" className="mt-1.5 rounded-xl" />
                 </div>
-                <div>
-                  <Label htmlFor="lastName" className="text-sm font-medium text-cocoa">Last Name *</Label>
-                  <Input id="lastName" ref={lastNameRef} required placeholder="Uddin" className="mt-1.5 rounded-xl" />
-                </div>
-                <div>
-                  <Label htmlFor="phone" className="text-sm font-medium text-cocoa">Phone Number *</Label>
-                  <Input id="phone" ref={phoneRef} required type="tel" placeholder="01XXXXXXXXX" className="mt-1.5 rounded-xl" />
-                </div>
-                <div>
-                  <Label htmlFor="email" className="text-sm font-medium text-cocoa">Email Address</Label>
-                  <Input id="email" ref={emailRef} type="email" placeholder="you@example.com" className="mt-1.5 rounded-xl" />
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="phone" className="text-sm font-medium text-cocoa">Phone Number *</Label>
+                    <Input id="phone" ref={phoneRef} required type="tel" placeholder="01XXXXXXXXX" pattern="^(?:\+?88)?01[3-9]\d{8}$" className="mt-1.5 rounded-xl" />
+                    <p className="text-[11px] text-cocoa/50 mt-1">Bangladeshi number only (e.g., 01712345678)</p>
+                  </div>
+                  <div>
+                    <Label htmlFor="email" className="text-sm font-medium text-cocoa">Email Address (optional)</Label>
+                    <Input id="email" ref={emailRef} type="email" placeholder="you@example.com" className="mt-1.5 rounded-xl" />
+                  </div>
                 </div>
               </div>
             </div>
@@ -393,28 +398,21 @@ export function CheckoutPage() {
                   <MapPin className="h-4.5 w-4.5" />
                 </div>
                 <div>
-                  <h2 className="font-display text-lg font-semibold text-cocoa">Shipping Address</h2>
+                  <h2 className="font-display text-lg font-semibold text-cocoa">Delivery Address</h2>
                   <p className="text-xs text-cocoa/60">Where should we deliver your order?</p>
                 </div>
               </div>
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="address" className="text-sm font-medium text-cocoa">Street Address *</Label>
-                  <Input id="address" ref={addressRef} required placeholder="House #, Road #, Area" className="mt-1.5 rounded-xl" />
-                </div>
-                <div className="grid sm:grid-cols-3 gap-4">
-                  <div>
-                    <Label htmlFor="city" className="text-sm font-medium text-cocoa">City *</Label>
-                    <Input id="city" ref={cityRef} required placeholder="Dhaka" className="mt-1.5 rounded-xl" />
-                  </div>
-                  <div>
-                    <Label htmlFor="area" className="text-sm font-medium text-cocoa">Area</Label>
-                    <Input id="area" ref={areaRef} placeholder="Gulshan" className="mt-1.5 rounded-xl" />
-                  </div>
-                  <div>
-                    <Label htmlFor="postal" className="text-sm font-medium text-cocoa">Postal Code</Label>
-                    <Input id="postal" ref={postalRef} placeholder="1212" className="mt-1.5 rounded-xl" />
-                  </div>
+                  <Label htmlFor="address" className="text-sm font-medium text-cocoa">Full Address *</Label>
+                  <textarea
+                    id="address"
+                    ref={addressRef}
+                    required
+                    rows={3}
+                    placeholder="House #, Road #, Area, City — full delivery address"
+                    className="mt-1.5 w-full px-3 py-2 rounded-xl border border-border bg-background text-sm resize-none focus:outline-none focus:ring-2 focus:ring-terracotta/30"
+                  />
                 </div>
                 <div>
                   <Label htmlFor="notes" className="text-sm font-medium text-cocoa">Order Notes (optional)</Label>
