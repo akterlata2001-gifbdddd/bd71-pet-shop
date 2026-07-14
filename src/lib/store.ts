@@ -433,7 +433,7 @@ export const useRouter = create<RouterState>((set, get) => ({
   },
 }));
 
-// ===== Cart Store =====
+// ===== Cart Store with localStorage persistence =====
 export type CartItem = {
   id: number;
   name: string;
@@ -456,31 +456,60 @@ type CartState = {
   subtotal: () => number;
 };
 
+const CART_STORAGE_KEY = "pn_cart_v1";
+
+function loadCart(): CartItem[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(CART_STORAGE_KEY);
+    if (!raw) return [];
+    return JSON.parse(raw);
+  } catch {
+    return [];
+  }
+}
+
+function saveCart(items: CartItem[]) {
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+    } catch {}
+  }
+}
+
 export const useCart = create<CartState>((set, get) => ({
-  items: [],
+  items: loadCart(),
   isOpen: false,
   setOpen: (open) => set({ isOpen: open }),
   addItem: (item, qty = 1) => {
     const existing = get().items.find((i) => i.id === item.id);
+    let newItems: CartItem[];
     if (existing) {
-      set({
-        items: get().items.map((i) =>
-          i.id === item.id ? { ...i, quantity: i.quantity + qty } : i
-        ),
-      });
+      newItems = get().items.map((i) =>
+        i.id === item.id ? { ...i, quantity: i.quantity + qty } : i
+      );
     } else {
-      set({ items: [...get().items, { ...item, quantity: qty }] });
+      newItems = [...get().items, { ...item, quantity: qty }];
     }
-    set({ isOpen: true });
+    set({ items: newItems, isOpen: true });
+    saveCart(newItems);
   },
-  removeItem: (id) => set({ items: get().items.filter((i) => i.id !== id) }),
-  updateQuantity: (id, qty) =>
-    set({
-      items: get()
-        .items.map((i) => (i.id === id ? { ...i, quantity: Math.max(1, qty) } : i))
-        .filter((i) => i.quantity > 0),
-    }),
-  clearCart: () => set({ items: [] }),
+  removeItem: (id) => {
+    const newItems = get().items.filter((i) => i.id !== id);
+    set({ items: newItems });
+    saveCart(newItems);
+  },
+  updateQuantity: (id, qty) => {
+    const newItems = get()
+      .items.map((i) => (i.id === id ? { ...i, quantity: Math.max(1, qty) } : i))
+      .filter((i) => i.quantity > 0);
+    set({ items: newItems });
+    saveCart(newItems);
+  },
+  clearCart: () => {
+    set({ items: [] });
+    saveCart([]);
+  },
   count: () => get().items.reduce((sum, i) => sum + i.quantity, 0),
   subtotal: () => get().items.reduce((sum, i) => sum + i.price * i.quantity, 0),
 }));
