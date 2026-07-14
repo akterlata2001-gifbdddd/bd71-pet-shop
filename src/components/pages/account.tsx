@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Home as HomeIcon, ChevronRight, User, Lock, Mail, Eye, EyeOff, PawPrint, Package,
-  Heart, LogOut, Settings, ShoppingBag, Phone, MapPin, Loader2, Truck, CheckCircle2,
+  Home as HomeIcon, ChevronRight, PawPrint, Package,
+  Heart, LogOut, ShoppingBag, Phone, MapPin, Loader2, Truck, CheckCircle2,
   Clock, RotateCcw, XCircle, Search,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -19,8 +19,8 @@ const CMS_SITE_ID = process.env.NEXT_PUBLIC_CMS_SITE_ID ?? "lata-test";
 const CMS_API_KEY = process.env.NEXT_PUBLIC_CMS_API_KEY ?? "";
 
 const WISHLIST_KEY = "bd71-wishlist";
+const CUSTOMER_SESSION_KEY = "pn_customer_session";
 
-// ===== Status badge config =====
 const STATUS_CONFIG: Record<string, { color: string; icon: any; label: string }> = {
   pending: { color: "bg-amber-glow/20 text-amber-glow", icon: Clock, label: "Pending" },
   confirmed: { color: "bg-amber-glow/20 text-amber-glow", icon: Clock, label: "Confirmed" },
@@ -37,7 +37,6 @@ interface CustomerOrder {
   order_number: string;
   customer_name: string;
   customer_phone: string;
-  customer_email: string;
   total: number;
   subtotal: number;
   shipping_cost: number;
@@ -60,40 +59,38 @@ interface CustomerData {
 export function AccountPage() {
   const products = useRouter((s) => s.products);
   const navigate = useRouter((s) => s.navigate);
-  const [mode, setMode] = useState<"login" | "register">("login");
-  const [showPassword, setShowPassword] = useState(false);
-  const [activeTab, setActiveTab] = useState<"orders" | "wishlist" | "addresses" | "settings">("orders");
-  const [form, setForm] = useState({ name: "", email: "", phone: "", password: "" });
+  const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [customer, setCustomer] = useState<CustomerData | null>(null);
+  const [activeTab, setActiveTab] = useState<"orders" | "wishlist" | "addresses" | "settings">("orders");
   const [wishlistIds, setWishlistIds] = useState<string[]>([]);
 
-  // Load customer from localStorage on mount
+  // Auto-login from localStorage (session saved after order or manual login)
   useEffect(() => {
     try {
-      const saved = localStorage.getItem("bd71-customer");
+      const saved = localStorage.getItem(CUSTOMER_SESSION_KEY);
       if (saved) {
-        const c = JSON.parse(saved);
-        setForm({ name: c.name ?? "", email: c.email ?? "", phone: c.phone ?? "", password: "" });
-        if (c.phone || c.email) {
-          fetchCustomer(c.phone, c.email);
+        const session = JSON.parse(saved);
+        if (session.phone) {
+          setPhone(session.phone);
+          fetchCustomer(session.phone);
         }
       }
     } catch {}
+
     try {
       const w = JSON.parse(localStorage.getItem(WISHLIST_KEY) ?? "[]");
       setWishlistIds(Array.isArray(w) ? w : []);
     } catch {}
   }, []);
 
-  async function fetchCustomer(phone: string, email: string) {
+  async function fetchCustomer(phoneNum: string) {
     setLoading(true);
     setError(null);
     try {
       const params = new URLSearchParams();
-      if (phone) params.set("phone", phone);
-      if (email) params.set("email", email);
+      params.set("phone", phoneNum.trim());
       const res = await fetch(
         `${CMS_API}/api/v1/sites/${CMS_SITE_ID}/customers/me?${params}`,
         { headers: { "X-API-Key": CMS_API_KEY } }
@@ -101,62 +98,48 @@ export function AccountPage() {
       const json = await res.json();
       if (json.success && json.data) {
         setCustomer(json.data as CustomerData);
-        // Update name from latest order if customer had no name
-        if (!form.name && json.data.customer?.name) {
-          setForm(f => ({ ...f, name: json.data.customer.name }));
-        }
+        // Save session
+        localStorage.setItem(CUSTOMER_SESSION_KEY, JSON.stringify({
+          phone: phoneNum.trim(),
+          name: json.data.customer?.name || "",
+        }));
       } else {
-        // No orders yet — that's OK, show empty state
-        setCustomer({
-          customer: { name: form.name, phone, email },
-          stats: { totalOrders: 0, totalSpent: 0, completedOrders: 0, pendingOrders: 0 },
-          orders: [],
-          savedAddresses: [],
-        });
+        setError("No orders found for this phone number.");
+        setCustomer(null);
       }
-    } catch (err) {
-      setError("Could not load your orders. Please try again later.");
+    } catch {
+      setError("Could not load your account. Please try again.");
     } finally {
       setLoading(false);
     }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  function handleLogin(e: React.FormEvent) {
     e.preventDefault();
-    if (mode === "login") {
-      if (!form.phone && !form.email) {
-        setError("Phone or email required to sign in");
-        return;
-      }
-    } else {
-      if (!form.name || !form.phone) {
-        setError("Name and phone required to register");
-        return;
-      }
+    const phoneClean = phone.replace(/[\s-]/g, "");
+    const phoneRegex = /^(?:\+?88)?01[3-9]\d{8}$/;
+    if (!phoneRegex.test(phoneClean)) {
+      setError("Please enter a valid Bangladeshi phone number (e.g., 01712345678).");
+      return;
     }
-    // Save customer to localStorage
-    localStorage.setItem("bd71-customer", JSON.stringify({
-      name: form.name, email: form.email, phone: form.phone,
-    }));
-    fetchCustomer(form.phone, form.email);
-  };
+    fetchCustomer(phoneClean);
+  }
 
-  const handleLogout = () => {
-    localStorage.removeItem("bd71-customer");
+  function handleLogout() {
+    localStorage.removeItem(CUSTOMER_SESSION_KEY);
     setCustomer(null);
-    setForm({ name: "", email: "", phone: "", password: "" });
+    setPhone("");
     navigate("home");
-  };
+  }
 
-  // ===== Wishlist helpers =====
-  const wishlist = products.filter(p => wishlistIds.includes(String(p.id)));
   const removeFromWishlist = (id: string) => {
     const next = wishlistIds.filter(x => x !== id);
     setWishlistIds(next);
     localStorage.setItem(WISHLIST_KEY, JSON.stringify(next));
   };
 
-  // ===== Logged-in dashboard =====
+  const wishlist = products.filter(p => wishlistIds.includes(String(p.id)));
+
   if (customer) {
     return (
       <div className="bg-gradient-to-b from-secondary/30 to-background min-h-screen">
@@ -179,36 +162,20 @@ export function AccountPage() {
               <div className="bg-card rounded-2xl border border-border/60 p-5 sticky top-28">
                 <div className="flex items-center gap-3 mb-5 pb-5 border-b border-border/60">
                   <div className="h-12 w-12 rounded-full bg-terracotta text-primary-foreground flex items-center justify-center font-display font-semibold text-lg">
-                    {form.name?.[0]?.toUpperCase() || form.phone?.[0] || "U"}
+                    {customer.customer?.name?.[0]?.toUpperCase() || phone[0] || "U"}
                   </div>
                   <div className="min-w-0">
-                    <div className="font-semibold text-cocoa truncate">{form.name || "Valued Customer"}</div>
-                    <div className="text-xs text-cocoa/60 truncate">{form.phone || form.email}</div>
-                  </div>
-                </div>
-
-                {/* Stats */}
-                <div className="grid grid-cols-3 gap-2 mb-5 pb-5 border-b border-border/60">
-                  <div className="text-center">
-                    <div className="text-lg font-bold text-cocoa">{customer.stats.totalOrders}</div>
-                    <div className="text-[10px] text-cocoa/60 uppercase">Orders</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-lg font-bold text-sage">{customer.stats.completedOrders}</div>
-                    <div className="text-[10px] text-cocoa/60 uppercase">Done</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-lg font-bold text-amber-glow">{customer.stats.pendingOrders}</div>
-                    <div className="text-[10px] text-cocoa/60 uppercase">Active</div>
+                    <div className="font-semibold text-cocoa truncate">{customer.customer?.name || "Customer"}</div>
+                    <div className="text-xs text-cocoa/60 truncate">{phone}</div>
                   </div>
                 </div>
 
                 <nav className="space-y-1">
                   {[
-                    { id: "orders" as const, label: "My Orders", icon: Package, badge: customer.stats.totalOrders },
+                    { id: "orders" as const, label: "My Orders", icon: Package, badge: customer.stats?.totalOrders },
                     { id: "wishlist" as const, label: "Wishlist", icon: Heart, badge: wishlist.length },
-                    { id: "addresses" as const, label: "Addresses", icon: MapPin, badge: customer.savedAddresses.length },
-                    { id: "settings" as const, label: "Settings", icon: Settings },
+                    { id: "addresses" as const, label: "Saved Addresses", icon: MapPin, badge: customer.savedAddresses?.length },
+                    { id: "settings" as const, label: "Settings", icon: ShoppingBag },
                   ].map((item) => (
                     <button
                       key={item.id}
@@ -221,10 +188,10 @@ export function AccountPage() {
                       )}
                     >
                       <item.icon className="h-4 w-4" />
-                      <span className="flex-1 text-left">{item.label}</span>
+                      {item.label}
                       {item.badge !== undefined && item.badge > 0 && (
                         <span className={cn(
-                          "text-xs px-1.5 py-0.5 rounded-full",
+                          "text-xs px-1.5 py-0.5 rounded-full ml-auto",
                           activeTab === item.id ? "bg-primary-foreground/20" : "bg-secondary"
                         )}>{item.badge}</span>
                       )}
@@ -277,10 +244,7 @@ export function AccountPage() {
                                 <div>
                                   <div className="font-display text-lg font-semibold text-cocoa">#{order.order_number}</div>
                                   <div className="text-xs text-cocoa/60 mt-0.5">
-                                    {new Date(order.created_at).toLocaleDateString("en-US", {
-                                      year: "numeric", month: "short", day: "numeric",
-                                      hour: "2-digit", minute: "2-digit",
-                                    })}
+                                    {new Date(order.created_at).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-2">
@@ -289,16 +253,12 @@ export function AccountPage() {
                                   </span>
                                   <span className={cn(
                                     "text-xs font-semibold px-3 py-1.5 rounded-full",
-                                    order.payment_status === "paid"
-                                      ? "bg-sage/15 text-sage"
-                                      : "bg-amber-glow/20 text-amber-glow"
+                                    order.payment_status === "paid" ? "bg-sage/15 text-sage" : "bg-amber-glow/20 text-amber-glow"
                                   )}>
                                     {order.payment_status === "paid" ? "Paid" : "Unpaid"}
                                   </span>
                                 </div>
                               </div>
-
-                              {/* Items */}
                               <div className="space-y-2 py-3 border-t border-border/40">
                                 {order.items.length === 0 ? (
                                   <p className="text-xs text-cocoa/60 italic">Item details unavailable</p>
@@ -312,23 +272,15 @@ export function AccountPage() {
                                   </div>
                                 ))}
                               </div>
-
                               <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-border/40">
                                 {addr && (
                                   <div className="text-xs text-cocoa/60 flex items-start gap-1.5 max-w-md">
                                     <MapPin className="h-3 w-3 mt-0.5 shrink-0" />
-                                    <span>
-                                      {[addr.line1, addr.line2, addr.city, addr.zip].filter(Boolean).join(", ")}
-                                    </span>
+                                    <span>{addr.full_address || [addr.line1, addr.line2, addr.city, addr.zip].filter(Boolean).join(", ")}</span>
                                   </div>
                                 )}
-                                <div className="text-right ml-auto">
-                                  {order.discount > 0 && (
-                                    <div className="text-xs text-sage line-through">৳{formatPrice(order.subtotal + order.shipping_cost)}</div>
-                                  )}
-                                  <div className="font-display text-lg font-semibold text-cocoa">
-                                    ৳{formatPrice(order.total)}
-                                  </div>
+                                <div className="font-display text-lg font-semibold text-cocoa ml-auto">
+                                  ৳{formatPrice(order.total)}
                                 </div>
                               </div>
                             </div>
@@ -346,8 +298,7 @@ export function AccountPage() {
                       <div className="bg-card rounded-2xl border border-border/60 p-12 text-center">
                         <Heart className="h-12 w-12 mx-auto text-cocoa/30 mb-3" />
                         <h3 className="font-semibold text-cocoa mb-1">Your wishlist is empty</h3>
-                        <p className="text-sm text-cocoa/60 mb-5">Tap the heart icon on any product to save it here.</p>
-                        <Button onClick={() => navigate("shop")} className="bg-terracotta hover:bg-terracotta/90 text-primary-foreground rounded-full">
+                        <Button onClick={() => navigate("shop")} className="bg-terracotta hover:bg-terracotta/90 text-primary-foreground rounded-full mt-4">
                           <ShoppingBag className="h-4 w-4 mr-2" /> Browse Products
                         </Button>
                       </div>
@@ -366,21 +317,10 @@ export function AccountPage() {
                               <h3 className="font-semibold text-cocoa line-clamp-2 text-sm">{p.name}</h3>
                               <div className="font-display text-base font-semibold text-cocoa mt-1">৳{formatPrice(p.price)}</div>
                               <div className="flex items-center gap-2 mt-2">
-                                <Button
-                                  size="sm"
-                                  onClick={() => navigate("product", { productSlug: p.slug, productId: String(p.id) })}
-                                  className="h-8 rounded-full bg-terracotta hover:bg-terracotta/90 text-primary-foreground text-xs"
-                                >
-                                  View
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => removeFromWishlist(String(p.id))}
-                                  className="h-8 rounded-full text-xs border-cocoa/15"
-                                >
-                                  Remove
-                                </Button>
+                                <Button size="sm" onClick={() => navigate("product", { productSlug: p.slug, productId: String(p.id) })}
+                                  className="h-8 rounded-full bg-terracotta hover:bg-terracotta/90 text-primary-foreground text-xs">View</Button>
+                                <Button size="sm" variant="outline" onClick={() => removeFromWishlist(String(p.id))}
+                                  className="h-8 rounded-full text-xs border-cocoa/15">Remove</Button>
                               </div>
                             </div>
                           </div>
@@ -411,10 +351,7 @@ export function AccountPage() {
                               <span className="text-sm font-semibold text-cocoa">Address #{i + 1}</span>
                             </div>
                             <div className="text-sm text-cocoa/80 space-y-1">
-                              {addr.line1 && <div>{addr.line1}</div>}
-                              {addr.line2 && <div>{addr.line2}</div>}
-                              <div>{[addr.city, addr.zip].filter(Boolean).join(", ")}</div>
-                              {addr.country && <div>{addr.country}</div>}
+                              {addr.full_address || [addr.line1, addr.line2, addr.city, addr.zip].filter(Boolean).map((v, j) => <div key={j}>{v}</div>)}
                             </div>
                           </div>
                         ))}
@@ -429,56 +366,22 @@ export function AccountPage() {
                     <div className="bg-card rounded-2xl border border-border/60 p-6 space-y-5">
                       <div>
                         <Label className="text-sm font-medium text-cocoa">Full Name</Label>
-                        <Input
-                          value={form.name}
-                          onChange={(e) => setForm({ ...form, name: e.target.value })}
-                          className="mt-1.5 rounded-xl"
-                        />
+                        <Input value={customer.customer?.name || ""} readOnly className="mt-1.5 rounded-xl bg-muted" />
                       </div>
-                      <div className="grid sm:grid-cols-2 gap-4">
-                        <div>
-                          <Label className="text-sm font-medium text-cocoa">Email</Label>
-                          <Input
-                            type="email"
-                            value={form.email}
-                            onChange={(e) => setForm({ ...form, email: e.target.value })}
-                            className="mt-1.5 rounded-xl"
-                          />
+                      <div>
+                        <Label className="text-sm font-medium text-cocoa">Phone Number</Label>
+                        <Input value={phone} readOnly className="mt-1.5 rounded-xl bg-muted font-mono" />
+                      </div>
+                      <div className="pt-4 border-t border-border/60">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-cocoa/70">Total Orders</span>
+                          <span className="font-bold">{customer.stats?.totalOrders ?? 0}</span>
                         </div>
-                        <div>
-                          <Label className="text-sm font-medium text-cocoa">Phone</Label>
-                          <Input
-                            type="tel"
-                            value={form.phone}
-                            onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                            className="mt-1.5 rounded-xl"
-                          />
+                        <div className="flex justify-between text-sm mt-2">
+                          <span className="text-cocoa/70">Total Spent</span>
+                          <span className="font-bold text-terracotta">৳{formatPrice(customer.stats?.totalSpent ?? 0)}</span>
                         </div>
                       </div>
-                      <div className="pt-4 border-t border-border/60 flex items-center justify-between">
-                        <p className="text-xs text-cocoa/60">
-                          Changes are saved locally on this device.
-                        </p>
-                        <Button
-                          onClick={() => {
-                            localStorage.setItem("bd71-customer", JSON.stringify({
-                              name: form.name, email: form.email, phone: form.phone,
-                            }));
-                            if (form.phone || form.email) fetchCustomer(form.phone, form.email);
-                          }}
-                          className="bg-terracotta hover:bg-terracotta/90 text-primary-foreground rounded-full"
-                        >
-                          Save Changes
-                        </Button>
-                      </div>
-                    </div>
-
-                    <div className="bg-card rounded-2xl border border-border/60 p-6 mt-4">
-                      <h3 className="font-semibold text-cocoa mb-2">Total Spent</h3>
-                      <p className="text-3xl font-display font-bold text-terracotta">৳{formatPrice(customer.stats.totalSpent)}</p>
-                      <p className="text-xs text-cocoa/60 mt-1">
-                        Across {customer.stats.totalOrders} orders ({customer.stats.completedOrders} delivered)
-                      </p>
                     </div>
                   </motion.div>
                 )}
@@ -490,7 +393,7 @@ export function AccountPage() {
     );
   }
 
-  // ===== Login / Register screen =====
+  // ===== Login screen — phone only, no password =====
   return (
     <div className="bg-gradient-to-b from-secondary/30 to-background min-h-screen">
       <div className="bg-card border-b border-border/40">
@@ -500,7 +403,7 @@ export function AccountPage() {
               <HomeIcon className="h-3 w-3" /> Home
             </button>
             <ChevronRight className="h-3 w-3" />
-            <span className="text-cocoa font-medium">{mode === "login" ? "Login" : "Register"}</span>
+            <span className="text-cocoa font-medium">My Account</span>
           </nav>
         </div>
       </div>
@@ -516,107 +419,27 @@ export function AccountPage() {
             <div className="inline-flex h-14 w-14 rounded-2xl bg-terracotta text-primary-foreground items-center justify-center mb-3 shadow-warm">
               <PawPrint className="h-7 w-7" />
             </div>
-            <h1 className="font-display text-2xl font-semibold text-cocoa">
-              {mode === "login" ? "Welcome Back!" : "Create Account"}
-            </h1>
-            <p className="text-sm text-cocoa/60 mt-1">
-              {mode === "login"
-                ? "Sign in with your phone or email to see orders"
-                : "Join the BD71 family for exclusive offers"}
-            </p>
+            <h1 className="font-display text-2xl font-semibold text-cocoa">My Account</h1>
+            <p className="text-sm text-cocoa/60 mt-1">Enter your phone number to see your orders</p>
           </div>
 
-          {/* Toggle */}
-          <div className="flex p-1 rounded-full bg-secondary mb-6">
-            <button
-              onClick={() => setMode("login")}
-              className={cn(
-                "flex-1 py-2 rounded-full text-sm font-medium transition-colors",
-                mode === "login" ? "bg-terracotta text-primary-foreground shadow-warm" : "text-cocoa/70"
-              )}
-            >
-              Sign In
-            </button>
-            <button
-              onClick={() => setMode("register")}
-              className={cn(
-                "flex-1 py-2 rounded-full text-sm font-medium transition-colors",
-                mode === "register" ? "bg-terracotta text-primary-foreground shadow-warm" : "text-cocoa/70"
-              )}
-            >
-              Register
-            </button>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {mode === "register" && (
-              <div>
-                <Label htmlFor="name" className="text-sm font-medium text-cocoa">Full Name</Label>
-                <div className="relative mt-1.5">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-cocoa/40" />
-                  <Input
-                    id="name"
-                    required
-                    value={form.name}
-                    onChange={(e) => setForm({ ...form, name: e.target.value })}
-                    placeholder="Rahim Uddin"
-                    className="pl-10 rounded-xl"
-                  />
-                </div>
-              </div>
-            )}
+          <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <Label htmlFor="phone" className="text-sm font-medium text-cocoa">Phone Number</Label>
+              <Label htmlFor="phone" className="text-sm font-medium text-cocoa">Phone Number *</Label>
               <div className="relative mt-1.5">
                 <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-cocoa/40" />
                 <Input
                   id="phone"
                   type="tel"
-                  value={form.phone}
-                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                  required
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
                   placeholder="01XXXXXXXXX"
+                  pattern="^(?:\+?88)?01[3-9]\d{8}$"
                   className="pl-10 rounded-xl"
                 />
               </div>
-            </div>
-            <div>
-              <Label htmlFor="email" className="text-sm font-medium text-cocoa">Email Address</Label>
-              <div className="relative mt-1.5">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-cocoa/40" />
-                <Input
-                  id="email"
-                  type="email"
-                  value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  placeholder="you@example.com"
-                  className="pl-10 rounded-xl"
-                />
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="password" className="text-sm font-medium text-cocoa">Password (optional)</Label>
-              <div className="relative mt-1.5">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-cocoa/40" />
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  value={form.password}
-                  onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  placeholder="••••••••"
-                  className="pl-10 pr-10 rounded-xl"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-cocoa/40 hover:text-cocoa"
-                  aria-label="Toggle password visibility"
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
-              <p className="text-[11px] text-cocoa/50 mt-1">
-                For now, you can sign in with just your phone or email.
-              </p>
+              <p className="text-[11px] text-cocoa/50 mt-1">Bangladeshi number only. No password needed.</p>
             </div>
 
             {error && (
@@ -633,30 +456,23 @@ export function AccountPage() {
               {loading ? (
                 <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Loading...</>
               ) : (
-                <><Search className="h-4 w-4 mr-2" />{mode === "login" ? "Sign In" : "Create Account"}</>
+                <><Search className="h-4 w-4 mr-2" /> View My Orders</>
               )}
             </Button>
           </form>
 
           <div className="mt-6 text-center text-xs text-cocoa/60">
-            {mode === "login" ? "Don't have an account? " : "Already have an account? "}
-            <button
-              onClick={() => setMode(mode === "login" ? "register" : "login")}
-              className="text-terracotta font-medium hover:underline"
-            >
-              {mode === "login" ? "Sign up" : "Sign in"}
+            Don&apos;t have an account?{" "}
+            <button onClick={() => navigate("shop")} className="text-terracotta font-medium hover:underline">
+              Start shopping
             </button>
+            <p className="mt-1 text-cocoa/40">An account is created automatically when you place your first order.</p>
           </div>
 
           <div className="mt-6 pt-6 border-t border-border/60 text-center">
             <p className="text-xs text-cocoa/50 mb-3">Or continue shopping as guest</p>
-            <Button
-              variant="outline"
-              onClick={() => navigate("shop")}
-              className="rounded-full border-2 border-cocoa/15 hover:bg-secondary"
-            >
-              <ShoppingBag className="h-4 w-4 mr-2" />
-              Browse Products
+            <Button variant="outline" onClick={() => navigate("shop")} className="rounded-full border-2 border-cocoa/15 hover:bg-secondary">
+              <ShoppingBag className="h-4 w-4 mr-2" /> Browse Products
             </Button>
           </div>
         </motion.div>

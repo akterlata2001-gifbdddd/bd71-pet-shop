@@ -229,6 +229,8 @@ export function CheckoutPage() {
           setOrderResult({ orderNumber: orderNum, total });
           setSubmitted(true);
           clearCart();
+          // Auto-login customer — save session so /account shows their orders
+          localStorage.setItem("pn_customer_session", JSON.stringify({ phone: phoneClean, name: fullName.trim() }));
           window.scrollTo({ top: 0 });
           return;
         } catch (err) {
@@ -241,6 +243,8 @@ export function CheckoutPage() {
           setOrderResult({ orderNumber: orderNum, total });
           setSubmitted(true);
           clearCart();
+          // Auto-login customer
+          localStorage.setItem("pn_customer_session", JSON.stringify({ phone: phoneClean, name: fullName.trim() }));
           window.scrollTo({ top: 0 });
           return;
         }
@@ -250,6 +254,8 @@ export function CheckoutPage() {
       setOrderResult({ orderNumber: orderNum, total });
       setSubmitted(true);
       clearCart();
+      // Auto-login customer — save session so /account shows their orders
+      localStorage.setItem("pn_customer_session", JSON.stringify({ phone: phoneClean, name: fullName.trim() }));
       window.scrollTo({ top: 0 });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to place order. Please try again.");
