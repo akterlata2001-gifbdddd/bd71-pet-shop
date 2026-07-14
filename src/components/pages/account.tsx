@@ -20,6 +20,7 @@ const CMS_API_KEY = process.env.NEXT_PUBLIC_CMS_API_KEY ?? "";
 
 const WISHLIST_KEY = "bd71-wishlist";
 const CUSTOMER_SESSION_KEY = "pn_customer_session";
+const CUSTOMER_CACHE_KEY = "pn_customer_cache_v1";
 
 const STATUS_CONFIG: Record<string, { color: string; icon: any; label: string }> = {
   pending: { color: "bg-amber-glow/20 text-amber-glow", icon: Clock, label: "Pending" },
@@ -66,9 +67,37 @@ export function AccountPage() {
   const [activeTab, setActiveTab] = useState<"orders" | "wishlist" | "addresses" | "settings">("orders");
   const [wishlistIds, setWishlistIds] = useState<string[]>([]);
 
-  // Auto-login from localStorage (session saved after order or manual login)
+  // Auto-login from localStorage — instant (no API call needed)
+  // Session + cached customer data saved together.
+  // Background API refresh happens silently.
+  const [initialized, setInitialized] = useState(false);
+
   useEffect(() => {
+    if (initialized) return;
+    setInitialized(true);
+
     try {
+      // 1. Check cached customer data first (instant login)
+      const cachedRaw = localStorage.getItem(CUSTOMER_CACHE_KEY);
+      if (cachedRaw) {
+        const cached = JSON.parse(cachedRaw);
+        if (cached.customer && cached.orders) {
+          setCustomer(cached);
+          setPhone(cached.customer.phone || "");
+          // Background refresh — don't show loading
+          if (cached.customer.phone) {
+            fetchCustomer(cached.customer.phone, true).catch(() => {});
+          }
+          // Still load wishlist
+          try {
+            const w = JSON.parse(localStorage.getItem(WISHLIST_KEY) ?? "[]");
+            setWishlistIds(Array.isArray(w) ? w : []);
+          } catch {}
+          return; // Don't show login screen
+        }
+      }
+
+      // 2. Check session (phone only, no cached data) — need API call
       const saved = localStorage.getItem(CUSTOMER_SESSION_KEY);
       if (saved) {
         const session = JSON.parse(saved);
@@ -83,10 +112,10 @@ export function AccountPage() {
       const w = JSON.parse(localStorage.getItem(WISHLIST_KEY) ?? "[]");
       setWishlistIds(Array.isArray(w) ? w : []);
     } catch {}
-  }, []);
+  }, [initialized]);
 
-  async function fetchCustomer(phoneNum: string, retry = false) {
-    setLoading(true);
+  async function fetchCustomer(phoneNum: string, retry = false, silent = false) {
+    if (!silent) setLoading(true);
     setError(null);
     try {
       const params = new URLSearchParams();
@@ -97,24 +126,28 @@ export function AccountPage() {
       );
       const json = await res.json();
       if (json.success && json.data && json.data.orders) {
-        setCustomer(json.data as CustomerData);
-        // Save session
+        const data = json.data as CustomerData;
+        setCustomer(data);
+        // Save to cache for instant login on next visit
+        localStorage.setItem(CUSTOMER_CACHE_KEY, JSON.stringify(data));
+        // Also save session
         localStorage.setItem(CUSTOMER_SESSION_KEY, JSON.stringify({
           phone: phoneNum.trim(),
-          name: json.data.customer?.name || "",
+          name: data.customer?.name || "",
         }));
       } else if (json.error?.code === "DB_TIMEOUT" && !retry) {
-        // Database timeout — auto-retry once after 2s
-        setTimeout(() => fetchCustomer(phoneNum, true), 2000);
+        setTimeout(() => fetchCustomer(phoneNum, true, silent), 2000);
         return;
-      } else {
+      } else if (!silent) {
         setError(json.error?.message || "No orders found for this phone number. If you just placed an order, please wait a moment and try again.");
         setCustomer(null);
       }
     } catch {
-      setError("Could not load your account. Please check your connection and try again.");
+      if (!silent) {
+        setError("Could not load your account. Please check your connection and try again.");
+      }
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }
 
@@ -131,6 +164,7 @@ export function AccountPage() {
 
   function handleLogout() {
     localStorage.removeItem(CUSTOMER_SESSION_KEY);
+    localStorage.removeItem(CUSTOMER_CACHE_KEY);
     setCustomer(null);
     setPhone("");
     navigate("home");
