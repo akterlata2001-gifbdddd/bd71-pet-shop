@@ -21,7 +21,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { PawIcon } from "./icons";
 import { SearchModal } from "./search-modal";
 import { cn } from "@/lib/utils";
 import { useRouter, useCart, type PageId } from "@/lib/store";
@@ -140,17 +139,7 @@ export function SiteHeader({
               {logoUrl ? (
                 <img src={logoUrl} alt={siteName || "Store"} className="h-12 sm:h-14 max-w-[160px] w-auto object-contain" />
               ) : (
-                <>
-                  <div className="relative h-10 w-10 sm:h-12 sm:w-12 rounded-2xl bg-terracotta flex items-center justify-center shadow-warm transition-transform group-hover:scale-105">
-                    <PawIcon className="h-6 w-6 sm:h-7 sm:w-7 text-primary-foreground" />
-                    <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-amber-glow ring-2 ring-background" />
-                  </div>
-                  <div className="flex flex-col leading-none">
-                    <span className="font-display text-xl sm:text-2xl font-semibold text-cocoa tracking-tight">
-                      {(siteName || "Store")}
-                    </span>
-                  </div>
-                </>
+                <div className="h-12 sm:h-14 w-[140px]" />
               )}
             </button>
 
@@ -273,16 +262,7 @@ export function SiteHeader({
                       {logoUrl ? (
                         <img src={logoUrl} alt={siteName || "Store"} className="h-10 max-w-[140px] w-auto object-contain" />
                       ) : (
-                        <>
-                          <div className="h-9 w-9 rounded-xl bg-terracotta flex items-center justify-center">
-                            <PawIcon className="h-5 w-5 text-primary-foreground" />
-                          </div>
-                          <div className="flex flex-col leading-none">
-                            <span className="font-display text-lg font-semibold text-cocoa">
-                              {(siteName || "Store")}
-                            </span>
-                          </div>
-                        </>
+                        <div className="h-10 w-[100px]" />
                       )}
                     </SheetTitle>
                   </SheetHeader>

@@ -1,7 +1,6 @@
 "use client";
 
 import { Phone, Mail, MapPin } from "lucide-react";
-import { PawIcon } from "./icons";
 import { useRouter, type PageId } from "@/lib/store";
 import { siteInfo } from "@/lib/data";
 import { SocialIcon, type SocialLink } from "@/lib/social-links";
@@ -64,16 +63,7 @@ export function SiteFooter({
               {logoUrl ? (
                 <img src={logoUrl} alt={siteName || "Store"} className="h-12 max-w-[160px] w-auto object-contain mb-5" />
               ) : (
-                <>
-                  <div className="h-11 w-11 rounded-2xl bg-terracotta flex items-center justify-center shadow-warm">
-                    <PawIcon className="h-6 w-6 text-primary-foreground" />
-                  </div>
-                  <div className="flex flex-col leading-none">
-                    <span className="font-display text-2xl font-semibold text-cream tracking-tight">
-                      {(siteName || "Store")}
-                    </span>
-                  </div>
-                </>
+                <div className="h-12 w-[140px] mb-5" />
               )}
             </button>
             <p className="text-sm text-cream/70 leading-relaxed max-w-sm">
