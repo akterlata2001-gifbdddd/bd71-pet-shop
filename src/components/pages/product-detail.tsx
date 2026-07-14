@@ -201,29 +201,17 @@ export function ProductDetailPage() {
               </button>
               {product.featured_image ? (
                 <img
+                  key={product.featured_image}
                   src={product.featured_image}
                   alt={product.name}
                   className="w-full h-full object-cover absolute inset-0"
                   loading="eager"
                   onError={(e) => {
-                    const img = e.currentTarget;
-                    const allImages = product.images || [];
-                    const currentIdx = allImages.indexOf(product.featured_image);
-                    if (currentIdx >= 0 && currentIdx < allImages.length - 1) {
-                      img.src = allImages[currentIdx + 1];
-                    } else {
-                      img.style.display = "none";
-                      const fallback = img.parentElement?.querySelector('[data-fallback]') as HTMLElement;
-                      if (fallback) fallback.style.display = "flex";
-                    }
+                    e.currentTarget.style.display = "none";
                   }}
                 />
               ) : null}
-              <div
-                data-fallback
-                className="absolute inset-0 items-center justify-center"
-                style={{ display: product.featured_image ? "none" : "flex" }}
-              >
+              {!product.featured_image && (
                 <motion.div
                   animate={{ y: [0, -10, 0] }}
                   transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
@@ -231,7 +219,15 @@ export function ProductDetailPage() {
                 >
                   {product.emoji}
                 </motion.div>
-              </div>
+              )}
+              {/* Emoji fallback shown when image fails to load */}
+              {product.featured_image && (
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <span className="text-[180px] sm:text-[220px] drop-shadow-2xl select-none opacity-0" id="emoji-fallback">
+                    {product.emoji}
+                  </span>
+                </div>
+              )}
               <div className="absolute inset-0 pointer-events-none">
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-3/4 rounded-full border-2 border-dashed border-white/20" />
               </div>
