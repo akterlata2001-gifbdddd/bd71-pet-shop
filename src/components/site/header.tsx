@@ -137,7 +137,7 @@ export function SiteHeader({
               aria-label={`${siteName || "BD71 Pet Shop"} home`}
             >
               {logoUrl ? (
-                <img src={logoUrl} alt={siteName || "Store"} className="h-12 sm:h-14 max-w-[160px] w-auto object-contain" />
+                <img src={logoUrl} alt={siteName || "Store"} className="h-14 sm:h-16 max-w-[200px] w-auto object-contain" />
               ) : (
                 <div className="h-12 sm:h-14 w-[140px]" />
               )}
@@ -260,7 +260,7 @@ export function SiteHeader({
                   <SheetHeader className="p-5 border-b border-border/60">
                     <SheetTitle className="flex items-center gap-2.5">
                       {logoUrl ? (
-                        <img src={logoUrl} alt={siteName || "Store"} className="h-10 max-w-[140px] w-auto object-contain" />
+                        <img src={logoUrl} alt={siteName || "Store"} className="h-12 max-w-[160px] w-auto object-contain" />
                       ) : (
                         <div className="h-10 w-[100px]" />
                       )}
