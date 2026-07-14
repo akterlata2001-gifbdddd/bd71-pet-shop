@@ -12,7 +12,7 @@ const CMS_API_KEY = process.env.NEXT_PUBLIC_CMS_API_KEY ?? "";
 export async function fetchProductBySlug(slug: string) {
   try {
     const res = await fetch(
-      `${CMS_API}/api/v1/sites/${CMS_SITE_ID}/products?slug=${encodeURIComponent(slug)}`,
+      `${CMS_API}/api/v1/sites/${CMS_SITE_ID}/products?pageSize=500`,
       {
         headers: { "Content-Type": "application/json", "X-API-Key": CMS_API_KEY },
         next: { revalidate: 60, tags: [`product-${slug}`] },
@@ -20,8 +20,9 @@ export async function fetchProductBySlug(slug: string) {
     );
     const json = await res.json();
     if (!json.success) return null;
-    // API may return array or single
-    const product = Array.isArray(json.data?.products) ? json.data.products[0] : json.data?.product;
+    // API returns all products — filter by slug to find the exact match
+    const products: any[] = json.data?.products ?? [];
+    const product = products.find((p) => p.slug === slug);
     return product ?? null;
   } catch {
     return null;
