@@ -2,11 +2,12 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
-    unoptimized: true,
     remotePatterns: [
       { protocol: "https", hostname: "glsjqdbglzfyyrqkpwfi.supabase.co" },
       { protocol: "https", hostname: "bd71shop.com.bd" },
       { protocol: "https", hostname: "cms-lac-two.vercel.app" },
+      { protocol: "https", hostname: "**.supabase.co" },
+      { protocol: "https", hostname: "**.vercel.app" },
     ],
   },
   typescript: {

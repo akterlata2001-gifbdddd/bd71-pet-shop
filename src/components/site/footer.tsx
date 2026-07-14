@@ -4,6 +4,7 @@ import { Phone, Mail, MapPin } from "lucide-react";
 import { useRouter, type PageId } from "@/lib/store";
 import { siteInfo } from "@/lib/data";
 import { SocialIcon, type SocialLink } from "@/lib/social-links";
+import Image from "next/image";
 
 const footerCompany: { label: string; page: PageId }[] = [
   { label: "About Us", page: "about" },
@@ -61,7 +62,7 @@ export function SiteFooter({
               className="inline-flex items-center gap-2.5 mb-5"
             >
               {logoUrl ? (
-                <img src={logoUrl} alt={siteName || "Store"} className="h-14 max-w-[200px] w-auto object-contain mb-5" />
+                <Image src={logoUrl} alt={siteName || "Store"} width={200} height={56} className="h-14 w-auto max-w-[200px] object-contain mb-5" />
               ) : (
                 <div className="h-12 w-[140px] mb-5" />
               )}

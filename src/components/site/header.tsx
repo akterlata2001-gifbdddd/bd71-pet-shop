@@ -26,6 +26,7 @@ import { cn } from "@/lib/utils";
 import { useRouter, useCart, type PageId } from "@/lib/store";
 import { siteInfo } from "@/lib/data";
 import { SocialIcon, type SocialLink } from "@/lib/social-links";
+import Image from "next/image";
 
 const navLinks: { label: string; page: PageId; hasMenu?: boolean }[] = [
   { label: "Home", page: "home" },
@@ -137,7 +138,7 @@ export function SiteHeader({
               aria-label={`${siteName || "BD71 Pet Shop"} home`}
             >
               {logoUrl ? (
-                <img src={logoUrl} alt={siteName || "Store"} className="h-14 sm:h-16 max-w-[200px] w-auto object-contain" />
+                <Image src={logoUrl} alt={siteName || "Store"} width={200} height={64} className="h-14 sm:h-16 w-auto max-w-[200px] object-contain" priority />
               ) : (
                 <div className="h-12 sm:h-14 w-[140px]" />
               )}
@@ -260,7 +261,7 @@ export function SiteHeader({
                   <SheetHeader className="p-5 border-b border-border/60">
                     <SheetTitle className="flex items-center gap-2.5">
                       {logoUrl ? (
-                        <img src={logoUrl} alt={siteName || "Store"} className="h-12 max-w-[160px] w-auto object-contain" />
+                        <Image src={logoUrl} alt={siteName || "Store"} width={160} height={48} className="h-12 w-auto max-w-[160px] object-contain" />
                       ) : (
                         <div className="h-10 w-[100px]" />
                       )}
