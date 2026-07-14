@@ -69,16 +69,23 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
             className="w-full h-full object-cover absolute inset-0"
             loading="lazy"
             onError={(e) => {
-              // Fallback to emoji on broken image
               const img = e.currentTarget;
-              img.style.display = "none";
-              const fallback = img.nextElementSibling as HTMLElement;
-              if (fallback) fallback.style.display = "flex";
+              // Try next image from images array
+              const allImages = product.images || [];
+              const currentIdx = allImages.indexOf(product.featured_image);
+              if (currentIdx >= 0 && currentIdx < allImages.length - 1) {
+                img.src = allImages[currentIdx + 1];
+              } else {
+                img.style.display = "none";
+                const fallback = img.parentElement?.querySelector('[data-fallback]') as HTMLElement;
+                if (fallback) fallback.style.display = "flex";
+              }
             }}
           />
         ) : null}
         <div
-          className="absolute inset-0 flex items-center justify-center"
+          data-fallback
+          className="absolute inset-0 items-center justify-center"
           style={{ display: product.featured_image ? "none" : "flex" }}
         >
           <motion.div
