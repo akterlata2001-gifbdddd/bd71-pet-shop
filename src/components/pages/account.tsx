@@ -85,7 +85,7 @@ export function AccountPage() {
     } catch {}
   }, []);
 
-  async function fetchCustomer(phoneNum: string) {
+  async function fetchCustomer(phoneNum: string, retry = false) {
     setLoading(true);
     setError(null);
     try {
@@ -96,19 +96,23 @@ export function AccountPage() {
         { headers: { "X-API-Key": CMS_API_KEY } }
       );
       const json = await res.json();
-      if (json.success && json.data) {
+      if (json.success && json.data && json.data.orders) {
         setCustomer(json.data as CustomerData);
         // Save session
         localStorage.setItem(CUSTOMER_SESSION_KEY, JSON.stringify({
           phone: phoneNum.trim(),
           name: json.data.customer?.name || "",
         }));
+      } else if (json.error?.code === "DB_TIMEOUT" && !retry) {
+        // Database timeout — auto-retry once after 2s
+        setTimeout(() => fetchCustomer(phoneNum, true), 2000);
+        return;
       } else {
-        setError("No orders found for this phone number.");
+        setError(json.error?.message || "No orders found for this phone number. If you just placed an order, please wait a moment and try again.");
         setCustomer(null);
       }
     } catch {
-      setError("Could not load your account. Please try again.");
+      setError("Could not load your account. Please check your connection and try again.");
     } finally {
       setLoading(false);
     }
