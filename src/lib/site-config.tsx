@@ -41,8 +41,15 @@ const DEFAULT_CONFIG: SiteConfig = {
 };
 
 // Load from localStorage synchronously on module init
+// Also check window.__SITE_CONFIG__ (set by inline script in layout.tsx)
 function loadCachedConfig(): SiteConfig | null {
   if (typeof window === "undefined") return null;
+
+  // First check window.__SITE_CONFIG__ (set by inline script before React)
+  if ((window as any).__SITE_CONFIG__) {
+    return { ...DEFAULT_CONFIG, ...(window as any).__SITE_CONFIG__ };
+  }
+
   try {
     const raw = localStorage.getItem(CACHE_KEY);
     if (!raw) return null;

@@ -28,7 +28,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "BD71 Pet Shop | Premium Pet Food Online in Bangladesh",
   description:
-    "Shop premium pet food for cats, dogs, birds & fish at BD71 Pet Shop. Genuine products, affordable prices & fast delivery across Bangladesh.",
+    "Shop premium pet food for cats, dogs, birds & fish at BD71 Pet Shop. Genuine products, affordable prices, fast delivery across Bangladesh.",
   keywords: [
     "pet food Bangladesh",
     "cat food",
@@ -41,7 +41,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "BD71 Pet Shop | Premium Pet Food Online in Bangladesh",
     description:
-      "Shop premium pet food for cats, dogs, birds & fish at BD71 Pet Shop. Genuine products, affordable prices & fast delivery.",
+      "Shop premium pet food for cats, dogs, birds & fish at BD71 Pet Shop. Genuine products, affordable prices, fast delivery.",
     url: "https://bd71shop.com.bd",
     siteName: "BD71 Pet Shop",
     type: "website",
@@ -53,6 +53,29 @@ export const metadata: Metadata = {
   },
 };
 
+// =====================================================
+// Inline script — sets logo + site config from localStorage
+// BEFORE React hydrates. This ensures the logo <img> tag
+// renders with the correct src on the very first paint.
+// No flash, no delay, no placeholder.
+// =====================================================
+const logoInitScript = `
+(function(){
+  try {
+    var raw = localStorage.getItem('pn_site_config_v1');
+    if (!raw) return;
+    var config = JSON.parse(raw);
+    window.__SITE_CONFIG__ = config;
+    if (config.faviconUrl) {
+      var link = document.querySelector("link[rel='icon']") || document.createElement('link');
+      link.rel = 'icon';
+      link.href = config.faviconUrl;
+      if (!link.parentNode) document.head.appendChild(link);
+    }
+  } catch(e) {}
+})();
+`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -63,6 +86,8 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        {/* Pre-load site config from localStorage BEFORE React */}
+        <script dangerouslySetInnerHTML={{ __html: logoInitScript }} />
         {/* Site-wide Organization schema for SEO */}
         <script
           type="application/ld+json"
@@ -78,4 +103,3 @@ export default function RootLayout({
     </html>
   );
 }
-// Trigger redeploy Mon Jul 13 01:27:12 UTC 2026
