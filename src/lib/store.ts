@@ -201,7 +201,7 @@ function getInitialStoreState() {
   };
 }
 
-function mapProduct(p: any): Product {
+export function mapProduct(p: any): Product {
   // Strip <script> blocks (with content) AND any standalone JSON-LD
   // text that survived earlier tag stripping — Yoast/RankMath inject
   // FAQ schema into the WooCommerce description, and without this the
@@ -261,7 +261,7 @@ function mapProduct(p: any): Product {
   };
 }
 
-function mapPost(p: any): BlogPost {
+export function mapPost(p: any): BlogPost {
   // Content: keep raw HTML for rendering with dangerouslySetInnerHTML
   let contentSections: { heading: string; body: string }[] = [];
   if (typeof p.content === "string" && p.content) {
@@ -336,7 +336,7 @@ function pickCategoryVisuals(slug: string, name: string): { emoji: string; bg: s
   return { emoji: "🐾", bg: "from-amber-glow/20 to-terracotta/15", desc: name || "Products" };
 }
 
-function buildCategories(
+export function buildCategories(
   apiCats: any[] | null | undefined,
   products: Product[]
 ): StoreCategory[] {
