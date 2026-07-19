@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { fetchProductBySlug } from "@/lib/seo-fetchers";
+import { fetchProductBySlug, fetchAllProducts } from "@/lib/seo-fetchers";
 import { stripSchemaMarkup } from "@/lib/clean-description";
 import { ProductDetailSSR } from "./product-ssr-client";
 
@@ -13,9 +13,32 @@ import { ProductDetailSSR } from "./product-ssr-client";
 //
 // The client component (ProductDetailSSR) hydrates and takes
 // over interactivity after mount.
+//
+// Static generation: generateStaticParams pre-renders all
+// known product pages at build time. This means:
+//   - First visit to any product page = instant (already built)
+//   - Subsequent visits = served from CDN edge cache
+//   - New products added after build = generated on first
+//     request (ISR), then cached for 60s
 // =====================================================
 
 export const revalidate = 60; // ISR — revalidate every 60s
+
+// ===== Pre-render all product pages at build time =====
+// This is the key to instant page loads. Without this, every
+// first visit to a product page triggers a server-side fetch
+// from the CMS API (1-3 seconds of blank screen). With this,
+// the page is already built and served from CDN — instant.
+export async function generateStaticParams() {
+  try {
+    const products = await fetchAllProducts();
+    return products.map((p: any) => ({ slug: p.slug }));
+  } catch {
+    // If the API is down at build time, return empty — pages
+    // will be generated on-demand via ISR instead.
+    return [];
+  }
+}
 
 // ===== Generate static metadata for SEO =====
 export async function generateMetadata({

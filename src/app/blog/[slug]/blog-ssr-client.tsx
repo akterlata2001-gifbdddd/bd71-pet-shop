@@ -33,12 +33,36 @@ export function BlogSingleSSR({ post }: { post: any }) {
 }
 
 function mapApiPost(p: any) {
+  // Content can be a string (HTML) or already an array of sections.
+  // Normalize to an array of { heading, body } sections for the
+  // BlogSinglePage renderer.
+  let contentSections: { heading: string; body: string }[] = [];
+  if (typeof p.content === "string" && p.content) {
+    // Split HTML content by h2/h3 headings into sections
+    const html = p.content;
+    const parts = html.split(/<h[23][^>]*>(.*?)<\/h[23]>/i);
+    if (parts.length > 1) {
+      for (let i = 1; i < parts.length; i += 2) {
+        const heading = parts[i]?.replace(/<[^>]*>/g, "").trim() || "";
+        const body = (parts[i + 1] || "").trim();
+        if (heading || body) {
+          contentSections.push({ heading, body });
+        }
+      }
+    }
+    if (contentSections.length === 0) {
+      contentSections = [{ heading: "", body: html }];
+    }
+  } else if (Array.isArray(p.content)) {
+    contentSections = p.content;
+  }
+
   return {
     id: parseInt(String(p.id).replace(/-/g, "").slice(0, 8), 16) || Math.floor(Math.random() * 1e6),
     slug: p.slug,
     title: p.title ?? "Untitled",
     excerpt: p.excerpt ?? "",
-    content: p.content ?? "",
+    content: contentSections,
     image: p.featured_image ?? "",
     author: p.author ?? "BD71 Pet Shop",
     date: p.published_at ?? p.created_at ?? new Date().toISOString(),

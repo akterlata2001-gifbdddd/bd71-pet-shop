@@ -1,14 +1,28 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { fetchPostBySlug } from "@/lib/seo-fetchers";
+import { fetchPostBySlug, fetchAllPosts } from "@/lib/seo-fetchers";
 import { stripSchemaMarkup } from "@/lib/clean-description";
 import { BlogSingleSSR } from "./blog-ssr-client";
 
 // =====================================================
 // /blog/[slug] — Server-Rendered Blog Post (SEO)
 // =====================================================
+// Pre-renders all known blog posts at build time for instant
+// page loads. New posts added after build = generated on first
+// request via ISR, then cached for 60s.
+// =====================================================
 
 export const revalidate = 60;
+
+// ===== Pre-render all blog post pages at build time =====
+export async function generateStaticParams() {
+  try {
+    const posts = await fetchAllPosts();
+    return posts.map((p: any) => ({ slug: p.slug }));
+  } catch {
+    return [];
+  }
+}
 
 export async function generateMetadata({
   params,
