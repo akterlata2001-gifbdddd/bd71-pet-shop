@@ -1,22 +1,20 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect } from "react";
 import { useRouter } from "@/lib/store";
 import { BlogSinglePage } from "@/components/pages/blog-single";
 
 // =====================================================
-// Client wrapper — receives SSR post data and injects
-// it into the Zustand store so BlogSinglePage finds it.
+// Client wrapper — receives SSR post data and passes it
+// DIRECTLY to BlogSinglePage as a prop (eliminates flash)
+// AND injects it into the store for other consumers.
 // =====================================================
 
 export function BlogSingleSSR({ post }: { post: any }) {
-  // ===== Inject the SSR post SYNCHRONOUSLY during render =====
-  // useMemo runs DURING render (not after, like useEffect), so
-  // the store has the post BEFORE the first paint. No "Loading
-  // article..." flash during page navigation.
-  useMemo(() => {
+  // Set router state + inject into store in useEffect (after paint).
+  // The post is rendered via the prop, so no flash.
+  useEffect(() => {
     if (!post) return;
-
     useRouter.setState({
       page: "blog-single",
       params: { blogSlug: post.slug, blogId: post.id },
@@ -31,7 +29,7 @@ export function BlogSingleSSR({ post }: { post: any }) {
     }
   }, [post]);
 
-  return <BlogSinglePage />;
+  return <BlogSinglePage initialPost={post ? mapApiPost(post) : undefined} />;
 }
 
 function mapApiPost(p: any) {

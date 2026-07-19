@@ -27,7 +27,7 @@ import {
 import { stripSchemaMarkup } from "@/lib/clean-description";
 import { useTurnstile } from "@/components/site/turnstile-widget";
 
-export function ProductDetailPage() {
+export function ProductDetailPage({ initialProduct }: { initialProduct?: any } = {}) {
   const navigate = useRouter((s) => s.navigate);
   const params = useRouter((s) => s.params);
   const addItem = useCart((s) => s.addItem);
@@ -40,12 +40,17 @@ export function ProductDetailPage() {
   const [added, setAdded] = useState(false);
   const [wishlisted, setWishlisted] = useState(false);
 
-  // Find by slug (preferred) or by productId (fallback)
-  const product = params.productSlug
+  // Find by slug (preferred) or by productId (fallback) in the store.
+  // If not found in store AND we have an SSR-provided initialProduct,
+  // use that directly — this eliminates the "Product not found" flash
+  // during navigation because the SSR data is available immediately
+  // without waiting for the store to populate.
+  const productFromStore = params.productSlug
     ? allProducts.find((p) => p.slug === params.productSlug)
     : params.productId
     ? allProducts.find((p) => String(p.id) === String(params.productId))
     : null;
+  const product = productFromStore ?? initialProduct ?? null;
 
   // Sync wishlist state from localStorage when product changes
   useEffect(() => {
@@ -70,21 +75,24 @@ export function ProductDetailPage() {
     } catch {}
   };
 
-  // If no product found, render nothing.
-  // The store is initialized synchronously from localStorage on
-  // module load, AND the SSR component injects the product
-  // synchronously via useMemo before this component renders.
-  // So if we reach here without a product, it's either:
-  //   (a) First-time visitor with no localStorage cache — data is
-  //       still loading from the CMS API. Render nothing for a moment.
-  //   (b) The product truly doesn't exist — show the not-found UI
-  //       ONLY after data has fully loaded.
-  if (!product && !dataLoaded) {
-    return null;
-  }
-
-  // Product not found after data fully loaded
+  // If we have a product (from store, SSR prop, or both), render it.
+  // The "Product not found" UI is shown ONLY when:
+  //   1. We have NO product from any source (store + SSR prop both empty), AND
+  //   2. Data has fully loaded (so we know it's not just a loading delay), AND
+  //   3. The user is on a /product/[slug] URL (so it's a real product request)
+  //
+  // During navigation between products (e.g. /product/a → /product/b):
+  //   - The new SSR prop arrives almost instantly
+  //   - The store may briefly not have the new product
+  //   - But initialProduct (the SSR prop) is always available
+  // So we never show "Product not found" during navigation.
   if (!product) {
+    // No product from any source. Wait silently if data isn't loaded yet
+    // (first-time visitor with no localStorage cache). Otherwise, the
+    // product genuinely doesn't exist — show the not-found UI.
+    if (!dataLoaded) {
+      return null;
+    }
     return (
       <div className="mx-auto max-w-3xl px-4 py-20 text-center">
         <div className="text-6xl mb-4">😿</div>

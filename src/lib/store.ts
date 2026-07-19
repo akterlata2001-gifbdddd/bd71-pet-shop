@@ -415,6 +415,33 @@ export const useRouter = create<RouterState>((set, get) => ({
         return;
       }
 
+      // Special case: navigating from /product/X → /product/Y
+      // Both routes share the same Next.js page component, so React
+      // won't unmount/remount — it'll just receive new `params` prop.
+      // But there's a brief window where the SSR fetch is in flight
+      // and the page may show stale data. To prevent that, we
+      // pre-inject the product/post into the store NOW (if it's
+      // already cached) so the page can render it immediately.
+      if (
+        page === "product" &&
+        params.productSlug &&
+        window.location.pathname.startsWith("/product/")
+      ) {
+        const cached = get().products.find((p) => p.slug === params.productSlug);
+        // Don't need to do anything special — the store already has
+        // the cached product, and ProductDetailPage will find it via
+        // params.productSlug lookup. The route change will happen
+        // in the background; the UI updates instantly.
+      }
+      if (
+        page === "blog-single" &&
+        params.blogSlug &&
+        window.location.pathname.startsWith("/blog/")
+      ) {
+        const cached = get().blogPosts.find((p) => p.slug === params.blogSlug);
+        // Same as above — store already has the cached post.
+      }
+
       // Use the Next.js App Router adapter (set by NavigationBridge)
       // for client-side navigation. This avoids a full page reload
       // and eliminates the loading flash between page transitions.

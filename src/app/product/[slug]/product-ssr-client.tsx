@@ -1,34 +1,44 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import { useRouter } from "@/lib/store";
 import { ProductDetailPage } from "@/components/pages/product-detail";
 
 // =====================================================
-// Client wrapper — receives SSR product data and injects
-// it into the Zustand store so ProductDetailPage finds it.
+// Client wrapper — receives SSR product data and passes
+// it DIRECTLY to ProductDetailPage as a prop, AND injects
+// it into the Zustand store for other components to find.
+// =====================================================
+//
+// Why both?
+//   1. Passing as a prop eliminates the "Product not found"
+//      flash during navigation. The page renders with the
+//      product on the very first paint — no waiting for
+//      store hydration, no useMemo-then-rerender cycle.
+//   2. Injecting into the store makes the product available
+//      to other components (related products, breadcrumbs,
+//      cart drawer, etc.) that read from the store.
+//
+// The store injection happens in a useEffect (after paint),
+// which is fine because the prop-based render is already
+// showing the product. The useEffect updates the store in
+// the background for other consumers.
 // =====================================================
 
 export function ProductDetailSSR({ product }: { product: any }) {
-  // ===== Inject the SSR product SYNCHRONOUSLY during render =====
-  // We use useMemo (which runs DURING render, not after) so the
-  // store has the product BEFORE the first paint. This eliminates
-  // any "Product not found" flash during page navigation.
-  //
-  // useEffect would run AFTER paint, causing a one-frame blank
-  // or "not found" state. useMemo runs DURING render, so the
-  // setState call here causes an immediate re-render with the
-  // product already in the store.
-  useMemo(() => {
+  // Set router state in useEffect (after paint) — setting state
+  // during render is an anti-pattern that causes React warnings.
+  // The router state is only used by other components, not by
+  // ProductDetailPage itself (which receives the product as a prop).
+  useEffect(() => {
     if (!product) return;
-
-    // Set router state
     useRouter.setState({
       page: "product",
       params: { productSlug: product.slug, productId: String(product.id) },
     } as any);
 
-    // Inject product into store if not already present
+    // Inject product into store if not already present (for other
+    // components like related products, cart drawer, etc.)
     const current = useRouter.getState().products;
     const exists = current.find((p) => p.slug === product.slug);
     if (!exists) {
@@ -38,7 +48,11 @@ export function ProductDetailSSR({ product }: { product: any }) {
     }
   }, [product]);
 
-  return <ProductDetailPage />;
+  // Pass the SSR product directly as a prop — this is the key
+  // fix. ProductDetailPage uses it as a fallback when the store
+  // doesn't have the product yet, so the first paint always
+  // shows the correct product (no "Product not found" flash).
+  return <ProductDetailPage initialProduct={product ? mapApiProduct(product) : undefined} />;
 }
 
 function mapApiProduct(p: any) {

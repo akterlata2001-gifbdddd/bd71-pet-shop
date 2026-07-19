@@ -16,28 +16,29 @@ const CMS_API = process.env.NEXT_PUBLIC_CMS_API_URL ?? "https://cms-lac-two.verc
 const CMS_SITE_ID = process.env.NEXT_PUBLIC_CMS_SITE_ID ?? "lata-test";
 const CMS_API_KEY = process.env.NEXT_PUBLIC_CMS_API_KEY ?? "";
 
-export function BlogSinglePage() {
+export function BlogSinglePage({ initialPost }: { initialPost?: any } = {}) {
   const blogPosts = useRouter((s) => s.blogPosts);
   const navigate = useRouter((s) => s.navigate);
   const params = useRouter((s) => s.params);
   const dataLoaded = useRouter((s) => s.dataLoaded);
 
-  // Find by slug (preferred) or by blogId (fallback)
-  const post = params.blogSlug
+  // Find by slug (preferred) or by blogId (fallback) in the store.
+  // If not in store AND we have SSR-provided initialPost, use that
+  // directly — eliminates "Article not found" flash during navigation.
+  const postFromStore = params.blogSlug
     ? blogPosts.find((p) => p.slug === params.blogSlug)
     : params.blogId
     ? blogPosts.find((p) => p.id === params.blogId)
     : null;
+  const post = postFromStore ?? initialPost ?? null;
 
-  // If data not loaded yet AND no post found, render nothing.
-  // The store is initialized synchronously from localStorage, so
-  // returning users see the post immediately. The SSR component
-  // also injects the post synchronously via useMemo.
-  if (!post && !dataLoaded) {
-    return null;
-  }
-
+  // If we have a post (from store, SSR prop, or both), render it.
+  // The "Article not found" UI is shown ONLY when no post is
+  // available from any source AND data has fully loaded.
   if (!post) {
+    if (!dataLoaded) {
+      return null;
+    }
     return (
       <div className="mx-auto max-w-2xl px-4 py-20 text-center">
         <div className="text-6xl mb-4">📭</div>
