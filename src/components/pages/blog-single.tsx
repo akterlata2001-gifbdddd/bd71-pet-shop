@@ -29,15 +29,12 @@ export function BlogSinglePage() {
     ? blogPosts.find((p) => p.id === params.blogId)
     : null;
 
-  if (!dataLoaded) {
-    return (
-      <div className="min-h-[400px] flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-5xl mb-3 animate-bounce">📝</div>
-          <p className="text-cocoa/60 text-sm">Loading article...</p>
-        </div>
-      </div>
-    );
+  // If data not loaded yet AND no post found, render nothing.
+  // The store is initialized synchronously from localStorage, so
+  // returning users see the post immediately. The SSR component
+  // also injects the post synchronously via useMemo.
+  if (!post && !dataLoaded) {
+    return null;
   }
 
   if (!post) {

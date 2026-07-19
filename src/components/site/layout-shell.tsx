@@ -6,6 +6,8 @@ import { SiteFooter } from "@/components/site/footer";
 import { CartDrawer } from "@/components/site/cart-drawer";
 import { PageMeta } from "@/components/site/page-meta";
 import { StoreInitializer } from "@/components/site/store-initializer";
+import { NavigationBridge } from "@/components/site/navigation-bridge";
+import { RouteSync } from "@/components/site/route-sync";
 import { fetchSiteConfig, getSiteConfigSync, type SiteConfig } from "@/lib/site-config";
 
 // =====================================================
@@ -13,6 +15,8 @@ import { fetchSiteConfig, getSiteConfigSync, type SiteConfig } from "@/lib/site-
 // =====================================================
 // Uses cached site config for instant render.
 // Fetches fresh config in background.
+// Also mounts NavigationBridge (for client-side navigation)
+// and RouteSync (for browser back/forward support).
 // =====================================================
 
 export function LayoutShell({ children }: { children: React.ReactNode }) {
@@ -26,6 +30,8 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <NavigationBridge />
+      <RouteSync />
       <StoreInitializer />
       <PageMeta />
       <SiteHeader

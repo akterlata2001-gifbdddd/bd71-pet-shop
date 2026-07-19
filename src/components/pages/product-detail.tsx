@@ -70,8 +70,15 @@ export function ProductDetailPage() {
     } catch {}
   };
 
-  // If data not loaded yet AND no product found, wait silently
-  // (don't show "Loading..." or "Product not found" flash)
+  // If no product found, render nothing.
+  // The store is initialized synchronously from localStorage on
+  // module load, AND the SSR component injects the product
+  // synchronously via useMemo before this component renders.
+  // So if we reach here without a product, it's either:
+  //   (a) First-time visitor with no localStorage cache — data is
+  //       still loading from the CMS API. Render nothing for a moment.
+  //   (b) The product truly doesn't exist — show the not-found UI
+  //       ONLY after data has fully loaded.
   if (!product && !dataLoaded) {
     return null;
   }

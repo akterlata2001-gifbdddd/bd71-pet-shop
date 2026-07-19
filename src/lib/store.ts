@@ -20,6 +20,50 @@ export type PageId =
   | "account"
   | "category";
 
+// =====================================================
+// Next.js App Router integration for client-side navigation.
+// =====================================================
+// The Zustand store can't use the `useRouter` hook from
+// next/navigation directly (hooks only work in React
+// components). Instead, we expose a global "navigation
+// adapter" that a React component (NavigationBridge) sets
+// on mount. When navigate() is called, it invokes this
+// adapter — which calls router.push() — enabling smooth
+// client-side transitions WITHOUT a full page reload.
+//
+// Before this, navigate() used window.location.href, which
+// caused a full page reload on every navigation — resulting
+// in the blank/loading flash the user saw between pages.
+// =====================================================
+type NavigationAdapter = (url: string) => void;
+
+let navigationAdapter: NavigationAdapter | null = null;
+
+export function setNavigationAdapter(adapter: NavigationAdapter | null) {
+  navigationAdapter = adapter;
+}
+
+// Map page ID + params to a real URL path
+export function pageToUrl(page: PageId, params: RouteParams = {}): string {
+  const urlMap: Record<string, string> = {
+    home: "/",
+    shop: "/shop",
+    product: params.productSlug ? `/product/${params.productSlug}` : "/shop",
+    cart: "/cart",
+    checkout: "/checkout",
+    about: "/about",
+    contact: "/contact",
+    blog: "/blog",
+    "blog-single": params.blogSlug ? `/blog/${params.blogSlug}` : "/blog",
+    privacy: "/privacy",
+    terms: "/terms",
+    dmca: "/dmca",
+    disclaimer: "/disclaimer",
+    account: "/account",
+  };
+  return urlMap[page] || "/";
+}
+
 export type RouteParams = {
   productId?: string;
   productSlug?: string;
@@ -108,6 +152,53 @@ function isCacheFresh(key: string): boolean {
   } catch {
     return false;
   }
+}
+
+// =====================================================
+// Synchronous initialization from localStorage.
+//
+// This runs ONCE when the store module is first imported.
+// If the user has visited the site before, their cached
+// products/posts/categories are loaded IMMEDIATELY —
+// before the first React render. This means:
+//
+//   - No "Loading..." flash on page navigation
+//   - No "No products found" flicker while data hydrates
+//   - The store is populated from the very first paint
+//
+// Without this, the store starts empty (dataLoaded: false),
+// and pages would show loading screens for a frame or two
+// before StoreInitializer's useEffect runs loadData().
+// =====================================================
+function getInitialStoreState() {
+  if (typeof window === "undefined") {
+    return {
+      products: [] as Product[],
+      blogPosts: [] as BlogPost[],
+      categories: [] as StoreCategory[],
+      dataLoaded: false,
+    };
+  }
+
+  const cachedProducts = loadFromCache<Product[]>(CACHE_KEY_PRODUCTS);
+  const cachedPosts = loadFromCache<BlogPost[]>(CACHE_KEY_POSTS);
+  const cachedCats = loadFromCache<StoreCategory[]>(CACHE_KEY_CATEGORIES);
+
+  if (cachedProducts && cachedPosts) {
+    return {
+      products: cachedProducts,
+      blogPosts: cachedPosts,
+      categories: cachedCats ?? buildCategories(null, cachedProducts),
+      dataLoaded: true,
+    };
+  }
+
+  return {
+    products: [] as Product[],
+    blogPosts: [] as BlogPost[],
+    categories: [] as StoreCategory[],
+    dataLoaded: false,
+  };
 }
 
 function mapProduct(p: any): Product {
@@ -309,39 +400,32 @@ function buildCategories(
 export const useRouter = create<RouterState>((set, get) => ({
   page: "home",
   params: {},
-  products: [],
-  blogPosts: [],
-  categories: [],
-  dataLoaded: false,
+  // ===== Synchronous initial state from localStorage =====
+  // Populated IMMEDIATELY on store creation so the very first
+  // React render has data. No loading screens ever show.
+  ...getInitialStoreState(),
   navigate: (page, params = {}) => {
     set({ page, params });
     if (typeof window !== "undefined") {
-      const urlMap: Record<string, string> = {
-        home: "/",
-        shop: "/shop",
-        product: params.productSlug ? `/product/${params.productSlug}` : "/shop",
-        cart: "/cart",
-        checkout: "/checkout",
-        about: "/about",
-        contact: "/contact",
-        blog: "/blog",
-        "blog-single": params.blogSlug ? `/blog/${params.blogSlug}` : "/blog",
-        privacy: "/privacy",
-        terms: "/terms",
-        dmca: "/dmca",
-        disclaimer: "/disclaimer",
-        account: "/account",
-      };
-      const newUrl = urlMap[page] || "/";
+      const newUrl = pageToUrl(page, params);
 
-      // Use full page navigation so Next.js App Router renders the
-      // correct page component. pushState alone only changes the URL
-      // bar without triggering a route change.
-      if (window.location.pathname !== newUrl) {
-        window.location.href = newUrl;
-      } else {
-        // Already on the page — just scroll to top
+      // Already on the target page — just scroll to top, no navigation.
+      if (window.location.pathname === newUrl) {
         window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+        return;
+      }
+
+      // Use the Next.js App Router adapter (set by NavigationBridge)
+      // for client-side navigation. This avoids a full page reload
+      // and eliminates the loading flash between page transitions.
+      if (navigationAdapter) {
+        navigationAdapter(newUrl);
+        // Scroll to top after navigation (smooth, no flash)
+        window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+      } else {
+        // Fallback: full page navigation (only used before the
+        // NavigationBridge component mounts on initial load).
+        window.location.href = newUrl;
       }
     }
   },

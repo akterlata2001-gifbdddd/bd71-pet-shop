@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import { useRouter } from "@/lib/store";
 import { ProductDetailPage } from "@/components/pages/product-detail";
 
@@ -10,11 +10,16 @@ import { ProductDetailPage } from "@/components/pages/product-detail";
 // =====================================================
 
 export function ProductDetailSSR({ product }: { product: any }) {
-  const allProducts = useRouter((s) => s.products);
-  const dataLoaded = useRouter((s) => s.dataLoaded);
-  const [injected, setInjected] = useState(false);
-
-  useEffect(() => {
+  // ===== Inject the SSR product SYNCHRONOUSLY during render =====
+  // We use useMemo (which runs DURING render, not after) so the
+  // store has the product BEFORE the first paint. This eliminates
+  // any "Product not found" flash during page navigation.
+  //
+  // useEffect would run AFTER paint, causing a one-frame blank
+  // or "not found" state. useMemo runs DURING render, so the
+  // setState call here causes an immediate re-render with the
+  // product already in the store.
+  useMemo(() => {
     if (!product) return;
 
     // Set router state
@@ -23,21 +28,15 @@ export function ProductDetailSSR({ product }: { product: any }) {
       params: { productSlug: product.slug, productId: String(product.id) },
     } as any);
 
-    // If product isn't already in store, inject it immediately
-    const exists = allProducts.find((p) => p.slug === product.slug);
+    // Inject product into store if not already present
+    const current = useRouter.getState().products;
+    const exists = current.find((p) => p.slug === product.slug);
     if (!exists) {
       useRouter.setState((s) => ({
         products: [...s.products, mapApiProduct(product)] as any,
       }));
     }
-    setInjected(true);
   }, [product]);
-
-  // Don't render ProductDetailPage until product is injected
-  // This prevents "Loading..." and "Product not found" flash
-  if (!injected && product) {
-    return null; // Brief invisible state — product injects in <1ms
-  }
 
   return <ProductDetailPage />;
 }

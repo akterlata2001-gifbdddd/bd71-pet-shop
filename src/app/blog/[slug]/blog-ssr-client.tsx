@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useMemo } from "react";
 import { useRouter } from "@/lib/store";
 import { BlogSinglePage } from "@/components/pages/blog-single";
 
@@ -10,23 +10,26 @@ import { BlogSinglePage } from "@/components/pages/blog-single";
 // =====================================================
 
 export function BlogSingleSSR({ post }: { post: any }) {
-  const allPosts = useRouter((s) => s.blogPosts);
-  const dataLoaded = useRouter((s) => s.dataLoaded);
-
-  useEffect(() => {
+  // ===== Inject the SSR post SYNCHRONOUSLY during render =====
+  // useMemo runs DURING render (not after, like useEffect), so
+  // the store has the post BEFORE the first paint. No "Loading
+  // article..." flash during page navigation.
+  useMemo(() => {
     if (!post) return;
+
     useRouter.setState({
       page: "blog-single",
       params: { blogSlug: post.slug, blogId: post.id },
     } as any);
 
-    const exists = allPosts.find((p: any) => p.slug === post.slug);
-    if (!exists && dataLoaded) {
+    const current = useRouter.getState().blogPosts;
+    const exists = current.find((p: any) => p.slug === post.slug);
+    if (!exists) {
       useRouter.setState((s) => ({
         blogPosts: [...s.blogPosts, mapApiPost(post)] as any,
       }));
     }
-  }, [post, allPosts.length, dataLoaded]);
+  }, [post]);
 
   return <BlogSinglePage />;
 }

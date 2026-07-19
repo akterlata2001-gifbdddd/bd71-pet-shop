@@ -95,15 +95,12 @@ export function BlogPage() {
 
   const featured = blogPosts.length > 0 ? blogPosts[0] : null;
 
+  // If no posts yet, render NOTHING — don't show "Loading..." text.
+  // The store is initialized synchronously from localStorage, so
+  // returning users see posts immediately. First-time visitors will
+  // see a brief blank moment (less jarring than a loading screen).
   if (!featured) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-6xl mb-4">📝</div>
-          <p className="text-cocoa/60">Loading blog posts...</p>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   return (
