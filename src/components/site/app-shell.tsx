@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect } from "react";
-import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "@/lib/store";
 import { ErrorBoundary } from "@/components/error-boundary";
 // Header/Footer/CartDrawer now live in LayoutShell (root layout)
@@ -17,6 +16,27 @@ import { BlogSinglePage } from "@/components/pages/blog-single";
 import { LegalPage } from "@/components/pages/legal";
 import { NotFoundPage } from "@/components/pages/not-found";
 import { AccountPage } from "@/components/pages/account";
+
+// =====================================================
+// AppShell — only used on the home page (/) route.
+// =====================================================
+// NOTE: We deliberately DO NOT use AnimatePresence / motion.div
+// here. The previous version wrapped renderPage() in an
+// <AnimatePresence mode="wait"> with a keyed motion.div, which
+// caused a visible 3-step load pattern on every page change:
+//   1. Old page fades out (200ms)
+//   2. URL changes
+//   3. New page fades in (200ms)
+// During the fade, the user saw a blank screen — perceived as
+// "page loads, URL changes, then loads again".
+//
+// Without AnimatePresence, page swaps are instantaneous. The
+// new page renders immediately when the store's `page` field
+// changes, with no fade gap.
+//
+// The browser's built-in loading.tsx (skeleton) handles the
+// brief fetch window for SSR pages.
+// =====================================================
 
 // URL path → page mapping
 const PATH_TO_PAGE: Record<string, { page: string; params?: any }> = {
@@ -118,19 +138,9 @@ export function AppShell() {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <main className="flex-1">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={page}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-          >
-            <ErrorBoundary key={page}>
-              {renderPage()}
-            </ErrorBoundary>
-          </motion.div>
-        </AnimatePresence>
+        <ErrorBoundary key={page}>
+          {renderPage()}
+        </ErrorBoundary>
       </main>
     </div>
   );

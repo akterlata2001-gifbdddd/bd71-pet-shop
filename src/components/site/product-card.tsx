@@ -30,6 +30,7 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
   };
 
   const goToProduct = () => navigate("product", { productSlug: product.slug || String(product.id) });
+  const productUrl = `/product/${product.slug || String(product.id)}`;
 
   return (
     <motion.div
@@ -39,6 +40,7 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       onClick={goToProduct}
+      data-prefetch={productUrl}
       className="group relative bg-card rounded-2xl overflow-hidden border border-border/60 shadow-soft hover:shadow-warm transition-all duration-300 flex flex-col cursor-pointer"
     >
       <div className={cn(
