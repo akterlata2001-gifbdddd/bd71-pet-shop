@@ -1,16 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 
 // =====================================================
-// SPA fallback + SEO Redirect middleware
+// SEO Redirect middleware
 // =====================================================
-// This frontend is a client-side SPA using Zustand for routing.
-// All routes (/, /shop, /blog, /product/123, etc.) render
-// the same page.tsx which handles routing internally.
+// This middleware handles ONLY SEO redirects (301/302) configured
+// in the CMS dashboard under URL Redirects.
 //
-// SEO REDIRECTS: Before rewriting to /, we check the CMS API
-// for any redirect rules. If a redirect exists for the current
-// path, we return the appropriate HTTP redirect (301/302).
-// This preserves SEO link juice when URLs change.
+// Previously, this middleware also rewrote all unknown URLs to "/"
+// so the SPA could handle routing. That's no longer needed because
+// the storefront now uses Next.js App Router with proper file-based
+// routing (/shop, /product/[slug], /blog/[slug], etc.). Unknown
+// URLs now fall through to Next.js's built-in 404 page (src/app/
+// not-found.tsx) — which returns a proper HTTP 404 status code
+// for SEO instead of a soft-404.
 // =====================================================
 
 const CMS_API = process.env.NEXT_PUBLIC_CMS_API_URL ?? "https://cms-lac-two.vercel.app";
@@ -46,43 +48,49 @@ export async function middleware(req: NextRequest) {
         cached.statusCode ?? 301
       );
     }
-  } else {
-    // Cache expired or not found — check CMS API
-    try {
-      const res = await fetch(
-        `${CMS_API}/api/v1/sites/${CMS_SITE_ID}/redirects?path=${encodeURIComponent(pathname)}`,
-        {
-          headers: { "X-API-Key": CMS_API_KEY },
-          signal: AbortSignal.timeout(3000), // 3s timeout — don't block too long
-        }
-      );
-      const json = await res.json();
-
-      if (json.found && json.redirect?.destination) {
-        // Cache positive result
-        redirectCache.set(pathname, {
-          found: true,
-          destination: json.redirect.destination,
-          statusCode: json.redirect.statusCode,
-          cachedAt: now,
-        });
-
-        return NextResponse.redirect(
-          new URL(json.redirect.destination, req.url),
-          json.redirect.statusCode ?? 301
-        );
-      }
-
-      // Cache negative result (no redirect found)
-      redirectCache.set(pathname, { found: false, cachedAt: now });
-    } catch {
-      // API failed — don't block the user, just continue to SPA
-      // Don't cache failures
-    }
+    // Negative cache hit — no redirect configured, let Next.js
+    // handle the route normally (404 if no matching file).
+    return NextResponse.next();
   }
 
-  // Rewrite all other paths to / — the SPA handles routing
-  return NextResponse.rewrite(new URL("/", req.url));
+  // Cache expired or not found — check CMS API
+  try {
+    const res = await fetch(
+      `${CMS_API}/api/v1/sites/${CMS_SITE_ID}/redirects?path=${encodeURIComponent(pathname)}`,
+      {
+        headers: { "X-API-Key": CMS_API_KEY },
+        signal: AbortSignal.timeout(3000), // 3s timeout — don't block too long
+      }
+    );
+    const json = await res.json();
+
+    if (json.found && json.redirect?.destination) {
+      // Cache positive result
+      redirectCache.set(pathname, {
+        found: true,
+        destination: json.redirect.destination,
+        statusCode: json.redirect.statusCode,
+        cachedAt: now,
+      });
+
+      return NextResponse.redirect(
+        new URL(json.redirect.destination, req.url),
+        json.redirect.statusCode ?? 301
+      );
+    }
+
+    // Cache negative result (no redirect found) — Next.js will
+    // handle the route via its file-system routing. If no route
+    // matches, the user sees the custom 404 page (HTTP 404).
+    redirectCache.set(pathname, { found: false, cachedAt: now });
+  } catch {
+    // API failed — don't block the user, let Next.js handle it.
+    // Don't cache failures.
+  }
+
+  // Let Next.js handle the route normally (file-system routing
+  // → matches a page, or renders the 404 page if no match).
+  return NextResponse.next();
 }
 
 export const config = {
@@ -92,7 +100,7 @@ export const config = {
     // sitemap.xml, ads.txt, Google Search Console verification
     // files (google*.html), etc. These are served as static files
     // from /public or via route handlers — middleware must NOT
-    // rewrite them to /.
+    // intercept them.
     "/((?!api|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|ads.txt|google[0-9a-f]+\\.html|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|txt|html|woff|woff2)$).*)",
   ],
 };
