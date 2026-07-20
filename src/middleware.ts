@@ -1,18 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 
 // =====================================================
-// SEO Redirect middleware
+// SEO Redirect + Google Verification middleware
 // =====================================================
-// This middleware handles ONLY SEO redirects (301/302) configured
-// in the CMS dashboard under URL Redirects.
+// This middleware handles:
+//   1. SEO redirects (301/302) configured in the CMS dashboard
+//   2. Google Search Console verification files (google*.html)
+//      — served dynamically from CMS store_settings so tenants
+//        don't need to redeploy when Google generates a new file.
 //
-// Previously, this middleware also rewrote all unknown URLs to "/"
-// so the SPA could handle routing. That's no longer needed because
-// the storefront now uses Next.js App Router with proper file-based
-// routing (/shop, /product/[slug], /blog/[slug], etc.). Unknown
-// URLs now fall through to Next.js's built-in 404 page (src/app/
-// not-found.tsx) — which returns a proper HTTP 404 status code
-// for SEO instead of a soft-404.
+// Unknown URLs fall through to Next.js's built-in 404 page
+// (src/app/not-found.tsx) which returns a proper HTTP 404.
 // =====================================================
 
 const CMS_API = process.env.NEXT_PUBLIC_CMS_API_URL ?? "https://cms-lac-two.vercel.app";
@@ -29,6 +27,13 @@ interface CachedRedirect {
 const redirectCache = new Map<string, CachedRedirect>();
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
+// In-memory cache for Google verification content
+let cachedGoogleVerification: string | null = null;
+let googleVerifyCacheTime = 0;
+
+// Strict pattern: /google + hex chars + .html
+const GOOGLE_VERIFICATION_PATTERN = /^\/google[0-9a-f]+\.html$/i;
+
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
@@ -37,8 +42,77 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
+  // ===== Google Search Console verification files =====
+  // Match /google<hex>.html exactly. Serve the verification
+  // content from CMS. If not configured, return 404 (which
+  // renders the custom not-found page).
+  if (GOOGLE_VERIFICATION_PATTERN.test(pathname)) {
+    // Check cache (5 min TTL)
+    if (cachedGoogleVerification && Date.now() - googleVerifyCacheTime < CACHE_TTL) {
+      // Verify the requested filename matches the configured one
+      const expectedFile = extractFilename(cachedGoogleVerification);
+      if (expectedFile && pathname === `/${expectedFile}`) {
+        return new NextResponse(cachedGoogleVerification, {
+          headers: {
+            "Content-Type": "text/html; charset=utf-8",
+            "Cache-Control": "public, max-age=86400",
+          },
+        });
+      }
+      // Filename doesn't match → 404
+      return new NextResponse(null, { status: 404 });
+    }
+
+    // Fetch verification content from CMS
+    try {
+      const res = await fetch(
+        `${CMS_API}/api/v1/sites/${CMS_SITE_ID}/settings`,
+        {
+          headers: { "X-API-Key": CMS_API_KEY },
+          signal: AbortSignal.timeout(3000),
+        }
+      );
+      const json = await res.json();
+      const settings = json.data?.settings ?? {};
+
+      // Check both the integration key and the legacy seo_ key
+      let verificationContent = null;
+      const raw = settings["integration:google_search_console"];
+      if (raw) {
+        try {
+          const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
+          verificationContent = parsed?.verification_content;
+        } catch {
+          verificationContent = raw;
+        }
+      }
+      if (!verificationContent) {
+        verificationContent = settings.seo_googleVerification;
+      }
+
+      cachedGoogleVerification = verificationContent;
+      googleVerifyCacheTime = Date.now();
+
+      if (verificationContent) {
+        const expectedFile = extractFilename(verificationContent);
+        if (expectedFile && pathname === `/${expectedFile}`) {
+          return new NextResponse(verificationContent, {
+            headers: {
+              "Content-Type": "text/html; charset=utf-8",
+              "Cache-Control": "public, max-age=86400",
+            },
+          });
+        }
+      }
+    } catch {
+      // CMS unreachable — fall through to 404
+    }
+
+    // No matching verification file → 404
+    return new NextResponse(null, { status: 404 });
+  }
+
   // ===== SEO Redirect Check =====
-  // Check cache first
   const cached = redirectCache.get(pathname);
   const now = Date.now();
   if (cached && now - cached.cachedAt < CACHE_TTL) {
@@ -48,24 +122,20 @@ export async function middleware(req: NextRequest) {
         cached.statusCode ?? 301
       );
     }
-    // Negative cache hit — no redirect configured, let Next.js
-    // handle the route normally (404 if no matching file).
     return NextResponse.next();
   }
 
-  // Cache expired or not found — check CMS API
   try {
     const res = await fetch(
       `${CMS_API}/api/v1/sites/${CMS_SITE_ID}/redirects?path=${encodeURIComponent(pathname)}`,
       {
         headers: { "X-API-Key": CMS_API_KEY },
-        signal: AbortSignal.timeout(3000), // 3s timeout — don't block too long
+        signal: AbortSignal.timeout(3000),
       }
     );
     const json = await res.json();
 
     if (json.found && json.redirect?.destination) {
-      // Cache positive result
       redirectCache.set(pathname, {
         found: true,
         destination: json.redirect.destination,
@@ -79,28 +149,26 @@ export async function middleware(req: NextRequest) {
       );
     }
 
-    // Cache negative result (no redirect found) — Next.js will
-    // handle the route via its file-system routing. If no route
-    // matches, the user sees the custom 404 page (HTTP 404).
     redirectCache.set(pathname, { found: false, cachedAt: now });
   } catch {
-    // API failed — don't block the user, let Next.js handle it.
-    // Don't cache failures.
+    // API failed — don't block, let Next.js handle it
   }
 
-  // Let Next.js handle the route normally (file-system routing
-  // → matches a page, or renders the 404 page if no match).
   return NextResponse.next();
+}
+
+// Helper: extract the filename from verification content
+// e.g. "google-site-verification: google123abc.html" → "google123abc.html"
+function extractFilename(content: string): string | null {
+  const match = content?.match(/google[0-9a-f]+\.html/i);
+  return match ? match[0] : null;
 }
 
 export const config = {
   matcher: [
-    // Exclude: API routes, Next.js internals, static assets (images,
-    // fonts, icons), and well-known root files like robots.txt,
-    // sitemap.xml, ads.txt, Google Search Console verification
-    // files (google*.html), etc. These are served as static files
-    // from /public or via route handlers — middleware must NOT
-    // intercept them.
-    "/((?!api|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|ads.txt|google[0-9a-f]+\\.html|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|txt|html|woff|woff2)$).*)",
+    // Exclude: API routes, Next.js internals, static assets.
+    // NOTE: google*.html files are NOT excluded here — they're
+    // handled by the middleware above (served from CMS).
+    "/((?!api|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|ads.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|woff|woff2)$).*)",
   ],
 };
