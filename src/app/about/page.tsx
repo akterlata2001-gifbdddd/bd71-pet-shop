@@ -4,12 +4,12 @@ import { AboutSSR } from "./about-ssr-client";
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: "About Us | BD71 Pet Shop",
+  title: "About Us",
   description:
-    "BD71 Pet Shop is Bangladesh's trusted source for premium pet food and supplies since 2021. Genuine products, fair prices, fast delivery.",
+    "${siteName} is Bangladesh's trusted source for premium pet food and supplies since 2021. Genuine products, fair prices, fast delivery.",
   alternates: { canonical: "/about" },
   openGraph: {
-    title: "About Us | BD71 Pet Shop",
+    title: "About Us",
     description: "Bangladesh's trusted source for premium pet food and supplies since 2021.",
     url: "/about",
     type: "website",

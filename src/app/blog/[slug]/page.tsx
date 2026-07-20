@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { fetchPostBySlug, fetchAllPosts } from "@/lib/seo-fetchers";
 import { stripSchemaMarkup } from "@/lib/clean-description";
 import { BlogSingleSSR } from "./blog-ssr-client";
+import { getSiteName } from "@/lib/site-name";
 
 // =====================================================
 // /blog/[slug] — Server-Rendered Blog Post (SEO)
@@ -30,11 +31,14 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const post = await fetchPostBySlug(slug);
+  const [post, siteName] = await Promise.all([
+    fetchPostBySlug(slug),
+    getSiteName(),
+  ]);
 
   if (!post) {
     return {
-      title: "Article Not Found | BD71 Pet Shop",
+      title: "Article Not Found",
       robots: { index: false, follow: true },
     };
   }
@@ -50,7 +54,7 @@ export async function generateMetadata({
     .slice(0, 160);
 
   return {
-    title: `${title} | BD71 Pet Shop Blog`,
+    title, // template adds "| SiteName" automatically
     description: cleanDesc,
     keywords: post.tags ?? [],
     alternates: {

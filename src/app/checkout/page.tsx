@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { CheckoutClient } from "./checkout-client";
 
 export const metadata: Metadata = {
-  title: "Checkout | BD71 Pet Shop",
+  title: "Checkout",
   description: "Secure checkout with cash on delivery and bKash/Nagad support.",
   alternates: { canonical: "/checkout" },
   robots: { index: false, follow: true },

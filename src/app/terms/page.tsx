@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { LegalPageClient } from "./legal-client";
 
 export const metadata: Metadata = {
-  title: "Terms of Use | BD71 Pet Shop",
+  title: "Terms of Use",
   description: "Terms and conditions for using BD71 Pet Shop website and services.",
   alternates: { canonical: "/terms" },
 };

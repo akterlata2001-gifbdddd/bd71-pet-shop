@@ -8,12 +8,12 @@ import { BlogSSR } from "./blog-ssr-client";
 export const revalidate = 60;
 
 export const metadata: Metadata = {
-  title: "Pet Care Blog | BD71 Pet Shop",
+  title: "Pet Care Blog",
   description:
     "Expert pet care tips, nutrition guides, product reviews, and heartwarming stories. Learn how to keep your cats, dogs, and other pets happy and healthy.",
   alternates: { canonical: "/blog" },
   openGraph: {
-    title: "Pet Care Blog | BD71 Pet Shop",
+    title: "Pet Care Blog",
     description: "Expert pet care tips, nutrition guides, product reviews, and pet stories.",
     url: "/blog",
     type: "website",

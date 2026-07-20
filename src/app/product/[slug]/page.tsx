@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { fetchProductBySlug, fetchAllProducts } from "@/lib/seo-fetchers";
 import { stripSchemaMarkup } from "@/lib/clean-description";
 import { ProductDetailSSR } from "./product-ssr-client";
+import { getSiteName } from "@/lib/site-name";
 
 // =====================================================
 // /product/[slug] — Server-Rendered Product Page (SEO)
@@ -47,11 +48,14 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const product = await fetchProductBySlug(slug);
+  const [product, siteName] = await Promise.all([
+    fetchProductBySlug(slug),
+    getSiteName(),
+  ]);
 
   if (!product) {
     return {
-      title: "Product Not Found | BD71 Pet Shop",
+      title: "Product Not Found",
       robots: { index: false, follow: true },
     };
   }
@@ -60,7 +64,7 @@ export async function generateMetadata({
   const description =
     product.short_description ??
     product.seo_description ??
-    `${name} — premium pet product from BD71 Pet Shop. Fast delivery across Bangladesh.`;
+    `${name} — premium pet product from ${siteName}. Fast delivery across Bangladesh.`;
   const image =
     product.featured_image ??
     (Array.isArray(product.images) && product.images.length > 0 ? product.images[0] : null);
@@ -69,7 +73,7 @@ export async function generateMetadata({
     .slice(0, 160);
 
   return {
-    title: `${name} | BD71 Pet Shop`,
+    title: name, // template adds "| SiteName" automatically
     description: cleanDesc,
     keywords: [name, product.brand, product.category_name, "pet food Bangladesh"].filter(Boolean),
     alternates: {

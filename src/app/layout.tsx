@@ -6,6 +6,7 @@ import { siteInfo } from "@/lib/data";
 import { generateOrganizationSchema, serializeSchema } from "@/lib/schema";
 import { LayoutShell } from "@/components/site/layout-shell";
 import { getSiteIntegrations } from "@/lib/site-integrations";
+import { getSiteName, DEFAULT_SITE_NAME } from "@/lib/site-name";
 
 const fredoka = Fredoka({
   variable: "--font-fredoka",
@@ -26,33 +27,45 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "BD71 Pet Shop | Premium Pet Food Online in Bangladesh",
-  description:
-    "Shop premium pet food for cats, dogs, birds & fish at BD71 Pet Shop. Genuine products, affordable prices, fast delivery across Bangladesh.",
-  keywords: [
-    "pet food Bangladesh",
-    "cat food",
-    "dog food",
-    "BD71 Pet Shop",
-    "pet shop Dhaka",
-    "premium pet food",
-  ],
-  authors: [{ name: "BD71 Pet Shop" }],
-  openGraph: {
-    title: "BD71 Pet Shop | Premium Pet Food Online in Bangladesh",
+// =====================================================
+// Dynamic metadata — uses the site_name from CMS so each
+// tenant's pages show their own brand name in the title.
+// Falls back to "BD71 Pet Shop" if CMS is unreachable.
+// =====================================================
+export async function generateMetadata(): Promise<Metadata> {
+  const siteName = await getSiteName();
+
+  return {
+    title: {
+      default: `${siteName} | Premium Pet Food Online in Bangladesh`,
+      template: `%s | ${siteName}`,
+    },
     description:
-      "Shop premium pet food for cats, dogs, birds & fish at BD71 Pet Shop. Genuine products, affordable prices, fast delivery.",
-    url: "https://bd71shop.com.bd",
-    siteName: "BD71 Pet Shop",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "BD71 Pet Shop",
-    description: "Premium pet food online in Bangladesh",
-  },
-};
+      `Shop premium pet food for cats, dogs, birds & fish at ${siteName}. Genuine products, affordable prices, fast delivery across Bangladesh.`,
+    keywords: [
+      "pet food Bangladesh",
+      "cat food",
+      "dog food",
+      siteName,
+      "pet shop Dhaka",
+      "premium pet food",
+    ],
+    authors: [{ name: siteName }],
+    openGraph: {
+      title: `${siteName} | Premium Pet Food Online in Bangladesh`,
+      description:
+        `Shop premium pet food for cats, dogs, birds & fish at ${siteName}. Genuine products, affordable prices, fast delivery.`,
+      url: "https://bd71shop.com.bd",
+      siteName,
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: siteName,
+      description: "Premium pet food online in Bangladesh",
+    },
+  };
+}
 
 // =====================================================
 // Inline script — sets logo + site config from localStorage

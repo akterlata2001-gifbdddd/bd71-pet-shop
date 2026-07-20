@@ -14,12 +14,12 @@ import { ShopSSR } from "./shop-ssr-client";
 export const revalidate = 60;
 
 export const metadata: Metadata = {
-  title: "Shop All Pet Products | BD71 Pet Shop",
+  title: "Shop All Pet Products",
   description:
     "Browse our full range of premium pet food, treats, litter, toys, and accessories. Genuine products with fast delivery across Bangladesh.",
   alternates: { canonical: "/shop" },
   openGraph: {
-    title: "Shop All Pet Products | BD71 Pet Shop",
+    title: "Shop All Pet Products",
     description: "Browse our full range of premium pet food, treats, litter, toys, and accessories.",
     url: "/shop",
     type: "website",

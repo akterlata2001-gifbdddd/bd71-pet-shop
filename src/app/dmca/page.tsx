@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { LegalPageClient } from "./legal-client";
 
 export const metadata: Metadata = {
-  title: "DMCA Policy | BD71 Pet Shop",
+  title: "DMCA Policy",
   description: "Digital Millennium Copyright Act policy for BD71 Pet Shop.",
   alternates: { canonical: "/dmca" },
 };

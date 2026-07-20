@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { LegalPageClient } from "./legal-client";
 
 export const metadata: Metadata = {
-  title: "Disclaimer | BD71 Pet Shop",
+  title: "Disclaimer",
   description: "Disclaimer for BD71 Pet Shop website content and services.",
   alternates: { canonical: "/disclaimer" },
 };
