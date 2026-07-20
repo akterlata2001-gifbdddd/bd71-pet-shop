@@ -405,17 +405,6 @@ export const useRouter = create<RouterState>((set, get) => ({
   // React render has data. No loading screens ever show.
   ...getInitialStoreState(),
   navigate: (page, params = {}) => {
-    // NOTE: We do NOT call set({ page, params }) here!
-    //
-    // Previously, navigate() updated the store FIRST (causing the
-    // UI to show the new page's content from cached data), THEN
-    // called router.push() (causing a visible page reload).
-    // This created the "content appears → reload → content again"
-    // pattern the user complained about.
-    //
-    // Now we ONLY call router.push(). RouteSync (which listens to
-    // usePathname) will detect the URL change and update the store.
-    // This ensures: URL changes first → page transition → content.
     if (typeof window !== "undefined") {
       const newUrl = pageToUrl(page, params);
 
@@ -426,15 +415,23 @@ export const useRouter = create<RouterState>((set, get) => ({
       }
 
       // Use the Next.js App Router adapter (set by NavigationBridge)
-      // for client-side navigation. RouteSync will update the store
-      // when the URL change is detected.
+      // for client-side navigation.
       if (navigationAdapter) {
+        // First: change the URL (page transition starts)
         navigationAdapter(newUrl);
+        // Then: update the store (content updates after URL changes)
+        // Using a microtask delay so router.push() starts first.
+        Promise.resolve().then(() => {
+          set({ page, params });
+          window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+        });
       } else {
-        // Fallback: full page navigation (only used before the
-        // NavigationBridge component mounts on initial load).
+        // Fallback: full page navigation
         window.location.href = newUrl;
       }
+    } else {
+      // SSR — just set the store
+      set({ page, params });
     }
   },
   // ===== hydrateFromServer — called once on page load with SSR data =====
