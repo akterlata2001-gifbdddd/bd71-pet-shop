@@ -64,6 +64,21 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
         allow: ["/", ...extraAllow],
         disallow: allDisallow,
       },
+      {
+        // Mediapartners-Google is Google AdSense's crawler.
+        // It scans pages to determine where to place ads.
+        // Without this rule, AdSense can't read the page content
+        // and won't show any ads — even on an approved account.
+        userAgent: "Mediapartners-Google",
+        allow: "/",
+        disallow: allDisallow,
+      },
+      {
+        // AdsBot-Google checks ad quality on landing pages.
+        userAgent: "AdsBot-Google",
+        allow: "/",
+        disallow: allDisallow,
+      },
     ],
     sitemap: `${BASE_URL}/sitemap.xml`,
     host: BASE_URL,
