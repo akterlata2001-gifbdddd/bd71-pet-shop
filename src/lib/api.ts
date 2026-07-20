@@ -1,5 +1,5 @@
 // =====================================================
-// CMS API Client — connects to PawsNest CMS backend
+// CMS API Client — connects to Cynlex CMS backend
 // =====================================================
 // Environment variables needed (.env.local):
 //   NEXT_PUBLIC_CMS_API_URL=https://cms-lac-two.vercel.app
