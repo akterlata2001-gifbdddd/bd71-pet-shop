@@ -46,38 +46,42 @@ export function RouteSync() {
     // Normalize: remove trailing slash (except root)
     const path = pathname.replace(/\/$/, "") || "/";
 
-    // Direct page match
+    // Determine what the store SHOULD be for this URL
+    let newPage: PageId = "home";
+    let newParams: any = {};
+
     if (PATH_TO_PAGE[path]) {
-      useRouter.setState({ page: PATH_TO_PAGE[path], params: {} } as any);
-      return;
-    }
-
-    // /product/{slug}
-    if (path.startsWith("/product/")) {
+      newPage = PATH_TO_PAGE[path];
+    } else if (path.startsWith("/product/")) {
       const slug = path.split("/")[2];
       if (slug) {
-        useRouter.setState({
-          page: "product",
-          params: { productSlug: slug },
-        } as any);
+        newPage = "product";
+        newParams = { productSlug: slug };
       }
-      return;
-    }
-
-    // /blog/{slug}
-    if (path.startsWith("/blog/")) {
+    } else if (path.startsWith("/blog/")) {
       const slug = path.split("/")[2];
       if (slug) {
-        useRouter.setState({
-          page: "blog-single",
-          params: { blogSlug: slug },
-        } as any);
+        newPage = "blog-single";
+        newParams = { blogSlug: slug };
       }
+    }
+
+    // Only update the store if the page or params ACTUALLY changed.
+    // Without this check, every navigation triggers:
+    //   1. navigate() → set({ page, params })  → UI renders
+    //   2. router.push() → URL changes
+    //   3. RouteSync → set({ page, params })  → UI renders AGAIN
+    // This causes the "content appears, then page reloads, then
+    // content appears again" double-render pattern.
+    const current = useRouter.getState();
+    const currentSlug = current.params?.productSlug || current.params?.blogSlug;
+    const newSlug = newParams?.productSlug || newParams?.blogSlug;
+    if (current.page === newPage && currentSlug === newSlug) {
+      // Already in sync — no update needed
       return;
     }
 
-    // Unknown path — default to home
-    useRouter.setState({ page: "home", params: {} } as any);
+    useRouter.setState({ page: newPage, params: newParams } as any);
   }, [pathname]);
 
   return null;

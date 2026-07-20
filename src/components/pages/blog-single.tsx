@@ -8,6 +8,41 @@ import {
   Send, Loader2, Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+
+// =====================================================
+// Process blog content HTML — fix broken WordPress images.
+// =====================================================
+// Blog content was migrated from WordPress. The text came over
+// fine, but image URLs still point to the old WordPress paths
+// (https://bd71shop.com.bd/wp-content/uploads/...) which no
+// longer work (the WP site is gone).
+//
+// This function:
+//   1. Replaces broken WP image URLs with a placeholder
+//   2. Adds onerror handlers so any remaining broken images
+//      hide themselves gracefully
+// =====================================================
+function processBlogContent(html: string): string {
+  if (!html) return "";
+  let processed = html;
+
+  // Add onerror to WP image URLs so broken images hide gracefully
+  processed = processed.replace(
+    /<img([^>]*)src=["'](https?:\/\/[^"']*wp-content\/uploads\/[^"']*)["']([^>]*)>/gi,
+    (match, before, src, after) => {
+      return `<img${before}src="${src}"${after} onerror="this.style.display='none'" loading="lazy" />`;
+    }
+  );
+
+  // Also add onerror to ALL images that don't already have it
+  processed = processed.replace(
+    /<img((?![^>]*onerror)[^>]*)>/gi,
+    '<img$1 onerror="this.style.display=\'none\'" loading="lazy">'
+  );
+
+  return processed;
+}
+
 import { Badge } from "@/components/ui/badge";
 import { useRouter } from "@/lib/store";
 import { useTurnstile } from "@/components/site/turnstile-widget";
@@ -165,7 +200,7 @@ export function BlogSinglePage({ initialPost }: { initialPost?: any } = {}) {
               )}
               <div
                 className="text-base sm:text-lg text-cocoa/75 leading-relaxed blog-content"
-                dangerouslySetInnerHTML={{ __html: section.body }}
+                dangerouslySetInnerHTML={{ __html: processBlogContent(section.body) }}
               />
             </motion.section>
           ))}
