@@ -67,12 +67,6 @@ export function RouteSync() {
     }
 
     // Only update the store if the page or params ACTUALLY changed.
-    // Without this check, every navigation triggers:
-    //   1. navigate() → set({ page, params })  → UI renders
-    //   2. router.push() → URL changes
-    //   3. RouteSync → set({ page, params })  → UI renders AGAIN
-    // This causes the "content appears, then page reloads, then
-    // content appears again" double-render pattern.
     const current = useRouter.getState();
     const currentSlug = current.params?.productSlug || current.params?.blogSlug;
     const newSlug = newParams?.productSlug || newParams?.blogSlug;
@@ -81,7 +75,13 @@ export function RouteSync() {
       return;
     }
 
+    // Update the store — this triggers the UI to render the new page.
+    // This happens AFTER router.push() has changed the URL, so the
+    // user sees: URL changes → page transitions → content appears.
     useRouter.setState({ page: newPage, params: newParams } as any);
+
+    // Scroll to top on every navigation
+    window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
   }, [pathname]);
 
   return null;

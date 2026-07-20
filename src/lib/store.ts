@@ -405,7 +405,17 @@ export const useRouter = create<RouterState>((set, get) => ({
   // React render has data. No loading screens ever show.
   ...getInitialStoreState(),
   navigate: (page, params = {}) => {
-    set({ page, params });
+    // NOTE: We do NOT call set({ page, params }) here!
+    //
+    // Previously, navigate() updated the store FIRST (causing the
+    // UI to show the new page's content from cached data), THEN
+    // called router.push() (causing a visible page reload).
+    // This created the "content appears → reload → content again"
+    // pattern the user complained about.
+    //
+    // Now we ONLY call router.push(). RouteSync (which listens to
+    // usePathname) will detect the URL change and update the store.
+    // This ensures: URL changes first → page transition → content.
     if (typeof window !== "undefined") {
       const newUrl = pageToUrl(page, params);
 
@@ -415,40 +425,11 @@ export const useRouter = create<RouterState>((set, get) => ({
         return;
       }
 
-      // Special case: navigating from /product/X → /product/Y
-      // Both routes share the same Next.js page component, so React
-      // won't unmount/remount — it'll just receive new `params` prop.
-      // But there's a brief window where the SSR fetch is in flight
-      // and the page may show stale data. To prevent that, we
-      // pre-inject the product/post into the store NOW (if it's
-      // already cached) so the page can render it immediately.
-      if (
-        page === "product" &&
-        params.productSlug &&
-        window.location.pathname.startsWith("/product/")
-      ) {
-        const cached = get().products.find((p) => p.slug === params.productSlug);
-        // Don't need to do anything special — the store already has
-        // the cached product, and ProductDetailPage will find it via
-        // params.productSlug lookup. The route change will happen
-        // in the background; the UI updates instantly.
-      }
-      if (
-        page === "blog-single" &&
-        params.blogSlug &&
-        window.location.pathname.startsWith("/blog/")
-      ) {
-        const cached = get().blogPosts.find((p) => p.slug === params.blogSlug);
-        // Same as above — store already has the cached post.
-      }
-
       // Use the Next.js App Router adapter (set by NavigationBridge)
-      // for client-side navigation. This avoids a full page reload
-      // and eliminates the loading flash between page transitions.
+      // for client-side navigation. RouteSync will update the store
+      // when the URL change is detected.
       if (navigationAdapter) {
         navigationAdapter(newUrl);
-        // Scroll to top after navigation (smooth, no flash)
-        window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
       } else {
         // Fallback: full page navigation (only used before the
         // NavigationBridge component mounts on initial load).
