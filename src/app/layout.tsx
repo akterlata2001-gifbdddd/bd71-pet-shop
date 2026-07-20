@@ -51,6 +51,13 @@ export const metadata: Metadata = {
     title: "BD71 Pet Shop",
     description: "Premium pet food online in Bangladesh",
   },
+  // ===== Google AdSense verification =====
+  // This meta tag + the script tag in <head> below enable AdSense
+  // to verify site ownership and serve ads. The publisher ID
+  // (ca-pub-1743417934898311) matches the one in /ads.txt.
+  verification: {
+    google: "google-pub-1743417934898311",
+  },
 };
 
 // =====================================================
@@ -92,6 +99,17 @@ export default function RootLayout({
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: serializeSchema(organizationSchema) }}
+        />
+        {/* ===== Google AdSense ===== */}
+        {/* Loaded async so it doesn't block page render. Google's
+            crawler sees this tag and uses it to verify AdSense
+            ownership + serve ads via the publisher ID below. The
+            same publisher ID (ca-pub-1743417934898311) appears in
+            /ads.txt for cross-verification. */}
+        <script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1743417934898311"
+          crossOrigin="anonymous"
         />
       </head>
       <body
