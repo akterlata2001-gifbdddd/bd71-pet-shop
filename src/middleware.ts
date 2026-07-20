@@ -89,9 +89,10 @@ export const config = {
   matcher: [
     // Exclude: API routes, Next.js internals, static assets (images,
     // fonts, icons), and well-known root files like robots.txt,
-    // sitemap.xml, ads.txt, etc. These are served as static files
+    // sitemap.xml, ads.txt, Google Search Console verification
+    // files (google*.html), etc. These are served as static files
     // from /public or via route handlers — middleware must NOT
     // rewrite them to /.
-    "/((?!api|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|ads.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|txt|woff|woff2)$).*)",
+    "/((?!api|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|ads.txt|google[0-9a-f]+\\.html|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|txt|html|woff|woff2)$).*)",
   ],
 };
