@@ -123,6 +123,23 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        {/* ===== Favicon — server-rendered for instant load ===== */}
+        {/* This <link> tag is in the HTML from the very first byte,
+            so the browser loads the favicon immediately — no JS
+            delay. The inline script below is a fallback for when
+            the CMS branding changes (it updates the href after
+            React hydrates). */}
+        {integrations.faviconUrl && (
+          <>
+            <link rel="icon" href={integrations.faviconUrl} type="image/png" />
+            <link rel="apple-touch-icon" href={integrations.faviconUrl} />
+          </>
+        )}
+        {/* Fallback favicon if CMS branding is not configured */}
+        {!integrations.faviconUrl && (
+          <link rel="icon" href="/favicon.ico" />
+        )}
+
         {/* Pre-load site config from localStorage BEFORE React */}
         <script dangerouslySetInnerHTML={{ __html: logoInitScript }} />
         {/* Site-wide Organization schema for SEO */}

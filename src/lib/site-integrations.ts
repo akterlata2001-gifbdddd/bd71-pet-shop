@@ -37,6 +37,11 @@ export interface SiteIntegrations {
   // Facebook Pixel ID
   facebookPixelId?: string;
 
+  // Favicon URL from CMS branding settings — injected as a
+  // server-rendered <link rel="icon"> tag so the browser
+  // loads it instantly on first paint (no JS delay).
+  faviconUrl?: string;
+
   // Custom scripts to inject in <head> (raw HTML, e.g. <script>...</script>)
   headerScripts?: string;
 
@@ -81,6 +86,22 @@ function extractIntegrationValue(raw: any, fieldNames: string[]): string | null 
     }
   }
   return null;
+}
+
+/**
+ * Extract favicon URL from CMS branding settings.
+ * Branding is stored as a JSON string under key='branding' in
+ * store_settings, with a 'favicon_url' field inside.
+ */
+function extractFaviconUrl(settings: any): string | null {
+  const branding = settings.branding;
+  if (!branding) return null;
+  try {
+    const parsed = typeof branding === "string" ? JSON.parse(branding) : branding;
+    return parsed?.favicon_url || null;
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -136,6 +157,7 @@ export async function getSiteIntegrations(): Promise<SiteIntegrations> {
       facebookPixelId:
         extractIntegrationValue(pixelRaw, ["pixel_id"]) ??
         undefined,
+      faviconUrl: extractFaviconUrl(settings) ?? undefined,
       headerScripts: settings.seo_headerScripts || undefined,
       bodyScripts: settings.seo_bodyScripts || undefined,
     };
