@@ -32,7 +32,7 @@ export async function fetchProductBySlug(slug: string) {
 export async function fetchPostBySlug(slug: string) {
   try {
     const res = await fetch(
-      `${CMS_API}/api/v1/sites/${CMS_SITE_ID}/posts?slug=${encodeURIComponent(slug)}`,
+      `${CMS_API}/api/v1/sites/${CMS_SITE_ID}/posts?pageSize=200`,
       {
         headers: { "Content-Type": "application/json", "X-API-Key": CMS_API_KEY },
         next: { revalidate: 60, tags: [`post-${slug}`] },
@@ -40,8 +40,10 @@ export async function fetchPostBySlug(slug: string) {
     );
     const json = await res.json();
     if (!json.success) return null;
-    const posts = json.data?.posts ?? [];
-    const post = Array.isArray(posts) ? posts[0] : posts;
+    // API ignores the ?slug= param and returns all posts —
+    // filter client-side to find the exact match.
+    const posts: any[] = json.data?.posts ?? [];
+    const post = posts.find((p) => p.slug === slug);
     return post ?? null;
   } catch {
     return null;
