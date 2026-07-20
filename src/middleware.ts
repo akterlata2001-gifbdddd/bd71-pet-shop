@@ -87,6 +87,11 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!api|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|woff|woff2)$).*)",
+    // Exclude: API routes, Next.js internals, static assets (images,
+    // fonts, icons), and well-known root files like robots.txt,
+    // sitemap.xml, ads.txt, etc. These are served as static files
+    // from /public or via route handlers — middleware must NOT
+    // rewrite them to /.
+    "/((?!api|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|ads.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|txt|woff|woff2)$).*)",
   ],
 };
