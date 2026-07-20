@@ -171,13 +171,28 @@ gtag('config', '${integrations.googleAnalyticsId}');`,
         {/* ===== Google AdSense ===== */}
         {/* Loaded async so it doesn't block page render. The
             publisher ID (ca-pub-XXX) is configured per-tenant
-            in the CMS dashboard. */}
+            in the CMS dashboard.
+            
+            The inline script initializes adsbygoogle and pushes
+            an empty ad request — this enables Auto ads (Google
+            automatically places ads in optimal positions).
+            
+            Without the push call, the AdSense script loads but
+            never actually requests ads — that's why ads weren't
+            showing even though the script was in <head>. */}
         {integrations.adsensePublisherId && (
-          <script
-            async
-            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${integrations.adsensePublisherId}`}
-            crossOrigin="anonymous"
-          />
+          <>
+            <script
+              async
+              src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${integrations.adsensePublisherId}`}
+              crossOrigin="anonymous"
+            />
+            <script
+              dangerouslySetInnerHTML={{
+                __html: `(adsbygoogle = window.adsbygoogle || []).push({});`,
+              }}
+            />
+          </>
         )}
 
         {/* ===== Facebook Pixel ===== */}
