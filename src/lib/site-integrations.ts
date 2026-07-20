@@ -98,7 +98,7 @@ export async function getSiteIntegrations(): Promise<SiteIntegrations> {
       `${CMS_API}/api/v1/sites/${CMS_SITE_ID}/settings`,
       {
         headers: { "Content-Type": "application/json", "X-API-Key": CMS_API_KEY },
-        next: { revalidate: 300, tags: ["seo-settings"] },
+        next: { revalidate: 60, tags: ["seo-settings"] },
       }
     );
     const json = await res.json();

@@ -28,6 +28,15 @@ const geistMono = Geist_Mono({
 });
 
 // =====================================================
+// Revalidate layout every 60 seconds so changes to CMS
+// integrations (AdSense, Analytics, etc.) appear without
+// a full redeploy. The layout is a server component that
+// fetches from CMS — without this, it would be cached at
+// build time and CMS changes wouldn't show until next deploy.
+// =====================================================
+export const revalidate = 60;
+
+// =====================================================
 // Dynamic metadata — uses the site_name from CMS so each
 // tenant's pages show their own brand name in the title.
 // Falls back to "BD71 Pet Shop" if CMS is unreachable.
