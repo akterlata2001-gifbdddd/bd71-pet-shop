@@ -408,29 +408,23 @@ export const useRouter = create<RouterState>((set, get) => ({
     if (typeof window !== "undefined") {
       const newUrl = pageToUrl(page, params);
 
-      // Already on the target page — just scroll to top, no navigation.
+      // Already on the target page — just scroll to top.
       if (window.location.pathname === newUrl) {
         window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
         return;
       }
 
-      // Use the Next.js App Router adapter (set by NavigationBridge)
-      // for client-side navigation.
+      // Only call router.push(). Do NOT call set() here.
+      // RouteSync will detect the URL change and call set() once.
+      // This prevents the double-render:
+      //   navigate() → set() → RouteSync → set() = TWO renders
+      //   navigate() → router.push() → RouteSync → set() = ONE render
       if (navigationAdapter) {
-        // First: change the URL (page transition starts)
         navigationAdapter(newUrl);
-        // Then: update the store (content updates after URL changes)
-        // Using a microtask delay so router.push() starts first.
-        Promise.resolve().then(() => {
-          set({ page, params });
-          window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
-        });
       } else {
-        // Fallback: full page navigation
         window.location.href = newUrl;
       }
     } else {
-      // SSR — just set the store
       set({ page, params });
     }
   },
