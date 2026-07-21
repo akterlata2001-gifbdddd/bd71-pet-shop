@@ -1,94 +1,94 @@
 "use client";
 
 // =====================================================
-// <PageMeta /> — sets dynamic SEO metadata for the current SPA route.
+// <PageMeta /> — sets dynamic SEO metadata for the current route.
 // =====================================================
-// Mount once at the top of the app (in app/page.tsx). It listens to
-// router state + product/post data and updates document.title, meta
-// description, OG tags, and canonical URL whenever the route changes.
+// Uses getSiteNameSync() to get the site name from CMS (cached
+// after the first server-side fetch in layout.tsx). This ensures
+// the client-side title matches the server-rendered title — no
+// hydration mismatch.
 // =====================================================
 
 import { useEffect, useMemo } from "react";
 import { useRouter } from "@/lib/store";
 import { setPageMeta, type PageMeta } from "@/lib/use-page-meta";
+import { getSiteNameSync } from "@/lib/site-name";
 
 const BASE_URL = "https://bd71shop.com.bd";
 
-const STATIC_META: Record<string, PageMeta> = {
-  home: {
-    title: "BD71 Pet Shop | Premium Pet Food Online in Bangladesh",
-    description:
-      "Shop premium pet food for cats, dogs, birds & fish at BD71 Pet Shop. Genuine products, affordable prices & fast delivery across Bangladesh.",
-    path: "/",
-    keywords:
-      "pet food Bangladesh, cat food, dog food, BD71 Pet Shop, pet shop Dhaka, premium pet food",
-  },
-  shop: {
-    title: "Shop All Pet Products | BD71 Pet Shop",
-    description:
-      "Browse our full range of premium pet food, treats, litter, toys, and accessories. Genuine products with fast delivery across Bangladesh.",
-    path: "/shop",
-    keywords: "pet shop, pet food, cat food, dog food, pet accessories Bangladesh",
-  },
-  cart: {
-    title: "Your Cart | BD71 Pet Shop",
-    description: "Review your cart and proceed to checkout.",
-    path: "/cart",
-  },
-  checkout: {
-    title: "Checkout | BD71 Pet Shop",
-    description: "Secure checkout with cash on delivery and bKash/Nagad support.",
-    path: "/checkout",
-  },
-  about: {
-    title: "About Us | BD71 Pet Shop",
-    description:
-      "BD71 Pet Shop is Bangladesh's trusted source for premium pet food and supplies since 2021. Genuine products, fair prices, fast delivery.",
-    path: "/about",
-  },
-  contact: {
-    title: "Contact Us | BD71 Pet Shop",
-    description:
-      "Get in touch with BD71 Pet Shop. Call 01627-001719 or message us — we're open 24/7.",
-    path: "/contact",
-  },
-  blog: {
-    title: "Pet Care Blog | BD71 Pet Shop",
-    description:
-      "Pet care tips, expert guides, and stories from our community of pet lovers across Bangladesh.",
-    path: "/blog",
-  },
-  privacy: {
-    title: "Privacy Policy | BD71 Pet Shop",
-    description: "How BD71 Pet Shop collects, uses, and protects your data.",
-    path: "/privacy",
-  },
-  terms: {
-    title: "Terms & Conditions | BD71 Pet Shop",
-    description: "Terms and conditions for using BD71 Pet Shop.",
-    path: "/terms",
-  },
-  dmca: {
-    title: "DMCA Policy | BD71 Pet Shop",
-    description: "DMCA policy and takedown procedure for BD71 Pet Shop.",
-    path: "/dmca",
-  },
-  disclaimer: {
-    title: "Disclaimer | BD71 Pet Shop",
-    description: "Disclaimer for BD71 Pet Shop products and content.",
-    path: "/disclaimer",
-  },
-  account: {
-    title: "My Account | BD71 Pet Shop",
-    description: "View your orders and account details.",
-    path: "/account",
-  },
-  "not-found": {
-    title: "Page Not Found | BD71 Pet Shop",
-    description: "The page you're looking for doesn't exist.",
-    path: "/404",
-  },
-};
+// Build static meta dynamically using the CMS site name.
+// Called inside useMemo so it picks up the latest cached site name.
+function buildStaticMeta(siteName: string): Record<string, PageMeta> {
+  return {
+    home: {
+      title: `${siteName} | Premium Pet Food Online in Bangladesh`,
+      description: `Shop premium pet food for cats, dogs, birds & fish at ${siteName}. Genuine products, affordable prices & fast delivery across Bangladesh.`,
+      path: "/",
+      keywords: `pet food Bangladesh, cat food, dog food, ${siteName}, pet shop Dhaka, premium pet food`,
+    },
+    shop: {
+      title: `Shop All Pet Products | ${siteName}`,
+      description: "Browse our full range of premium pet food, treats, litter, toys, and accessories. Genuine products with fast delivery across Bangladesh.",
+      path: "/shop",
+      keywords: "pet shop, pet food, cat food, dog food, pet accessories Bangladesh",
+    },
+    cart: {
+      title: `Your Cart | ${siteName}`,
+      description: "Review your cart and proceed to checkout.",
+      path: "/cart",
+    },
+    checkout: {
+      title: `Checkout | ${siteName}`,
+      description: "Secure checkout with cash on delivery and bKash/Nagad support.",
+      path: "/checkout",
+    },
+    about: {
+      title: `About Us | ${siteName}`,
+      description: `${siteName} is Bangladesh's trusted source for premium pet food and supplies. Genuine products, fair prices, fast delivery.`,
+      path: "/about",
+    },
+    contact: {
+      title: `Contact Us | ${siteName}`,
+      description: `Get in touch with ${siteName}. Call us or message us — we're here to help.`,
+      path: "/contact",
+    },
+    blog: {
+      title: `Pet Care Blog | ${siteName}`,
+      description: "Pet care tips, expert guides, and stories from our community of pet lovers across Bangladesh.",
+      path: "/blog",
+    },
+    privacy: {
+      title: `Privacy Policy | ${siteName}`,
+      description: `How ${siteName} collects, uses, and protects your data.`,
+      path: "/privacy",
+    },
+    terms: {
+      title: `Terms & Conditions | ${siteName}`,
+      description: `Terms and conditions for using ${siteName}.`,
+      path: "/terms",
+    },
+    dmca: {
+      title: `DMCA Policy | ${siteName}`,
+      description: `DMCA policy and takedown procedure for ${siteName}.`,
+      path: "/dmca",
+    },
+    disclaimer: {
+      title: `Disclaimer | ${siteName}`,
+      description: `Disclaimer for ${siteName} products and content.`,
+      path: "/disclaimer",
+    },
+    account: {
+      title: `My Account | ${siteName}`,
+      description: "View your orders and account details.",
+      path: "/account",
+    },
+    "not-found": {
+      title: `Page Not Found | ${siteName}`,
+      description: "The page you're looking for doesn't exist.",
+      path: "/404",
+    },
+  };
+}
 
 export function PageMeta() {
   const page = useRouter((s) => s.page);
@@ -96,8 +96,10 @@ export function PageMeta() {
   const products = useRouter((s) => s.products);
   const blogPosts = useRouter((s) => s.blogPosts);
 
-  // Compute the metadata for the current page
   const meta: PageMeta | null = useMemo(() => {
+    const siteName = getSiteNameSync();
+    const STATIC_META = buildStaticMeta(siteName);
+
     // ===== Product detail page =====
     if (page === "product") {
       const product = params.productSlug
@@ -108,21 +110,18 @@ export function PageMeta() {
 
       if (!product) {
         return {
-          title: "Loading product… | BD71 Pet Shop",
+          title: `Loading product… | ${siteName}`,
           description: "Loading product details.",
           path: params.productSlug ? `/product/${params.productSlug}` : "/shop",
         };
       }
 
       const seo = product.seo;
-      // ===== Fallback chain =====
-      // Use migrated Yoast data first (preserves WP ranking signals),
-      // then product fields, then a sensible default.
       const title = seo?.seo_title || `${product.name} — ৳${product.price}`;
       const description = seo?.seo_description
         || product.shortDescription
         || (product.description || "").slice(0, 160)
-        || `${product.name} — buy online at BD71 Pet Shop with fast delivery across Bangladesh.`;
+        || `${product.name} — buy online at ${siteName} with fast delivery across Bangladesh.`;
       const image = seo?.og_image || product.featured_image;
       const keywords = seo?.focus_keyword
         || `${product.name}, ${product.brand}, ${product.categoryName}, buy online Bangladesh`;
@@ -130,8 +129,6 @@ export function PageMeta() {
       return {
         title,
         description,
-        // Canonical = the CURRENT product page URL on the new domain.
-        // Never the old WP canonical_url — that URL no longer exists.
         path: `/product/${product.slug || product.id}`,
         image,
         keywords,
@@ -141,7 +138,7 @@ export function PageMeta() {
       };
     }
 
-    // ===== Blog archive (with optional category filter) =====
+    // ===== Blog archive =====
     if (page === "blog") {
       return STATIC_META.blog;
     }
@@ -153,17 +150,17 @@ export function PageMeta() {
         : null;
       if (!post) {
         return {
-          title: "Article | BD71 Pet Shop",
+          title: `Article | ${siteName}`,
           description: "Loading article.",
           path: params.blogSlug ? `/blog/${params.blogSlug}` : "/blog",
         };
       }
 
       const seo = post.seo;
-      const title = seo?.seo_title || `${post.title} | BD71 Pet Shop Blog`;
+      const title = seo?.seo_title || `${post.title} | ${siteName} Blog`;
       const description = seo?.seo_description
         || post.excerpt
-        || "Read the latest pet care tips on the BD71 Pet Shop blog.";
+        || `Read the latest pet care tips on the ${siteName} blog.`;
       const image = seo?.og_image || post.cover_image;
       const keywords = seo?.focus_keyword || post.category;
 
@@ -183,9 +180,9 @@ export function PageMeta() {
     if (page === "shop" && params.category) {
       const cat = products.find((p) => p.category === params.category)?.categoryName;
       return {
-        title: cat ? `${cat} — Shop Online | BD71 Pet Shop` : "Shop | BD71 Pet Shop",
+        title: cat ? `${cat} — Shop Online | ${siteName}` : `Shop | ${siteName}`,
         description: cat
-          ? `Browse ${cat} at BD71 Pet Shop. Genuine products, fair prices, fast delivery across Bangladesh.`
+          ? `Browse ${cat} at ${siteName}. Genuine products, fair prices, fast delivery across Bangladesh.`
           : "Browse our full range of premium pet products.",
         path: `/shop?category=${encodeURIComponent(params.category as string)}`,
       };

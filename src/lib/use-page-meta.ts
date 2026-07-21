@@ -26,6 +26,7 @@
 // =====================================================
 
 import { useEffect } from "react";
+import { getSiteNameSync, DEFAULT_SITE_NAME } from "@/lib/site-name";
 
 export type PageMeta = {
   title: string;
@@ -57,7 +58,12 @@ export type PageMeta = {
   robotsFollow?: boolean;
 };
 
-const SITE_NAME = "BD71 Pet Shop";
+// Use getSiteNameSync() to get the site name from CMS cache.
+// This ensures client-side titles match server-rendered titles.
+function getSiteName(): string {
+  return getSiteNameSync() || DEFAULT_SITE_NAME;
+}
+
 const DEFAULT_IMAGE = "https://bd71shop.com.bd/og-default.jpg";
 const BASE_URL = "https://bd71shop.com.bd";
 
@@ -93,9 +99,10 @@ function upsertCanonical(href: string) {
 export function setPageMeta(meta: PageMeta) {
   if (typeof window === "undefined") return;
 
-  const fullTitle = meta.title.includes(SITE_NAME)
+  const siteName = getSiteName();
+  const fullTitle = meta.title.includes(siteName)
     ? meta.title
-    : `${meta.title} | ${SITE_NAME}`;
+    : `${meta.title} | ${siteName}`;
 
   document.title = fullTitle;
 
@@ -106,7 +113,7 @@ export function setPageMeta(meta: PageMeta) {
   // Open Graph
   upsertMeta("property", "og:title", fullTitle);
   upsertMeta("property", "og:description", meta.description);
-  upsertMeta("property", "og:site_name", SITE_NAME);
+  upsertMeta("property", "og:site_name", siteName);
   upsertMeta("property", "og:type", meta.isArticle ? "article" : "website");
   upsertMeta("property", "og:url", `${BASE_URL}${window.location.pathname}`);
   upsertMeta("property", "og:image", meta.image || DEFAULT_IMAGE);

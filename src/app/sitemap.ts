@@ -95,16 +95,14 @@ export default async function sitemap() {
         }))
     : [];
 
-  const categoryPages = toggles.categories
-    ? (categories ?? [])
-        .filter((c: any) => c.slug)
-        .map((c: any) => ({
-          url: `${BASE_URL}/category/${c.slug}`,
-          priority: 0.6,
-          changeFrequency: "weekly",
-          lastModified: new Date(),
-        }))
-    : [];
+  // NOTE: Category pages (/category/{slug}) are NOT included in the
+  // sitemap because there's no /category/[slug] route in the app.
+  // Shop uses /shop?category={slug} query params instead (handled
+  // client-side). Publishing non-existent URLs would cause Google
+  // to see soft-404s, hurting SEO.
+  // If a /category/[slug] route is added in the future, re-enable
+  // this section.
+  const categoryPages: any[] = [];
 
   return [...staticPages, ...productPages, ...postPages, ...categoryPages];
 }
