@@ -95,9 +95,15 @@ function mapProduct(p: any): Product {
     inStock: (p.stock_quantity || 0) > 0,
     sku: p.sku || "",
     slug: p.slug || "",
-    description: stripHtml(p.description),
-    shortDescription: stripHtml(p.short_description),
-    rawDescription: stripSchemaMarkup(p.description || ""),
+    // NOTE: description, shortDescription, rawDescription are NOT
+    // included in the initial data payload. They're large (1-5KB
+    // each per product) and bloat the HTML to 5MB+, which causes
+    // AdSense crawler timeouts and slow page loads.
+    // Product detail pages get full descriptions via SSR
+    // (fetchProductBySlug in seo-fetchers.ts).
+    description: "",
+    shortDescription: stripHtml(p.short_description)?.slice(0, 100) || "",
+    rawDescription: "",
     images: p.images || [],
     featured_image: imageUrl,
     seo: p.seo ?? null,
