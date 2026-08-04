@@ -5,7 +5,7 @@ import { BlogSSR } from "./blog-ssr-client";
 // /blog — Server-Rendered Blog Listing (SEO)
 // =====================================================
 
-export const revalidate = 3600;
+export const revalidate = false; // No ISR — on-demand revalidation only
 
 export const metadata: Metadata = {
   title: "Pet Care Blog",

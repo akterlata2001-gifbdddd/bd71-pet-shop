@@ -23,7 +23,7 @@ import { getSiteName } from "@/lib/site-name";
 //     request (ISR), then cached for 60s
 // =====================================================
 
-export const revalidate = 86400; // ISR — revalidate every 60s
+export const revalidate = false; // No ISR — on-demand revalidation only
 
 // ===== Pre-render all product pages at build time =====
 // This is the key to instant page loads. Without this, every
