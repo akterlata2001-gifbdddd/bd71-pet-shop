@@ -13,7 +13,7 @@ import { getSiteName } from "@/lib/site-name";
 // request via ISR, then cached for 60s.
 // =====================================================
 
-export const revalidate = 60;
+export const revalidate = 86400;
 
 // ===== Pre-render all blog post pages at build time =====
 export async function generateStaticParams() {

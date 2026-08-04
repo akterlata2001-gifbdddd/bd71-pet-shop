@@ -13,7 +13,7 @@ import { AppShell } from "@/components/site/app-shell";
 // then re-generated in the background.
 // =====================================================
 
-export const revalidate = 60; // ISR — revalidate every 60 seconds
+export const revalidate = 3600; // ISR — revalidate every 60 seconds
 
 export default async function Page() {
   // Fetch data on the server

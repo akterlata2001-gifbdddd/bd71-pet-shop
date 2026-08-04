@@ -34,7 +34,7 @@ const geistMono = Geist_Mono({
 // fetches from CMS — without this, it would be cached at
 // build time and CMS changes wouldn't show until next deploy.
 // =====================================================
-export const revalidate = 60;
+export const revalidate = 3600;
 
 // =====================================================
 // Dynamic metadata — uses the site_name from CMS so each

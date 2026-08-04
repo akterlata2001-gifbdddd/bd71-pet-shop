@@ -6,7 +6,7 @@
 // state — eliminating the loading flash and making the site
 // feel instant.
 //
-// Uses Next.js fetch with revalidate=60 for ISR (Incremental
+// Uses Next.js fetch with revalidate=3600 for ISR (Incremental
 // Static Regeneration) — pages are cached for 60 seconds, then
 // re-fetched in the background.
 // =====================================================
@@ -44,7 +44,7 @@ async function serverFetch<T>(path: string): Promise<T> {
         "Content-Type": "application/json",
         "X-API-Key": CMS_API_KEY,
       },
-      next: { revalidate: 60 }, // ISR — cache for 60 seconds
+      next: { revalidate: 3600 }, // ISR — cache for 1 hour
     }
   );
   const json = await res.json();

@@ -11,7 +11,7 @@ import { ShopSSR } from "./shop-ssr-client";
 // appear later" pattern — products are in the initial HTML.
 // =====================================================
 
-export const revalidate = 60;
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: "Shop All Pet Products",
