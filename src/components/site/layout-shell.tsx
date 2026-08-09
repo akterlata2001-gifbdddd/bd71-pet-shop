@@ -20,10 +20,16 @@ import { fetchSiteConfig, getSiteConfigSync, type SiteConfig } from "@/lib/site-
 // =====================================================
 
 export function LayoutShell({ children }: { children: React.ReactNode }) {
-  // Start with cached config (from localStorage) — instant!
+  // Start with cached config (from localStorage OR server-rendered
+  // window.__SITE_CONFIG_FALLBACK__ injected by layout.tsx). Instant!
+  // The fallback is populated by the inline script in layout.tsx that
+  // runs BEFORE React hydrates, so even a first-time visitor with
+  // empty localStorage gets the logo on the very first paint.
   const [config, setConfig] = useState<SiteConfig>(getSiteConfigSync());
 
-  // Fetch fresh config in background (non-blocking)
+  // Fetch fresh config in background (non-blocking) — updates any
+  // stale fields (siteName, phone, socialLinks, etc.) that aren't
+  // included in the server-rendered fallback.
   useEffect(() => {
     fetchSiteConfig().then(setConfig);
   }, []);
