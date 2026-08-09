@@ -36,7 +36,27 @@ export interface ServerData {
 }
 
 // ===== Server-side fetch with ISR =====
+// ===== Tag map for on-demand cache purge =====
+// The CMS calls storefront /api/revalidate with these tag names when
+// a product/post/category is created/updated/deleted. Without tags,
+// revalidateTag() can't find the cached fetch to invalidate.
+//
+// IMPORTANT: any path here MUST match what the CMS sends in
+// src/lib/storefront-purge.ts. If you change a tag here, change it there too.
+const FETCH_TAG_FOR_PATH: Record<string, string> = {
+  "/products": "all-products",
+  "/posts": "all-posts",
+  "/categories": "categories",
+  "/social-links": "social-links",
+  "/seo-settings": "seo-settings",
+};
+
 async function serverFetch<T>(path: string): Promise<T> {
+  // Extract the base path (without query string) for tag lookup.
+  // e.g. "/products?pageSize=300" → "/products"
+  const basePath = path.split("?")[0];
+  const tag = FETCH_TAG_FOR_PATH[basePath];
+
   const res = await fetch(
     `${CMS_API}/api/v1/sites/${CMS_SITE_ID}${path}`,
     {
@@ -44,7 +64,13 @@ async function serverFetch<T>(path: string): Promise<T> {
         "Content-Type": "application/json",
         "X-API-Key": CMS_API_KEY,
       },
-      next: { revalidate: false }, // ISR — cache for 1 hour
+      // No automatic ISR (revalidate=false) — Vercel free plan has
+      // a tight ISR write budget. Purge is on-demand only via
+      // /api/revalidate. Tags make tag-based selective purge work.
+      next: {
+        revalidate: false,
+        ...(tag ? { tags: [tag] } : {}),
+      },
     }
   );
   const json = await res.json();
