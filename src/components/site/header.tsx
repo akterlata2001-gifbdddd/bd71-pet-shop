@@ -138,7 +138,8 @@ export function SiteHeader({
               aria-label={`${siteName || "BD71 Pet Shop"} home`}
             >
               {logoUrl ? (
-                <Image src={logoUrl} alt={siteName || "Store"} width={200} height={64} className="h-14 sm:h-16 w-auto max-w-[200px] object-contain" priority />
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={logoUrl} alt={siteName || "Store"} className="h-14 sm:h-16 w-auto max-w-[200px] object-contain" />
               ) : (
                 <div className="h-12 sm:h-14 w-[140px]" />
               )}
@@ -261,7 +262,8 @@ export function SiteHeader({
                   <SheetHeader className="p-5 border-b border-border/60">
                     <SheetTitle className="flex items-center gap-2.5">
                       {logoUrl ? (
-                        <Image src={logoUrl} alt={siteName || "Store"} width={160} height={48} className="h-12 w-auto max-w-[160px] object-contain" />
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={logoUrl} alt={siteName || "Store"} className="h-12 w-auto max-w-[160px] object-contain" />
                       ) : (
                         <div className="h-10 w-[100px]" />
                       )}

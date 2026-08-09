@@ -42,6 +42,13 @@ export interface SiteIntegrations {
   // loads it instantly on first paint (no JS delay).
   faviconUrl?: string;
 
+  // Logo URL from CMS branding settings — injected as a
+  // server-rendered inline JSON blob (window.__SITE_CONFIG__)
+  // so the header/footer logo renders on FIRST paint, with no
+  // flash of empty space while the client-side fetchSiteConfig()
+  // background request completes.
+  logoUrl?: string;
+
   // Custom scripts to inject in <head> (raw HTML, e.g. <script>...</script>)
   headerScripts?: string;
 
@@ -105,6 +112,21 @@ function extractFaviconUrl(settings: any): string | null {
 }
 
 /**
+ * Extract logo URL from CMS branding settings.
+ * Same JSON blob as favicon — uses the 'logo_url' field.
+ */
+function extractLogoUrl(settings: any): string | null {
+  const branding = settings.branding;
+  if (!branding) return null;
+  try {
+    const parsed = typeof branding === "string" ? JSON.parse(branding) : branding;
+    return parsed?.logo_url || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Fetch all third-party integration settings from the CMS.
  * Returns an empty object if the CMS is unreachable.
  */
@@ -158,6 +180,7 @@ export async function getSiteIntegrations(): Promise<SiteIntegrations> {
         extractIntegrationValue(pixelRaw, ["pixel_id"]) ??
         undefined,
       faviconUrl: extractFaviconUrl(settings) ?? undefined,
+      logoUrl: extractLogoUrl(settings) ?? undefined,
       headerScripts: settings.seo_headerScripts || undefined,
       bodyScripts: settings.seo_bodyScripts || undefined,
     };

@@ -62,7 +62,8 @@ export function SiteFooter({
               className="inline-flex items-center gap-2.5 mb-5"
             >
               {logoUrl ? (
-                <Image src={logoUrl} alt={siteName || "Store"} width={200} height={56} className="h-14 w-auto max-w-[200px] object-contain mb-5" />
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={logoUrl} alt={siteName || "Store"} className="h-14 w-auto max-w-[200px] object-contain mb-5" />
               ) : (
                 <div className="h-12 w-[140px] mb-5" />
               )}

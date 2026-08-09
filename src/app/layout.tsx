@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { siteInfo } from "@/lib/data";
 import { generateOrganizationSchema, serializeSchema } from "@/lib/schema";
 import { LayoutShell } from "@/components/site/layout-shell";
-import { getSiteIntegrations } from "@/lib/site-integrations";
+import { getSiteIntegrations, type SiteIntegrations } from "@/lib/site-integrations";
 import { getSiteName, DEFAULT_SITE_NAME } from "@/lib/site-name";
 
 const fredoka = Fredoka({
@@ -81,14 +81,33 @@ export async function generateMetadata(): Promise<Metadata> {
 // BEFORE React hydrates. This ensures the logo <img> tag
 // renders with the correct src on the very first paint.
 // No flash, no delay, no placeholder.
+//
+// Two sources, in priority order:
+//   1. SERVER-RENDERED fallback (window.__SITE_CONFIG_FALLBACK__)
+//      — embedded in the HTML by layout.tsx using the branding
+//      settings fetched at request time. Always available on
+//      the very first visit (no localStorage dependency).
+//   2. localStorage cache (pn_site_config_v1)
+//      — written by fetchSiteConfig() after the first successful
+//      client-side fetch. Survives page navigations and reloads.
 // =====================================================
 const logoInitScript = `
 (function(){
   try {
+    // 1) Server-rendered fallback — always present
+    var serverCfg = window.__SITE_CONFIG_FALLBACK__;
+    if (serverCfg && typeof serverCfg === 'object') {
+      window.__SITE_CONFIG__ = serverCfg;
+    }
+    // 2) Local cache — overrides server config if present
+    //    (it's fresher — written after the most recent fetchSiteConfig())
     var raw = localStorage.getItem('pn_site_config_v1');
-    if (!raw) return;
-    var config = JSON.parse(raw);
-    window.__SITE_CONFIG__ = config;
+    if (raw) {
+      var cached = JSON.parse(raw);
+      window.__SITE_CONFIG__ = Object.assign({}, window.__SITE_CONFIG__ || {}, cached);
+    }
+    var config = window.__SITE_CONFIG__;
+    if (!config) return;
     if (config.faviconUrl) {
       var link = document.querySelector("link[rel='icon']") || document.createElement('link');
       link.rel = 'icon';
@@ -98,6 +117,19 @@ const logoInitScript = `
   } catch(e) {}
 })();
 `;
+
+// Inline JSON blob of branding fields fetched server-side.
+// Injected BEFORE the logoInitScript runs, so __SITE_CONFIG_FALLBACK__
+// is available to it. This is what makes the logo render on the
+// very first paint of a first-time visitor (when localStorage
+// is still empty).
+function buildServerConfigScript(integrations: SiteIntegrations): string {
+  const fallback = JSON.stringify({
+    logoUrl: integrations.logoUrl || "",
+    faviconUrl: integrations.faviconUrl || "",
+  });
+  return `window.__SITE_CONFIG_FALLBACK__=${fallback};`;
+}
 
 export default async function RootLayout({
   children,
@@ -141,6 +173,10 @@ export default async function RootLayout({
         )}
 
         {/* Pre-load site config from localStorage BEFORE React */}
+        {/* Server-rendered branding fallback — embedded in HTML so the
+            header/footer logo renders on the very first paint, even for
+            first-time visitors with empty localStorage. */}
+        <script dangerouslySetInnerHTML={{ __html: buildServerConfigScript(integrations) }} />
         <script dangerouslySetInnerHTML={{ __html: logoInitScript }} />
         {/* Site-wide Organization schema for SEO */}
         <script
